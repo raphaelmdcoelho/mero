@@ -224,7 +224,6 @@ function closePanel(type) {
   const panelId = panelMap[type];
   if (panelId) document.getElementById(panelId).classList.remove('open');
 }
-}
 
 // ---- Inventory ----
 function renderInventory(char) {
