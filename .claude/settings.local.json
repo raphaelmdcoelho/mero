@@ -1,0 +1,28 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm install:*)",
+      "Bash(npm --version)",
+      "Bash(node -e \"require\\('better-sqlite3'\\)\")",
+      "Bash(node -e \"const c=require\\('crypto'\\);console.log\\('JWT_SECRET='+c.randomBytes\\(32\\).toString\\('hex'\\)\\);console.log\\('JWT_REFRESH_SECRET='+c.randomBytes\\(32\\).toString\\('hex'\\)\\);\")",
+      "Bash(npm uninstall:*)",
+      "Bash(node -e \"require\\('./server/db'\\); require\\('./server/auth'\\); require\\('./server/middleware/protect'\\); console.log\\('All modules load OK'\\)\")",
+      "Bash(where python:*)",
+      "Bash(where python3:*)",
+      "Bash(where cl.exe)",
+      "Read(//c/Program Files/Microsoft Visual Studio/**)",
+      "Bash(npm rebuild:*)",
+      "Bash(node -e \"const {DatabaseSync}=require\\('node-sqlite3-wasm'\\);const db=new DatabaseSync\\(':memory:'\\);db.exec\\('CREATE TABLE t\\(x\\)'\\);db.prepare\\('INSERT INTO t VALUES\\(1\\)'\\).run\\(\\);console.log\\(db.prepare\\('SELECT * FROM t'\\).all\\(\\)\\)\")",
+      "Bash(node -e \"const m=require\\('node-sqlite3-wasm'\\);console.log\\(Object.keys\\(m\\)\\)\")",
+      "Bash(node -e \"const {DatabaseSync}=require\\('node:sqlite'\\);const db=new DatabaseSync\\(':memory:'\\);db.exec\\('CREATE TABLE t\\(x INTEGER\\)'\\);db.prepare\\('INSERT INTO t VALUES\\(1\\)'\\).run\\(\\);console.log\\(db.prepare\\('SELECT * FROM t'\\).all\\(\\)\\)\")",
+      "Bash(node -e ':*)",
+      "Bash(grep -v \"Use \\\\`node\")",
+      "Bash(node -e \"require\\('./server/db'\\); console.log\\('DB OK'\\)\")",
+      "Bash(pkill -f \"node server/index.js\")",
+      "Bash(pkill -f \"nodemon\")",
+      "Bash(netstat -ano)",
+      "Bash(taskkill /PID 19320 /F)",
+      "Bash(cmd //c \"taskkill /PID 19320 /F\")"
+    ]
+  }
+}

@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mero — Adventure</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="/css/style.css" />
+</head>
+<body>
+
+  <!-- Header -->
+  <header class="site-header">
+    <div style="display:flex;align-items:center;gap:1rem;">
+      <a href="/characters.html" class="game-logo" style="font-size:1.4rem;text-decoration:none;">MERO</a>
+      <div>
+        <div id="char-name-header" style="font-family:'Cinzel',serif;font-size:1rem;color:var(--text);"></div>
+        <div id="char-class-header" style="font-size:0.75rem;color:var(--muted);"></div>
+      </div>
+    </div>
+    <div style="display:flex;align-items:center;gap:0.75rem;">
+      <div id="activity-badge" style="display:none;" class="activity-badge">
+        <div class="activity-dot"></div>
+        <span id="activity-label">Active</span>
+      </div>
+      <a href="/characters.html" class="btn btn-outline btn-sm">← Heroes</a>
+      <button class="btn btn-outline btn-sm" onclick="logout()">Logout</button>
+    </div>
+  </header>
+
+  <!-- Game arena -->
+  <div class="game-layout">
+    <div class="game-arena">
+      <div class="action-grid">
+        <!-- Top-left: Dungeon -->
+        <div class="action-sq" id="sq-dungeon" style="grid-column:1;grid-row:1;" onclick="handleDungeon()">
+          <span class="sq-icon">🏰</span>
+          <span>Dungeon</span>
+        </div>
+
+        <!-- Top-right: Tavern -->
+        <div class="action-sq" id="sq-tavern" style="grid-column:3;grid-row:1;" onclick="handleTavern()">
+          <span class="sq-icon">🍺</span>
+          <span>Tavern</span>
+        </div>
+
+        <!-- Center: Avatar -->
+        <div class="avatar-cell" style="grid-column:2;grid-row:2;">
+          <div class="avatar-ring" id="avatar-ring" onclick="triggerAvatarUpload()">
+            <img id="avatar-img" src="" alt="Avatar" style="display:none;" />
+            <svg id="avatar-svg" viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <circle cx="40" cy="28" r="14" fill="#3d2f6e"/>
+              <path d="M12 72c0-15.464 12.536-28 28-28s28 12.536 28 28" fill="#3d2f6e"/>
+            </svg>
+          </div>
+          <span class="avatar-hint">Click to upload</span>
+          <input type="file" id="avatar-input" accept="image/jpeg" style="display:none;" onchange="uploadAvatar(event)" />
+        </div>
+
+        <!-- Bottom-left: Inventory -->
+        <div class="action-sq" id="sq-inventory" style="grid-column:1;grid-row:3;" onclick="openPanel('inventory')">
+          <span class="sq-icon">🎒</span>
+          <span>Inventory</span>
+        </div>
+
+        <!-- Bottom-right: Equipment -->
+        <div class="action-sq" id="sq-equipment" style="grid-column:3;grid-row:3;" onclick="openPanel('equipment')">
+          <span class="sq-icon">🛡️</span>
+          <span>Equipment</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Status bars -->
+    <div class="status-bar">
+      <div class="status-bars">
+        <div class="stat-row">
+          <span class="stat-label">XP</span>
+          <div class="stat-track">
+            <div class="stat-fill xp" id="xp-fill" style="width:0%"></div>
+          </div>
+          <span class="stat-value" id="xp-text">0 / 10</span>
+        </div>
+        <div class="stat-row">
+          <span class="stat-label">HP</span>
+          <div class="stat-track">
+            <div class="stat-fill hp" id="hp-fill" style="width:100%"></div>
+          </div>
+          <span class="stat-value" id="hp-text">10 / 10</span>
+        </div>
+        <div style="text-align:center;margin-top:0.25rem;">
+          <span id="level-display" style="font-family:'Cinzel',serif;font-size:0.85rem;color:var(--gold);">Level 1</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Difficulty Modal -->
+  <div class="modal-overlay" id="diff-modal">
+    <div class="modal">
+      <h2 class="modal-title">Choose Dungeon Difficulty</h2>
+      <div class="diff-grid">
+        <div class="diff-card selected" data-diff="easy" onclick="selectDiff(this)">
+          <div class="diff-name">Easy</div>
+          <span class="diff-badge easy">Safe</span>
+          <div class="diff-stats">+1 XP / min<br/>−1 HP / min</div>
+        </div>
+        <div class="diff-card" data-diff="medium" onclick="selectDiff(this)">
+          <div class="diff-name">Medium</div>
+          <span class="diff-badge medium">Risky</span>
+          <div class="diff-stats">+2 XP / min<br/>−2 HP / min</div>
+        </div>
+        <div class="diff-card" data-diff="hard" onclick="selectDiff(this)">
+          <div class="diff-name">Hard</div>
+          <span class="diff-badge hard">Deadly</span>
+          <div class="diff-stats">+4 XP / min<br/>−4 HP / min</div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" onclick="closeDiffModal()">Cancel</button>
+        <button class="btn btn-primary" onclick="confirmDungeon()">Enter Dungeon</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Inventory Panel -->
+  <div class="side-panel" id="inv-panel">
+    <div class="side-panel-header">
+      <span class="side-panel-title">🎒 Inventory</span>
+      <button class="close-btn" onclick="closePanel('inventory')">✕</button>
+    </div>
+    <div class="side-panel-body">
+      <p style="font-size:0.8rem;color:var(--muted);margin-bottom:0.75rem;">
+        Max 10 slots &bull; Gold border = equipped
+      </p>
+      <div class="inv-grid" id="inv-grid"></div>
+      <div id="item-tooltip" style="display:none;margin-top:1rem;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:0.75rem;font-size:0.85rem;"></div>
+    </div>
+  </div>
+
+  <!-- Equipment Panel -->
+  <div class="side-panel" id="eq-panel">
+    <div class="side-panel-header">
+      <span class="side-panel-title">🛡️ Equipment</span>
+      <button class="close-btn" onclick="closePanel('equipment')">✕</button>
+    </div>
+    <div class="side-panel-body">
+      <div id="eq-weapon" class="equip-slot">
+        <span class="equip-slot-icon">🗡️</span>
+        <div class="equip-slot-info">
+          <div class="equip-slot-label">Weapon</div>
+          <div class="equip-slot-name" id="eq-weapon-name">None</div>
+        </div>
+      </div>
+      <div id="eq-armor" class="equip-slot">
+        <span class="equip-slot-icon">🥋</span>
+        <div class="equip-slot-info">
+          <div class="equip-slot-label">Armor</div>
+          <div class="equip-slot-name" id="eq-armor-name">None</div>
+        </div>
+      </div>
+      <hr style="border-color:var(--border);margin:1rem 0;" />
+      <p style="font-size:0.85rem;color:var(--muted);margin-bottom:0.5rem;">Equip from inventory:</p>
+      <div id="eq-list"></div>
+    </div>
+  </div>
+
+  <!-- Toast container -->
+  <div class="toast-container" id="toast-container"></div>
+
+  <script src="/js/api.js"></script>
+  <script src="/js/game.js"></script>
+</body>
+</html>

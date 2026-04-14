@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mero — Login</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="/css/style.css" />
+</head>
+<body>
+  <!-- Animated background -->
+  <div class="orb-bg">
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    <div class="orb orb-3"></div>
+  </div>
+
+  <div class="auth-wrap">
+    <!-- Logo -->
+    <div class="game-logo mb-6">MERO</div>
+    <p style="color:var(--muted);font-size:0.95rem;margin-bottom:1.5rem;font-style:italic;">
+      An idle adventure awaits…
+    </p>
+
+    <!-- Auth card -->
+    <div class="auth-card">
+      <div class="auth-tabs">
+        <button class="auth-tab active" id="tab-login" onclick="showTab('login')">Login</button>
+        <button class="auth-tab" id="tab-register" onclick="showTab('register')">Register</button>
+      </div>
+
+      <!-- Login form -->
+      <form id="form-login" onsubmit="handleLogin(event)">
+        <div class="form-group">
+          <label for="login-username">Username</label>
+          <input id="login-username" type="text" autocomplete="username" placeholder="YourHero" required />
+        </div>
+        <div class="form-group">
+          <label for="login-password">Password</label>
+          <input id="login-password" type="password" autocomplete="current-password" placeholder="••••••••" required />
+        </div>
+        <div class="error-msg" id="login-error"></div>
+        <button type="submit" class="btn btn-primary w-full mt-2" id="login-btn" style="width:100%;margin-top:0.5rem;">
+          Enter the Realm
+        </button>
+      </form>
+
+      <!-- Register form -->
+      <form id="form-register" style="display:none;" onsubmit="handleRegister(event)">
+        <div class="form-group">
+          <label for="reg-username">Username <span style="color:var(--muted);font-size:0.8rem;">(3–20 alphanumeric)</span></label>
+          <input id="reg-username" type="text" autocomplete="username" placeholder="YourHero" required />
+        </div>
+        <div class="form-group">
+          <label for="reg-password">Password <span style="color:var(--muted);font-size:0.8rem;">(min 6 chars)</span></label>
+          <input id="reg-password" type="password" autocomplete="new-password" placeholder="••••••••" required />
+        </div>
+        <div class="form-group">
+          <label for="reg-confirm">Confirm Password</label>
+          <input id="reg-confirm" type="password" autocomplete="new-password" placeholder="••••••••" required />
+        </div>
+        <div class="error-msg" id="register-error"></div>
+        <button type="submit" class="btn btn-primary" id="register-btn" style="width:100%;margin-top:0.5rem;">
+          Create Account
+        </button>
+      </form>
+    </div>
+
+    <p style="color:var(--muted);font-size:0.75rem;margin-top:1.5rem;">
+      Mero &copy; 2024 — A browser idle RPG
+    </p>
+  </div>
+
+  <script src="/js/api.js"></script>
+  <script src="/js/auth.js"></script>
+</body>
+</html>

@@ -1,0 +1,6 @@
+node_modules/
+.env
+mero.db
+mero.db-wal
+mero.db-shm
+public/avatars/*.jpg

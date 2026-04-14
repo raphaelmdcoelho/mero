@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mero — Characters</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="/css/style.css" />
+</head>
+<body>
+  <header class="site-header">
+    <span class="game-logo">MERO</span>
+    <div style="display:flex;align-items:center;gap:1rem;">
+      <span id="header-username" style="color:var(--muted);font-size:0.9rem;"></span>
+      <button class="btn btn-outline btn-sm" onclick="logout()">Logout</button>
+    </div>
+  </header>
+
+  <main>
+    <div style="padding:1.5rem 1.5rem 0.5rem;display:flex;align-items:center;justify-content:space-between;max-width:1100px;margin:0 auto;">
+      <h2 style="font-family:'Cinzel',serif;font-size:1.3rem;color:var(--text);">Your Heroes</h2>
+      <button class="btn btn-primary" onclick="openCreateModal()">+ New Character</button>
+    </div>
+
+    <div class="char-grid" id="char-grid">
+      <div style="grid-column:1/-1;text-align:center;padding:2rem;color:var(--muted);">Loading…</div>
+    </div>
+  </main>
+
+  <!-- Create Character Modal -->
+  <div class="modal-overlay" id="create-modal">
+    <div class="modal">
+      <h2 class="modal-title">Forge a New Hero</h2>
+      <form id="create-form" onsubmit="handleCreateChar(event)">
+        <div class="form-group">
+          <label for="char-name">Hero Name</label>
+          <input id="char-name" type="text" maxlength="30" placeholder="Name your hero…" required />
+        </div>
+        <label style="font-size:0.85rem;color:var(--muted);">Choose Class</label>
+        <div class="class-grid" id="class-grid">
+          <div class="class-card selected" data-class="Warrior" onclick="selectClass(this)">
+            <div class="icon">⚔️</div>
+            <div class="class-name">Warrior</div>
+          </div>
+          <div class="class-card" data-class="Mage" onclick="selectClass(this)">
+            <div class="icon">🔮</div>
+            <div class="class-name">Mage</div>
+          </div>
+          <div class="class-card" data-class="Rogue" onclick="selectClass(this)">
+            <div class="icon">🗡️</div>
+            <div class="class-name">Rogue</div>
+          </div>
+          <div class="class-card" data-class="Cleric" onclick="selectClass(this)">
+            <div class="icon">✝️</div>
+            <div class="class-name">Cleric</div>
+          </div>
+        </div>
+        <div class="error-msg" id="create-error"></div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline" onclick="closeCreateModal()">Cancel</button>
+          <button type="submit" class="btn btn-primary" id="create-btn">Create Hero</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="toast-container" id="toast-container"></div>
+
+  <script src="/js/api.js"></script>
+  <script src="/js/characters.js"></script>
+</body>
+</html>
