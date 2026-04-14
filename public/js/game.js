@@ -46,6 +46,10 @@ async function tick() {
   charState = data;
   renderAll(data);
   if (data.fallen) showToast('Your hero has fallen! Retreating from the dungeon…', 'danger');
+  if (data.plantConsumed) {
+    const icon = data.plantConsumed === 'carrot' ? '🥕' : '🍎';
+    showToast(`${icon} A ${data.plantConsumed} was consumed to keep you alive!`, 'warn');
+  }
 }
 
 // ---- Render ----
@@ -108,6 +112,25 @@ function renderAll(char) {
   // Action squares
   updateActionSquares(char.activity);
 
+  // Farm square: lock badge when level < 3, stock badge when plants in stock
+  const farmLock  = document.getElementById('farm-lock-badge');
+  const farmStock = document.getElementById('farm-stock-badge');
+  const level = Number(char.level) || 1;
+  if (level < 3) {
+    farmLock.style.display = 'flex';
+    farmStock.style.display = 'none';
+    document.getElementById('sq-farm').classList.add('disabled');
+  } else {
+    farmLock.style.display = 'none';
+    const totalPlants = (char.plants || []).reduce((s, p) => s + p.quantity, 0);
+    if (totalPlants > 0) {
+      farmStock.textContent = totalPlants;
+      farmStock.style.display = 'flex';
+    } else {
+      farmStock.style.display = 'none';
+    }
+  }
+
   // Refresh open panels
   renderInventory(char);
   renderEquipment(char);
@@ -120,8 +143,9 @@ function updateActionSquares(activity) {
   const inv     = document.getElementById('sq-inventory');
   const eq      = document.getElementById('sq-equipment');
   const attrs   = document.getElementById('sq-attributes');
+  const farm    = document.getElementById('sq-farm');
 
-  [dungeon, tavern, inv, eq, attrs].forEach(el => el.classList.remove('active', 'disabled'));
+  [dungeon, tavern, inv, eq, attrs, farm].forEach(el => el.classList.remove('active', 'disabled'));
 
   if (activity === 'dungeon') {
     dungeon.classList.add('active');
@@ -187,17 +211,19 @@ document.getElementById('diff-modal').addEventListener('click', function (e) {
 
 // ---- Side panels ----
 function openPanel(type) {
-  const panelMap = { inventory: 'inv-panel', equipment: 'eq-panel', attributes: 'attr-panel' };
+  const panelMap = { inventory: 'inv-panel', equipment: 'eq-panel', attributes: 'attr-panel', farm: 'farm-panel' };
   Object.values(panelMap).forEach(id => document.getElementById(id).classList.remove('open'));
   const panelId = panelMap[type];
   if (panelId) document.getElementById(panelId).classList.add('open');
   if (type === 'attributes') { pendingAttrs = {}; renderAttributes(charState); }
+  if (type === 'farm') renderFarmPanel();
 }
 
 function closePanel(type) {
-  const panelMap = { inventory: 'inv-panel', equipment: 'eq-panel', attributes: 'attr-panel' };
+  const panelMap = { inventory: 'inv-panel', equipment: 'eq-panel', attributes: 'attr-panel', farm: 'farm-panel' };
   const panelId = panelMap[type];
   if (panelId) document.getElementById(panelId).classList.remove('open');
+}
 }
 
 // ---- Inventory ----
@@ -333,6 +359,73 @@ async function confirmAttributes() {
   charState = { ...charState, ...data };
   renderAll(charState);
   showToast('Attributes updated!', 'success');
+}
+
+// ---- Farm ----
+function handleFarm() {
+  if (!charState) return;
+  if (Number(charState.level) < 3) {
+    showToast('Farming unlocks at level 3!', 'danger');
+    return;
+  }
+  openPanel('farm');
+}
+
+async function startGrowing(plantType) {
+  const res = await api.post(`/api/farm/${charId}/grow`, { plant_type: plantType });
+  if (!res) return;
+  const data = await res.json();
+  if (!res.ok) { showToast(data.error || 'Failed to start growing', 'danger'); return; }
+  const icon = plantType === 'carrot' ? '🥕' : '🍎';
+  showToast(`${icon} ${plantType.charAt(0).toUpperCase() + plantType.slice(1)} planted!`, 'success');
+  // Update charState plants/farmQueue from response
+  charState = { ...charState, plants: data.plants, farmQueue: data.queue };
+  renderFarmPanel();
+  renderAll(charState);
+}
+
+function renderFarmPanel() {
+  const char = charState;
+  if (!char) return;
+
+  const now = Math.floor(Date.now() / 1000);
+
+  // Stock
+  const stockList = document.getElementById('farm-stock-list');
+  const plants = char.plants || [];
+  if (!plants.length) {
+    stockList.innerHTML = '<span style="font-size:0.8rem;color:var(--muted);">Nothing harvested yet.</span>';
+  } else {
+    stockList.innerHTML = plants.map(p => {
+      const icon = p.plant_type === 'carrot' ? '🥕' : '🍎';
+      const hp   = p.plant_type === 'carrot' ? 2 : 1;
+      return `<div style="text-align:center;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:0.5rem 0.75rem;">
+        <div style="font-size:1.3rem;">${icon}</div>
+        <div style="font-size:0.75rem;font-weight:600;">${p.plant_type}</div>
+        <div style="font-size:0.7rem;color:var(--muted);">×${p.quantity} &bull; +${hp} HP</div>
+      </div>`;
+    }).join('');
+  }
+
+  // Queue
+  const queueList = document.getElementById('farm-queue-list');
+  const queue = char.farmQueue || [];
+  if (!queue.length) {
+    queueList.innerHTML = '<span style="font-size:0.8rem;color:var(--muted);">No plants growing.</span>';
+  } else {
+    queueList.innerHTML = queue.map(job => {
+      const icon    = job.plant_type === 'carrot' ? '🥕' : '🍎';
+      const secsLeft = Math.max(0, job.ready_at - now);
+      const mins    = Math.floor(secsLeft / 60);
+      const secs    = secsLeft % 60;
+      const timeStr = secsLeft === 0 ? 'Ready!' : `${mins}m ${String(secs).padStart(2,'0')}s`;
+      return `<div style="display:flex;align-items:center;gap:0.5rem;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:0.4rem 0.6rem;margin-bottom:0.35rem;">
+        <span style="font-size:1.1rem;">${icon}</span>
+        <span style="font-size:0.8rem;flex:1;">${job.plant_type}</span>
+        <span style="font-size:0.75rem;color:var(--muted);⋆">${timeStr}</span>
+      </div>`;
+    }).join('');
+  }
 }
 
 // ---- Avatar upload ----

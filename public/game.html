@@ -75,6 +75,14 @@
           <span class="sq-icon">🛡️</span>
           <span>Equipment</span>
         </div>
+
+        <!-- Row 4 center: Farm (unlocks at level 3) -->
+        <div class="action-sq" id="sq-farm" style="grid-column:2;grid-row:4;position:relative;" onclick="handleFarm()">
+          <span class="sq-icon">🌱</span>
+          <span id="farm-label">Farm</span>
+          <span id="farm-lock-badge" class="unspent-badge" style="display:none;font-size:0.55rem;">Lv.3</span>
+          <span id="farm-stock-badge" class="unspent-badge" style="display:none;background:var(--accent);"></span>
+        </div>
       </div>
     </div>
 
@@ -187,6 +195,44 @@
       <div id="attr-list"></div>
       <div id="attr-confirm-row" class="attr-confirm-row">
         <button type="button" class="btn btn-primary btn-full" onclick="confirmAttributes()">Confirm Allocation</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Farm Panel -->
+  <div class="side-panel" id="farm-panel">
+    <div class="side-panel-header">
+      <span class="side-panel-title">🌱 Farm</span>
+      <button class="close-btn" onclick="closePanel('farm')">✕</button>
+    </div>
+    <div class="side-panel-body">
+      <p style="font-size:0.8rem;color:var(--muted);margin-bottom:0.75rem;">
+        Grow plants to restore HP in dungeons.
+      </p>
+
+      <!-- Plant stock -->
+      <div id="farm-stock-section" style="margin-bottom:1rem;">
+        <div style="font-size:0.8rem;color:var(--muted);margin-bottom:0.4rem;">In stock:</div>
+        <div id="farm-stock-list" style="display:flex;gap:0.75rem;"></div>
+      </div>
+
+      <!-- Growing queue -->
+      <div id="farm-queue-section" style="margin-bottom:1rem;">
+        <div style="font-size:0.8rem;color:var(--muted);margin-bottom:0.4rem;">Growing:</div>
+        <div id="farm-queue-list"></div>
+      </div>
+
+      <hr style="border-color:var(--border);margin:0.75rem 0;" />
+
+      <!-- Grow actions -->
+      <div style="font-size:0.8rem;color:var(--muted);margin-bottom:0.5rem;">Start growing:</div>
+      <div style="display:flex;gap:0.5rem;">
+        <button type="button" class="btn btn-outline" style="flex:1;" onclick="startGrowing('apple')">
+          🍎 Apple <span style="font-size:0.7rem;color:var(--muted);display:block;">5 min · +1 HP</span>
+        </button>
+        <button type="button" class="btn btn-outline" style="flex:1;" onclick="startGrowing('carrot')">
+          🥕 Carrot <span style="font-size:0.7rem;color:var(--muted);display:block;">9 min · +2 HP</span>
+        </button>
       </div>
     </div>
   </div>

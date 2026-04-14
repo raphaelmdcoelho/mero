@@ -2,6 +2,24 @@ const express = require('express');
 const { db } = require('../db');
 const protect = require('../middleware/protect');
 
+// HP restored per plant type
+const PLANT_HP = { carrot: 2, apple: 1 };
+
+// Move any ready farm_queue entries into plants_inventory
+function harvestFarm(charId) {
+  const now = Math.floor(Date.now() / 1000);
+  const ready = db.prepare(
+    'SELECT * FROM farm_queue WHERE character_id = ? AND ready_at <= ?'
+  ).all(charId, now);
+  for (const job of ready) {
+    db.prepare(`
+      INSERT INTO plants_inventory (character_id, plant_type, quantity) VALUES (?, ?, 1)
+      ON CONFLICT(character_id, plant_type) DO UPDATE SET quantity = quantity + 1
+    `).run(charId, job.plant_type);
+    db.prepare('DELETE FROM farm_queue WHERE id = ?').run(job.id);
+  }
+}
+
 const router = express.Router();
 router.use(protect);
 
@@ -93,7 +111,13 @@ function fullChar(charId) {
     ? Object.assign({}, db.prepare('SELECT * FROM items WHERE id = ?').get(char.weapon_id)) : null;
   const equippedArmor = char.armor_id
     ? Object.assign({}, db.prepare('SELECT * FROM items WHERE id = ?').get(char.armor_id)) : null;
-  return { ...char, inventory, equippedWeapon, equippedArmor };
+  const plants = db.prepare(
+    'SELECT plant_type, quantity FROM plants_inventory WHERE character_id = ? AND quantity > 0'
+  ).all(charId).map(r => Object.assign({}, r));
+  const farmQueue = db.prepare(
+    'SELECT id, plant_type, ready_at FROM farm_queue WHERE character_id = ? ORDER BY ready_at ASC'
+  ).all(charId).map(r => Object.assign({}, r));
+  return { ...char, inventory, equippedWeapon, equippedArmor, plants, farmQueue };
 }
 
 // POST /api/game/:characterId/start
@@ -140,11 +164,38 @@ router.get('/:characterId/tick', (req, res) => {
   const char = ownedChar(req, res);
   if (!char) return;
 
+  // Harvest any ready farm plants on every tick
+  harvestFarm(char.id);
+
   if (!char.activity) {
     return res.json({ ...fullChar(char.id), fallen: false });
   }
 
   const updates = applyTick(char);
+
+  // If hero would fall, try consuming a plant from inventory to save them
+  let plantConsumed = null;
+  if (updates.fallen) {
+    // Prefer carrot (2 HP) over apple (1 HP)
+    const plant = db.prepare(`
+      SELECT * FROM plants_inventory
+      WHERE character_id = ? AND quantity > 0
+      ORDER BY CASE plant_type WHEN 'carrot' THEN 1 WHEN 'apple' THEN 2 END
+      LIMIT 1
+    `).get(char.id);
+
+    if (plant) {
+      db.prepare('UPDATE plants_inventory SET quantity = quantity - 1 WHERE id = ?').run(plant.id);
+      const hpRestore = PLANT_HP[plant.plant_type] || 1;
+      updates.hp = Math.min(hpRestore, updates.max_hp);
+      updates.fallen = false;
+      updates.activity = char.activity;
+      updates.activity_started_at = char.activity_started_at;
+      updates.dungeon_difficulty = char.dungeon_difficulty;
+      plantConsumed = plant.plant_type;
+    }
+  }
+
   db.prepare(`
     UPDATE characters SET xp = ?, xp_to_next = ?, level = ?, max_hp = ?, hp = ?,
       unspent_points = ?,
@@ -157,7 +208,7 @@ router.get('/:characterId/tick', (req, res) => {
     updates.last_tick_at, char.id
   );
 
-  res.json({ ...fullChar(char.id), fallen: updates.fallen });
+  res.json({ ...fullChar(char.id), fallen: updates.fallen, plantConsumed });
 });
 
 module.exports = router;

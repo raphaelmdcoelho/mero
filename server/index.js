@@ -33,6 +33,7 @@ app.use(express.static(path.join(__dirname, '..', 'public'), {
 app.use('/api/auth',       require('./routes/auth'));
 app.use('/api/characters', require('./routes/characters'));
 app.use('/api/game',       require('./routes/game'));
+app.use('/api/farm',       require('./routes/farm'));
 
 // SPA fallback — only for non-asset paths
 app.get('*', (req, res) => {
