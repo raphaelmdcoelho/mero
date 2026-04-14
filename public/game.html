@@ -76,12 +76,18 @@
           <span>Equipment</span>
         </div>
 
-        <!-- Row 4 center: Farm (unlocks at level 3) -->
-        <div class="action-sq" id="sq-farm" style="grid-column:2;grid-row:4;position:relative;" onclick="handleFarm()">
+        <!-- Row 4 left: Farm (unlocks at level 3) -->
+        <div class="action-sq" id="sq-farm" style="grid-column:1;grid-row:4;position:relative;" onclick="handleFarm()">
           <span class="sq-icon">🌱</span>
           <span id="farm-label">Farm</span>
           <span id="farm-lock-badge" class="unspent-badge" style="display:none;font-size:0.55rem;">Lv.3</span>
           <span id="farm-stock-badge" class="unspent-badge" style="display:none;background:var(--accent);"></span>
+        </div>
+
+        <!-- Row 4 right: Combat Stats -->
+        <div class="action-sq" id="sq-stats" style="grid-column:3;grid-row:4;" onclick="openPanel('stats')">
+          <span class="sq-icon">📊</span>
+          <span>Stats</span>
         </div>
       </div>
     </div>
@@ -111,30 +117,57 @@
     </div>
   </div>
 
-  <!-- Difficulty Modal -->
-  <div class="modal-overlay" id="diff-modal">
+  <!-- Dungeon Level Modal -->
+  <div class="modal-overlay" id="dungeon-modal">
     <div class="modal">
-      <h2 class="modal-title">Choose Dungeon Difficulty</h2>
-      <div class="diff-grid">
-        <div class="diff-card selected" data-diff="easy" onclick="selectDiff(this)">
-          <div class="diff-name">Easy</div>
-          <span class="diff-badge easy">Safe</span>
-          <div class="diff-stats">+1 XP / min<br/>−1 HP / min</div>
-        </div>
-        <div class="diff-card" data-diff="medium" onclick="selectDiff(this)">
-          <div class="diff-name">Medium</div>
-          <span class="diff-badge medium">Risky</span>
-          <div class="diff-stats">+2 XP / min<br/>−2 HP / min</div>
-        </div>
-        <div class="diff-card" data-diff="hard" onclick="selectDiff(this)">
-          <div class="diff-name">Hard</div>
-          <span class="diff-badge hard">Deadly</span>
-          <div class="diff-stats">+4 XP / min<br/>−4 HP / min</div>
-        </div>
+      <h2 class="modal-title">Choose Dungeon Level</h2>
+      <p class="dungeon-modal-note">Defeat 100 monsters, then face the Boss to increase your mastery.</p>
+      <div class="dungeon-level-grid" id="dungeon-level-grid">
+        <!-- populated by JS -->
       </div>
       <div class="modal-footer">
-        <button class="btn btn-outline" onclick="closeDiffModal()">Cancel</button>
-        <button class="btn btn-primary" onclick="confirmDungeon()">Enter Dungeon</button>
+        <button class="btn btn-outline" onclick="closeDungeonModal()">Cancel</button>
+        <button class="btn btn-primary" id="enter-dungeon-btn" onclick="confirmEnterDungeon()">Enter Dungeon</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Battle Panel -->
+  <div class="side-panel" id="battle-panel">
+    <div class="side-panel-header">
+      <span class="side-panel-title" id="battle-title">🏰 Dungeon</span>
+      <button class="close-btn" onclick="closePanel('battle')">✕</button>
+    </div>
+    <div class="side-panel-body">
+      <!-- Progress -->
+      <div class="battle-progress" id="battle-progress">
+        <span id="battle-kills-label">0 / 100 monsters</span>
+        <span id="battle-boss-label" class="boss-label" style="display:none;">⚠️ BOSS</span>
+      </div>
+
+      <!-- Monster card -->
+      <div class="monster-card" id="monster-card">
+        <div class="monster-icon" id="monster-icon">👺</div>
+        <div class="monster-info">
+          <div class="monster-name" id="monster-name">Goblin</div>
+          <div class="monster-hp-row">
+            <div class="stat-track" style="flex:1;">
+              <div class="stat-fill hp" id="monster-hp-fill" style="width:100%;"></div>
+            </div>
+            <span class="monster-hp-text" id="monster-hp-text">12 / 12</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Combat log -->
+      <div class="battle-log" id="battle-log">
+        <div class="battle-log-empty">Press Attack to begin!</div>
+      </div>
+
+      <!-- Actions -->
+      <div class="battle-actions">
+        <button class="btn btn-primary battle-attack-btn" id="attack-btn" onclick="doAttack()">⚔️ Attack</button>
+        <button class="btn btn-outline" onclick="doFlee()">🚪 Flee</button>
       </div>
     </div>
   </div>
@@ -166,6 +199,7 @@
         <div class="equip-slot-info">
           <div class="equip-slot-label">Weapon</div>
           <div class="equip-slot-name" id="eq-weapon-name">None</div>
+          <div class="equip-slot-stat" id="eq-weapon-stat"></div>
         </div>
       </div>
       <div id="eq-armor" class="equip-slot">
@@ -173,11 +207,29 @@
         <div class="equip-slot-info">
           <div class="equip-slot-label">Armor</div>
           <div class="equip-slot-name" id="eq-armor-name">None</div>
+          <div class="equip-slot-stat" id="eq-armor-stat"></div>
         </div>
       </div>
-      <hr style="border-color:var(--border);margin:1rem 0;" />
-      <p style="font-size:0.85rem;color:var(--muted);margin-bottom:0.5rem;">Equip from inventory:</p>
+      <hr class="panel-divider" />
+      <p class="panel-sub">Equip from inventory:</p>
       <div id="eq-list"></div>
+    </div>
+  </div>
+
+  <!-- Combat Stats Panel -->
+  <div class="side-panel" id="stats-panel">
+    <div class="side-panel-header">
+      <span class="side-panel-title">📊 Combat Stats</span>
+      <button class="close-btn" onclick="closePanel('stats')">✕</button>
+    </div>
+    <div class="side-panel-body">
+      <div class="combat-stat-row"><span class="cstat-label">❤️ Max HP</span><span class="cstat-value" id="cstat-hp">—</span></div>
+      <div class="combat-stat-row"><span class="cstat-label">⚔️ Damage</span><span class="cstat-value" id="cstat-dmg">—</span></div>
+      <div class="combat-stat-row"><span class="cstat-label">🎯 Hit Chance</span><span class="cstat-value" id="cstat-hit">—</span></div>
+      <div class="combat-stat-row"><span class="cstat-label">💨 Dodge Chance</span><span class="cstat-value" id="cstat-dodge">—</span></div>
+      <div class="combat-stat-row"><span class="cstat-label">🛡️ Defense</span><span class="cstat-value" id="cstat-def">—</span></div>
+      <hr class="panel-divider" />
+      <p class="cstat-note">Stats include equipped gear and attribute bonuses.</p>
     </div>
   </div>
 

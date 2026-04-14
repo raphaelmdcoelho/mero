@@ -757,6 +757,105 @@ input:focus, select:focus {
 .btn-mt       { margin-top: 0.5rem; }
 .muted-sm     { color: var(--muted); font-size: 0.85rem; }
 
+/* ---- Panel helpers ---- */
+.panel-divider { border: none; border-top: 1px solid var(--border); margin: 1rem 0; }
+.panel-sub { font-size: 0.85rem; color: var(--muted); margin-bottom: 0.5rem; }
+.equip-slot-stat { font-size: 0.75rem; color: var(--accent); margin-top: 0.15rem; }
+
+/* ---- Dungeon level modal ---- */
+.dungeon-modal-note { text-align: center; font-size: 0.8rem; color: var(--muted); margin-bottom: 0.75rem; }
+.dungeon-level-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 0.5rem;
+  margin: 0.5rem 0 0.75rem;
+}
+.dungeon-level-card {
+  background: var(--surface2);
+  border: 2px solid var(--border);
+  border-radius: 8px;
+  padding: 0.6rem 0.25rem;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: 'Cinzel', serif;
+}
+.dungeon-level-card:hover:not(.locked) { border-color: var(--accent); }
+.dungeon-level-card.selected { border-color: var(--accent); background: #c084fc11; }
+.dungeon-level-card.locked { opacity: 0.35; cursor: not-allowed; }
+.dungeon-level-card .dl-num { font-size: 1.1rem; font-weight: 700; color: var(--gold); }
+.dungeon-level-card .dl-icon { font-size: 1rem; }
+.dungeon-level-card .dl-mastery { font-size: 0.6rem; color: var(--success); margin-top: 0.15rem; }
+
+/* ---- Battle panel ---- */
+.battle-progress {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.75rem;
+  font-size: 0.82rem;
+  color: var(--muted);
+  font-family: 'Cinzel', serif;
+}
+.boss-label {
+  color: var(--danger);
+  font-weight: 700;
+  animation: blink 0.8s step-start infinite;
+}
+.monster-card {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 0.75rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+.monster-icon { font-size: 2.8rem; line-height: 1; }
+.monster-info { flex: 1; }
+.monster-name { font-family: 'Cinzel', serif; font-size: 0.95rem; margin-bottom: 0.4rem; }
+.monster-hp-row { display: flex; align-items: center; gap: 0.5rem; }
+.monster-hp-text { font-size: 0.75rem; color: var(--muted); white-space: nowrap; }
+
+/* Combat log */
+.battle-log {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.8rem;
+  height: 160px;
+  overflow-y: auto;
+  margin-bottom: 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+.battle-log-empty { color: var(--muted); text-align: center; margin: auto; }
+.log-hit-player  { color: var(--success); }
+.log-miss-player { color: var(--muted); }
+.log-hit-monster { color: var(--danger); }
+.log-dodge       { color: var(--accent); }
+.log-separator   { border: none; border-top: 1px dashed var(--border); margin: 0.2rem 0; }
+
+/* Battle action buttons */
+.battle-actions { display: flex; gap: 0.5rem; }
+.battle-attack-btn { flex: 1; }
+
+/* ---- Combat Stats panel ---- */
+.combat-stat-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.55rem 0;
+  border-bottom: 1px solid var(--border);
+}
+.combat-stat-row:last-of-type { border-bottom: none; }
+.cstat-label { font-family: 'Cinzel', serif; font-size: 0.82rem; color: var(--muted); }
+.cstat-value { font-size: 1rem; font-weight: 700; color: var(--gold); }
+.cstat-note  { font-size: 0.75rem; color: var(--muted); text-align: center; margin-top: 0.5rem; }
+
 /* ---- Mobile (375px) ---- */
 @media (max-width: 480px) {
   .action-grid {

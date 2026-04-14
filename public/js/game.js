@@ -6,22 +6,22 @@ if (!charId) { window.location.href = '/characters.html'; }
 const CLASS_ICONS = { Warrior: '⚔️', Mage: '🔮', Rogue: '🗡️', Cleric: '✝️' };
 
 const ATTRS = [
-  { key: 'strength',     label: 'Strength',     icon: '⚔️' },
-  { key: 'dexterity',    label: 'Dexterity',    icon: '🏹' },
-  { key: 'agility',      label: 'Agility',      icon: '💨' },
-  { key: 'vitality',     label: 'Vitality',     icon: '❤️' },
-  { key: 'intelligence', label: 'Intelligence', icon: '🔮' },
-  { key: 'focus',        label: 'Focus',        icon: '🎯' },
-  { key: 'stamina',      label: 'Stamina',      icon: '🛡️' },
-  { key: 'resistance',   label: 'Resistance',   icon: '🌀' },
+  { key: 'strength',     label: 'Strength',     icon: '⚔️',  hint: 'Melee damage' },
+  { key: 'dexterity',    label: 'Dexterity',    icon: '🏹',  hint: 'Hit chance & ranged damage' },
+  { key: 'agility',      label: 'Agility',      icon: '💨',  hint: 'Dodge chance' },
+  { key: 'vitality',     label: 'Vitality',     icon: '❤️',  hint: 'Max HP' },
+  { key: 'intelligence', label: 'Intelligence', icon: '🔮',  hint: '' },
+  { key: 'focus',        label: 'Focus',        icon: '🎯',  hint: '' },
+  { key: 'stamina',      label: 'Stamina',      icon: '🛡️',  hint: '' },
+  { key: 'resistance',   label: 'Resistance',   icon: '🌀',  hint: 'Defense' },
 ];
 
-let charState = null;
-let tickInterval = null;
-let selectedDiff = 'easy';
+const DUNGEON_LEVEL_ICONS = ['','🌿','🪨','💀','🌑','🔥','🧊','⚡','🌊','☠️','🐉'];
 
-// Pending attribute allocations { key: delta }
+let charState  = null;
+let tickInterval = null;
 let pendingAttrs = {};
+let selectedDungeonLevel = 1;
 
 // ---- Init ----
 async function init() {
@@ -33,7 +33,7 @@ async function init() {
   startTick();
 }
 
-// ---- Tick ----
+// ---- Tick (tavern HP regen + farm harvest) ----
 function startTick() {
   if (tickInterval) clearInterval(tickInterval);
   tickInterval = setInterval(tick, 5000);
@@ -45,21 +45,14 @@ async function tick() {
   const data = await res.json();
   charState = data;
   renderAll(data);
-  if (data.fallen) showToast('Your hero has fallen! Retreating from the dungeon…', 'danger');
-  if (data.plantConsumed) {
-    const icon = data.plantConsumed === 'carrot' ? '🥕' : '🍎';
-    showToast(`${icon} A ${data.plantConsumed} was consumed to keep you alive!`, 'warn');
-  }
 }
 
 // ---- Render ----
 function renderAll(char) {
-  // Header
   document.getElementById('char-name-header').textContent = char.name || '';
   document.getElementById('char-class-header').textContent =
     `${CLASS_ICONS[char.class] || ''} ${char.class || ''} · Level ${char.level}`;
 
-  // Avatar
   if (char.avatar_path) {
     const img = document.getElementById('avatar-img');
     img.src = char.avatar_path + '?t=' + Date.now();
@@ -67,25 +60,21 @@ function renderAll(char) {
     document.getElementById('avatar-svg').style.display = 'none';
   }
 
-  // XP bar
   const xpPct = char.xp_to_next > 0 ? Math.min(100, (char.xp / char.xp_to_next) * 100) : 100;
   document.getElementById('xp-fill').style.width = xpPct + '%';
   document.getElementById('xp-text').textContent = `${Math.floor(char.xp)} / ${char.xp_to_next}`;
 
-  // HP bar
-  const hp = Math.max(0, char.hp);
+  const hp    = Math.max(0, char.hp);
   const hpPct = char.max_hp > 0 ? Math.min(100, (hp / char.max_hp) * 100) : 0;
   const hpFill = document.getElementById('hp-fill');
   hpFill.style.width = hpPct + '%';
   hpFill.className = 'stat-fill hp' + (hpPct < 30 ? ' low' : '');
   document.getElementById('hp-text').textContent = `${Math.round(hp * 10) / 10} / ${char.max_hp}`;
 
-  // Level
   document.getElementById('level-display').textContent = `Level ${char.level}`;
 
-  // Unspent points indicators
   const unspent = Number(char.unspent_points) || 0;
-  const badge = document.getElementById('unspent-badge');
+  const badge  = document.getElementById('unspent-badge');
   const headerNotice = document.getElementById('unspent-header');
   if (unspent > 0) {
     badge.textContent = unspent;
@@ -97,22 +86,23 @@ function renderAll(char) {
     headerNotice.style.display = 'none';
   }
 
-  // Activity badge
   const actBadge = document.getElementById('activity-badge');
   const actLabel = document.getElementById('activity-label');
   if (char.activity) {
     actBadge.style.display = 'inline-flex';
-    actLabel.textContent = char.activity === 'dungeon'
-      ? `🏰 ${char.dungeon_difficulty || ''} dungeon`
-      : '🍺 Resting';
+    if (char.activity === 'dungeon') {
+      const run = char.dungeonRun;
+      const lvl = run ? run.dungeon_level : '';
+      actLabel.textContent = `🏰 Dungeon Lv.${lvl}`;
+    } else {
+      actLabel.textContent = '🍺 Resting';
+    }
   } else {
     actBadge.style.display = 'none';
   }
 
-  // Action squares
   updateActionSquares(char.activity);
 
-  // Farm square: lock badge when level < 3, stock badge when plants in stock
   const farmLock  = document.getElementById('farm-lock-badge');
   const farmStock = document.getElementById('farm-stock-badge');
   const level = Number(char.level) || 1;
@@ -133,11 +123,12 @@ function renderAll(char) {
     }
   }
 
-  // Refresh open panels
   renderInventory(char);
   renderEquipment(char);
   renderAttributes(char);
   renderFarmPanel();
+  renderBattlePanel(char);
+  refreshCombatStats();
 }
 
 function updateActionSquares(activity) {
@@ -146,13 +137,13 @@ function updateActionSquares(activity) {
   const inv     = document.getElementById('sq-inventory');
   const eq      = document.getElementById('sq-equipment');
   const attrs   = document.getElementById('sq-attributes');
-  const farm    = document.getElementById('sq-farm');
+  const stats   = document.getElementById('sq-stats');
 
-  [dungeon, tavern, inv, eq, attrs, farm].forEach(el => el.classList.remove('active', 'disabled'));
+  [dungeon, tavern, inv, eq, attrs, stats].forEach(el => el.classList.remove('active', 'disabled'));
 
   if (activity === 'dungeon') {
     dungeon.classList.add('active');
-    dungeon.querySelector('span:last-child').textContent = 'Stop';
+    dungeon.querySelector('span:last-child').textContent = 'Dungeon';
     tavern.classList.add('disabled');
   } else if (activity === 'tavern') {
     tavern.classList.add('active');
@@ -167,63 +158,241 @@ function updateActionSquares(activity) {
 // ---- Action handlers ----
 function handleDungeon() {
   if (!charState) return;
-  if (charState.activity === 'dungeon') stopActivity();
-  else if (!charState.activity) openDiffModal();
+  if (charState.activity === 'dungeon') { openPanel('battle'); return; }
+  if (charState.activity) return;
+  openDungeonModal();
 }
 
 function handleTavern() {
   if (!charState) return;
   if (charState.activity === 'tavern') stopActivity();
-  else if (!charState.activity) startActivity('tavern');
+  else if (!charState.activity) startTavern();
 }
 
-async function startActivity(action, difficulty) {
-  const body = { action };
-  if (action === 'dungeon') body.difficulty = difficulty;
-  const res = await api.post(`/api/game/${charId}/start`, body);
+async function startTavern() {
+  const res = await api.post(`/api/game/${charId}/start`, { action: 'tavern' });
   if (!res) return;
   const data = await res.json();
-  if (!res.ok) { showToast(data.error || 'Failed to start activity', 'danger'); return; }
+  if (!res.ok) { showToast(data.error || 'Failed', 'danger'); return; }
   charState = data;
   renderAll(data);
-  showToast(action === 'dungeon' ? `Entered ${difficulty} dungeon!` : 'Resting at the tavern…', 'success');
+  showToast('Resting at the tavern…', 'success');
 }
 
 async function stopActivity() {
   const res = await api.post(`/api/game/${charId}/stop`);
   if (!res) return;
   const data = await res.json();
-  if (!res.ok) { showToast(data.error || 'Failed to stop activity', 'danger'); return; }
+  if (!res.ok) { showToast(data.error || 'Failed to stop', 'danger'); return; }
   charState = data;
   renderAll(data);
   showToast('Activity stopped.', '');
 }
 
-// ---- Difficulty modal ----
-function openDiffModal() { document.getElementById('diff-modal').classList.add('open'); }
-function closeDiffModal() { document.getElementById('diff-modal').classList.remove('open'); }
-function selectDiff(el) {
-  document.querySelectorAll('.diff-card').forEach(c => c.classList.remove('selected'));
-  el.classList.add('selected');
-  selectedDiff = el.dataset.diff;
+// ---- Dungeon level modal ----
+function openDungeonModal() {
+  const mastery = Number(charState.dungeon_mastery) || 0;
+  const grid    = document.getElementById('dungeon-level-grid');
+  grid.innerHTML = '';
+  selectedDungeonLevel = Math.min(mastery + 1, 10);
+
+  for (let lvl = 1; lvl <= 10; lvl++) {
+    const unlocked = lvl <= mastery + 1;
+    const selected = lvl === selectedDungeonLevel;
+    const completed = lvl <= mastery;
+    const card = document.createElement('div');
+    card.className = 'dungeon-level-card' +
+      (selected ? ' selected' : '') +
+      (!unlocked ? ' locked' : '');
+    card.dataset.level = lvl;
+    card.innerHTML = `
+      <div class="dl-icon">${DUNGEON_LEVEL_ICONS[lvl]}</div>
+      <div class="dl-num">${lvl}</div>
+      ${completed ? '<div class="dl-mastery">✓</div>' : ''}
+    `;
+    if (unlocked) card.onclick = () => selectDungeonLevel(card, lvl);
+    grid.appendChild(card);
+  }
+
+  document.getElementById('dungeon-modal').classList.add('open');
 }
-function confirmDungeon() { closeDiffModal(); startActivity('dungeon', selectedDiff); }
-document.getElementById('diff-modal').addEventListener('click', function (e) {
-  if (e.target === this) closeDiffModal();
+
+function closeDungeonModal() {
+  document.getElementById('dungeon-modal').classList.remove('open');
+}
+
+function selectDungeonLevel(el, lvl) {
+  document.querySelectorAll('.dungeon-level-card').forEach(c => c.classList.remove('selected'));
+  el.classList.add('selected');
+  selectedDungeonLevel = lvl;
+}
+
+async function confirmEnterDungeon() {
+  closeDungeonModal();
+  const res = await api.post(`/api/game/${charId}/dungeon/enter`, { level: selectedDungeonLevel });
+  if (!res) return;
+  const data = await res.json();
+  if (!res.ok) { showToast(data.error || 'Failed to enter dungeon', 'danger'); return; }
+  charState = data;
+  renderAll(data);
+  openPanel('battle');
+  showToast(`Entered Dungeon Level ${selectedDungeonLevel}!`, 'success');
+}
+
+document.getElementById('dungeon-modal').addEventListener('click', function(e) {
+  if (e.target === this) closeDungeonModal();
 });
+
+// ---- Battle panel ----
+function renderBattlePanel(char) {
+  if (!char || !char.dungeonRun) return;
+  const run     = char.dungeonRun;
+  const monster = run.monster;
+  if (!monster) return;
+
+  document.getElementById('battle-title').textContent =
+    `🏰 Dungeon Lv.${run.dungeon_level} — Mastery: ${char.dungeon_mastery || 0}`;
+
+  const isBoss = monster.is_boss === 1;
+  document.getElementById('battle-kills-label').textContent = `${run.kills} / 100 monsters`;
+  const bossLabel = document.getElementById('battle-boss-label');
+  bossLabel.style.display = isBoss ? 'inline' : 'none';
+
+  document.getElementById('monster-icon').textContent = monster.icon;
+  document.getElementById('monster-name').textContent = (isBoss ? '👑 BOSS: ' : '') + monster.name;
+
+  const mhpPct = monster.hp > 0 ? Math.min(100, (run.monster_hp / monster.hp) * 100) : 0;
+  document.getElementById('monster-hp-fill').style.width = mhpPct + '%';
+  document.getElementById('monster-hp-text').textContent = `${Math.round(run.monster_hp)} / ${monster.hp}`;
+}
+
+async function doAttack() {
+  const btn = document.getElementById('attack-btn');
+  btn.disabled = true;
+  btn.textContent = '…';
+
+  const res = await api.post(`/api/game/${charId}/dungeon/attack`);
+  btn.disabled = false;
+  btn.textContent = '⚔️ Attack';
+  if (!res) return;
+
+  const data = await res.json();
+  if (!res.ok) { showToast(data.error || 'Attack failed', 'danger'); return; }
+
+  charState = data.char;
+  renderAll(data.char);
+  appendCombatLog(data.combatLog);
+
+  if (data.result === 'defeat') {
+    showToast('Your hero has fallen! Return to the dungeon to try again.', 'danger');
+    closePanel('battle');
+    return;
+  }
+  if (data.result === 'run_complete') {
+    showToast(`🏆 Boss defeated! Dungeon mastery is now ${data.newMastery}!`, 'success');
+    if (data.droppedItem) showToast(`💎 Dropped: ${data.droppedItem.icon} ${data.droppedItem.name}!`, 'success');
+    closePanel('battle');
+    return;
+  }
+  if (data.result === 'monster_killed') {
+    showToast(`+${data.gainedXp} XP`, 'success');
+    if (data.droppedItem) showToast(`💎 ${data.droppedItem.icon} ${data.droppedItem.name} dropped!`, 'success');
+    if (data.bossSpawned) showToast('⚠️ The Boss appears!', 'warn');
+  }
+}
+
+async function doFlee() {
+  const res = await api.post(`/api/game/${charId}/dungeon/flee`);
+  if (!res) return;
+  const data = await res.json();
+  if (!res.ok) { showToast(data.error || 'Failed', 'danger'); return; }
+  charState = data;
+  renderAll(data);
+  closePanel('battle');
+  showToast('You fled the dungeon.', 'warn');
+}
+
+function appendCombatLog(log) {
+  const container = document.getElementById('battle-log');
+  const empty = container.querySelector('.battle-log-empty');
+  if (empty) empty.remove();
+
+  for (const round of log) {
+    for (const entry of round) {
+      const div = document.createElement('div');
+      if (entry.by === 'player') {
+        if (entry.type === 'hit') {
+          div.className = 'log-hit-player';
+          div.textContent = `You hit for ${entry.damage} damage.`;
+        } else {
+          div.className = 'log-miss-player';
+          div.textContent = 'You missed!';
+        }
+      } else {
+        if (entry.type === 'dodge') {
+          div.className = 'log-dodge';
+          div.textContent = 'You dodged the attack!';
+        } else {
+          div.className = 'log-hit-monster';
+          div.textContent = `Monster hits you for ${entry.damage} damage.`;
+        }
+      }
+      container.appendChild(div);
+    }
+    const sep = document.createElement('hr');
+    sep.className = 'log-separator';
+    container.appendChild(sep);
+  }
+  container.scrollTop = container.scrollHeight;
+}
+
+// ---- Combat Stats ----
+async function refreshCombatStats() {
+  const panel = document.getElementById('stats-panel');
+  if (!panel.classList.contains('open')) return;
+
+  const res = await api.get(`/api/game/${charId}/stats`);
+  if (!res || !res.ok) return;
+  const s = await res.json();
+
+  document.getElementById('cstat-hp').textContent    = s.maxHp;
+  document.getElementById('cstat-dmg').textContent   = s.damage + (s.isRanged ? ' (ranged)' : ' (melee)');
+  document.getElementById('cstat-hit').textContent   = s.hitChance + '%';
+  document.getElementById('cstat-dodge').textContent = s.dodgeChance + '%';
+  document.getElementById('cstat-def').textContent   = s.defense;
+}
 
 // ---- Side panels ----
 function openPanel(type) {
-  const panelMap = { inventory: 'inv-panel', equipment: 'eq-panel', attributes: 'attr-panel', farm: 'farm-panel' };
+  const panelMap = {
+    inventory:  'inv-panel',
+    equipment:  'eq-panel',
+    attributes: 'attr-panel',
+    farm:       'farm-panel',
+    battle:     'battle-panel',
+    stats:      'stats-panel',
+  };
   Object.values(panelMap).forEach(id => document.getElementById(id).classList.remove('open'));
   const panelId = panelMap[type];
   if (panelId) document.getElementById(panelId).classList.add('open');
   if (type === 'attributes') { pendingAttrs = {}; renderAttributes(charState); }
-  if (type === 'farm') renderFarmPanel();
+  if (type === 'farm')       renderFarmPanel();
+  if (type === 'battle') {
+    document.getElementById('battle-log').innerHTML = '<div class="battle-log-empty">Press Attack to begin!</div>';
+    renderBattlePanel(charState);
+  }
+  if (type === 'stats') refreshCombatStats();
 }
 
 function closePanel(type) {
-  const panelMap = { inventory: 'inv-panel', equipment: 'eq-panel', attributes: 'attr-panel', farm: 'farm-panel' };
+  const panelMap = {
+    inventory:  'inv-panel',
+    equipment:  'eq-panel',
+    attributes: 'attr-panel',
+    farm:       'farm-panel',
+    battle:     'battle-panel',
+    stats:      'stats-panel',
+  };
   const panelId = panelMap[type];
   if (panelId) document.getElementById(panelId).classList.remove('open');
 }
@@ -232,7 +401,7 @@ function closePanel(type) {
 function renderInventory(char) {
   if (!char) return;
   const grid = document.getElementById('inv-grid');
-  const inv = char.inventory || [];
+  const inv  = char.inventory || [];
   const slots = Array(10).fill(null);
   inv.forEach((item, i) => { if (i < 10) slots[i] = item; });
   const equippedIds = new Set([char.weapon_id, char.armor_id].filter(Boolean));
@@ -254,11 +423,12 @@ function showItemInfo(idx) {
   if (!item) { tooltip.style.display = 'none'; return; }
   const isEq = ({ weapon: charState.weapon_id, armor: charState.armor_id })[item.type] === item.item_id;
   const canEquip = item.type === 'weapon' || item.type === 'armor';
+  const statLine = item.damage ? `⚔️ ${item.damage} dmg` : item.defense ? `🛡️ ${item.defense} def` : '';
   tooltip.style.display = 'block';
   tooltip.innerHTML = `
     <strong class="item-tt-name">${item.icon} ${escHtml(item.name)}</strong>
-    <span class="item-tt-type">${item.type}</span>
-    <p class="item-tt-desc">${escHtml(item.description || '')}</p>
+    <span class="item-tt-type">${item.type}${item.weapon_type ? ' · ' + item.weapon_type : ''}</span>
+    <p class="item-tt-desc">${escHtml(item.description || '')}${statLine ? ' ' + statLine : ''}</p>
     ${canEquip && !isEq
       ? `<button type="button" class="btn btn-outline btn-sm btn-mt" onclick="equipItem('${item.type}',${item.item_id})">Equip</button>`
       : isEq ? `<span class="item-tt-eq">✓ Equipped</span>` : ''}`;
@@ -267,23 +437,36 @@ function showItemInfo(idx) {
 // ---- Equipment ----
 function renderEquipment(char) {
   if (!char) return;
-  document.getElementById('eq-weapon-name').textContent =
-    char.equippedWeapon ? `${char.equippedWeapon.icon} ${char.equippedWeapon.name}` : 'None';
-  document.getElementById('eq-armor-name').textContent =
-    char.equippedArmor ? `${char.equippedArmor.icon} ${char.equippedArmor.name}` : 'None';
+  const w = char.equippedWeapon;
+  const a = char.equippedArmor;
+
+  document.getElementById('eq-weapon-name').textContent = w ? `${w.icon} ${w.name}` : 'None';
+  document.getElementById('eq-weapon-stat').textContent =
+    w && w.damage ? `⚔️ ${w.damage} damage · ${w.weapon_type}` : '';
+
+  document.getElementById('eq-armor-name').textContent = a ? `${a.icon} ${a.name}` : 'None';
+  document.getElementById('eq-armor-stat').textContent =
+    a && a.defense ? `🛡️ ${a.defense} defense` : '';
 
   const inv = (char.inventory || []).filter(i => i.type === 'weapon' || i.type === 'armor');
   const equippedIds = new Set([char.weapon_id, char.armor_id].filter(Boolean));
   const list = document.getElementById('eq-list');
   if (!inv.length) { list.innerHTML = '<p class="muted-sm">No equippable items.</p>'; return; }
-  list.innerHTML = inv.map(item => `
+  list.innerHTML = inv.map(item => {
+    const statLine = item.damage ? `⚔️ ${item.damage} dmg` : item.defense ? `🛡️ ${item.defense} def` : '';
+    return `
     <div class="equip-list-row">
       <span class="equip-list-icon">${item.icon}</span>
-      <span class="equip-list-name">${escHtml(item.name)} <span class="equip-list-type">${item.type}</span></span>
+      <span class="equip-list-name">
+        ${escHtml(item.name)}
+        <span class="equip-list-type">${item.type}${item.weapon_type ? ' · ' + item.weapon_type : ''}</span>
+        ${statLine ? `<span class="equip-list-type"> · ${statLine}</span>` : ''}
+      </span>
       ${equippedIds.has(item.item_id)
         ? `<span class="equip-list-check">✓</span>`
         : `<button type="button" class="btn btn-outline btn-sm" onclick="equipItem('${item.type}',${item.item_id})">Equip</button>`}
-    </div>`).join('');
+    </div>`;
+  }).join('');
 }
 
 async function equipItem(slot, itemId) {
@@ -295,6 +478,7 @@ async function equipItem(slot, itemId) {
   renderEquipment(charState);
   renderInventory(charState);
   showToast('Item equipped!', 'success');
+  refreshCombatStats();
 }
 
 // ---- Attributes ----
@@ -304,7 +488,6 @@ function renderAttributes(char) {
   const pendingTotal = Object.values(pendingAttrs).reduce((s, v) => s + v, 0);
   const remaining = unspent - pendingTotal;
 
-  // Unspent bar
   const bar = document.getElementById('attr-unspent-bar');
   const pointsEl = document.getElementById('attr-points-left');
   if (unspent > 0) {
@@ -314,19 +497,16 @@ function renderAttributes(char) {
     bar.classList.remove('visible');
   }
 
-  // Confirm button
-  const confirmRow = document.getElementById('attr-confirm-row');
-  confirmRow.classList.toggle('visible', pendingTotal > 0);
+  document.getElementById('attr-confirm-row').classList.toggle('visible', pendingTotal > 0);
 
-  // Attribute rows
   const list = document.getElementById('attr-list');
-  list.innerHTML = ATTRS.map(({ key, label, icon }) => {
+  list.innerHTML = ATTRS.map(({ key, label, icon, hint }) => {
     const base  = Number(char[`attr_${key}`]) || 5;
     const delta = pendingAttrs[key] || 0;
     return `
       <div class="attr-row">
         <span class="attr-icon">${icon}</span>
-        <span class="attr-name">${label}</span>
+        <span class="attr-name" title="${hint}">${label}</span>
         <span class="attr-value">${base}</span>
         ${unspent > 0 ? `
           <span class="attr-pending">${delta > 0 ? '+' + delta : ''}</span>
@@ -342,10 +522,8 @@ function adjustAttr(key, delta) {
   const unspent = Number(charState.unspent_points) || 0;
   const pendingTotal = Object.values(pendingAttrs).reduce((s, v) => s + v, 0);
   const current = pendingAttrs[key] || 0;
-
-  if (delta > 0 && pendingTotal >= unspent) return; // no points left
-  if (delta < 0 && current <= 0) return;            // can't go below 0 pending
-
+  if (delta > 0 && pendingTotal >= unspent) return;
+  if (delta < 0 && current <= 0) return;
   pendingAttrs[key] = current + delta;
   if (pendingAttrs[key] === 0) delete pendingAttrs[key];
   renderAttributes(charState);
@@ -361,15 +539,13 @@ async function confirmAttributes() {
   charState = { ...charState, ...data };
   renderAll(charState);
   showToast('Attributes updated!', 'success');
+  refreshCombatStats();
 }
 
 // ---- Farm ----
 function handleFarm() {
   if (!charState) return;
-  if (Number(charState.level) < 3) {
-    showToast('Farming unlocks at level 3!', 'danger');
-    return;
-  }
+  if (Number(charState.level) < 3) { showToast('Farming unlocks at level 3!', 'danger'); return; }
   openPanel('farm');
 }
 
@@ -380,7 +556,6 @@ async function startGrowing(plantType) {
   if (!res.ok) { showToast(data.error || 'Failed to start growing', 'danger'); return; }
   const icon = plantType === 'carrot' ? '🥕' : '🍎';
   showToast(`${icon} ${plantType.charAt(0).toUpperCase() + plantType.slice(1)} planted!`, 'success');
-  // Update charState farmQueue from response
   charState = { ...charState, farmQueue: data.farmQueue };
   renderAll(charState);
 }
@@ -388,10 +563,8 @@ async function startGrowing(plantType) {
 function renderFarmPanel() {
   const char = charState;
   if (!char) return;
-
   const now = Math.floor(Date.now() / 1000);
 
-  // Stock
   const stockList = document.getElementById('farm-stock-list');
   const plants = (char.inventory || []).filter(i => i.item_id === 6 || i.item_id === 7);
   if (!plants.length) {
@@ -407,22 +580,21 @@ function renderFarmPanel() {
     }).join('');
   }
 
-  // Queue
   const queueList = document.getElementById('farm-queue-list');
   const queue = char.farmQueue || [];
   if (!queue.length) {
     queueList.innerHTML = '<span style="font-size:0.8rem;color:var(--muted);">No plants growing.</span>';
   } else {
     queueList.innerHTML = queue.map(job => {
-      const icon    = job.plant_type === 'carrot' ? '🥕' : '🍎';
+      const icon     = job.plant_type === 'carrot' ? '🥕' : '🍎';
       const secsLeft = Math.max(0, job.ready_at - now);
-      const mins    = Math.floor(secsLeft / 60);
-      const secs    = secsLeft % 60;
-      const timeStr = secsLeft === 0 ? 'Ready!' : `${mins}m ${String(secs).padStart(2,'0')}s`;
+      const mins     = Math.floor(secsLeft / 60);
+      const secs     = secsLeft % 60;
+      const timeStr  = secsLeft === 0 ? 'Ready!' : `${mins}m ${String(secs).padStart(2,'0')}s`;
       return `<div style="display:flex;align-items:center;gap:0.5rem;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:0.4rem 0.6rem;margin-bottom:0.35rem;">
         <span style="font-size:1.1rem;">${icon}</span>
         <span style="font-size:0.8rem;flex:1;">${job.plant_type}</span>
-        <span style="font-size:0.75rem;color:var(--muted);⋆">${timeStr}</span>
+        <span style="font-size:0.75rem;color:var(--muted);">${timeStr}</span>
       </div>`;
     }).join('');
   }

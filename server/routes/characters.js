@@ -216,6 +216,16 @@ router.put('/:id/attributes', (req, res) => {
   db.prepare(`UPDATE characters SET ${sets}, unspent_points = unspent_points - ? WHERE id = ?`)
     .run(...vals, total, char.id);
 
+  // Recalculate max_hp if vitality was changed (max_hp = 10 + (level-1)*5 + vitality*2)
+  if (allocations.vitality) {
+    db.prepare(`
+      UPDATE characters
+      SET max_hp = 10 + (level - 1) * 5 + attr_vitality * 2,
+          hp     = MIN(hp + ?, 10 + (level - 1) * 5 + attr_vitality * 2)
+      WHERE id = ?
+    `).run(allocations.vitality * 2, char.id);
+  }
+
   const updated = db.prepare('SELECT * FROM characters WHERE id = ?').get(char.id);
   res.json(enrichCharacter(toObj(updated)));
 });
