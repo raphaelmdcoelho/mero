@@ -26,13 +26,13 @@ function harvestReady(charId) {
 
 function farmStatus(charId) {
   harvestReady(charId);
-  const queue = db.prepare(
+  const farmQueue = db.prepare(
     'SELECT id, plant_type, ready_at FROM farm_queue WHERE character_id = ? ORDER BY ready_at ASC'
   ).all(charId).map(r => Object.assign({}, r));
   const plants = db.prepare(
     'SELECT plant_type, quantity FROM plants_inventory WHERE character_id = ? AND quantity > 0'
   ).all(charId).map(r => Object.assign({}, r));
-  return { queue, plants };
+  return { farmQueue, plants };
 }
 
 // GET /api/farm/:characterId — get current farm status

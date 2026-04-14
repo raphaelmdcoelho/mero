@@ -135,6 +135,7 @@ function renderAll(char) {
   renderInventory(char);
   renderEquipment(char);
   renderAttributes(char);
+  renderFarmPanel();
 }
 
 function updateActionSquares(activity) {
@@ -378,8 +379,7 @@ async function startGrowing(plantType) {
   const icon = plantType === 'carrot' ? '🥕' : '🍎';
   showToast(`${icon} ${plantType.charAt(0).toUpperCase() + plantType.slice(1)} planted!`, 'success');
   // Update charState plants/farmQueue from response
-  charState = { ...charState, plants: data.plants, farmQueue: data.queue };
-  renderFarmPanel();
+  charState = { ...charState, plants: data.plants, farmQueue: data.farmQueue };
   renderAll(charState);
 }
 
