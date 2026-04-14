@@ -7,8 +7,9 @@ router.use(protect);
 
 // Grow times in seconds
 const GROW_TIME = { carrot: 9 * 60, apple: 5 * 60 };
+const PLANT_ITEM_IDS = { carrot: 6, apple: 7 };
 
-// Move any ready farm_queue entries into plants_inventory
+// Move any ready farm_queue entries into the regular inventory
 function harvestReady(charId) {
   const now = Math.floor(Date.now() / 1000);
   const ready = db.prepare(
@@ -16,10 +17,16 @@ function harvestReady(charId) {
   ).all(charId, now);
 
   for (const job of ready) {
-    db.prepare(`
-      INSERT INTO plants_inventory (character_id, plant_type, quantity) VALUES (?, ?, 1)
-      ON CONFLICT(character_id, plant_type) DO UPDATE SET quantity = quantity + 1
-    `).run(charId, job.plant_type);
+    const itemId = PLANT_ITEM_IDS[job.plant_type];
+    if (!itemId) continue;
+    const existing = db.prepare(
+      'SELECT id FROM inventory WHERE character_id = ? AND item_id = ?'
+    ).get(charId, itemId);
+    if (existing) {
+      db.prepare('UPDATE inventory SET quantity = quantity + 1 WHERE id = ?').run(existing.id);
+    } else {
+      db.prepare('INSERT INTO inventory (character_id, item_id, quantity) VALUES (?, ?, 1)').run(charId, itemId);
+    }
     db.prepare('DELETE FROM farm_queue WHERE id = ?').run(job.id);
   }
 }
@@ -29,10 +36,7 @@ function farmStatus(charId) {
   const farmQueue = db.prepare(
     'SELECT id, plant_type, ready_at FROM farm_queue WHERE character_id = ? ORDER BY ready_at ASC'
   ).all(charId).map(r => Object.assign({}, r));
-  const plants = db.prepare(
-    'SELECT plant_type, quantity FROM plants_inventory WHERE character_id = ? AND quantity > 0'
-  ).all(charId).map(r => Object.assign({}, r));
-  return { farmQueue, plants };
+  return { farmQueue };
 }
 
 // GET /api/farm/:characterId — get current farm status

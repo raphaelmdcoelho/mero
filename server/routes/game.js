@@ -2,20 +2,27 @@ const express = require('express');
 const { db } = require('../db');
 const protect = require('../middleware/protect');
 
-// HP restored per plant type
-const PLANT_HP = { carrot: 2, apple: 1 };
+// item_id -> HP restored
+const PLANT_ITEM_HP = { 6: 2, 7: 1 }; // 6=Carrot, 7=Apple
 
-// Move any ready farm_queue entries into plants_inventory
+// Move any ready farm_queue entries into the regular inventory
 function harvestFarm(charId) {
   const now = Math.floor(Date.now() / 1000);
+  const PLANT_ITEM_IDS = { carrot: 6, apple: 7 };
   const ready = db.prepare(
     'SELECT * FROM farm_queue WHERE character_id = ? AND ready_at <= ?'
   ).all(charId, now);
   for (const job of ready) {
-    db.prepare(`
-      INSERT INTO plants_inventory (character_id, plant_type, quantity) VALUES (?, ?, 1)
-      ON CONFLICT(character_id, plant_type) DO UPDATE SET quantity = quantity + 1
-    `).run(charId, job.plant_type);
+    const itemId = PLANT_ITEM_IDS[job.plant_type];
+    if (!itemId) continue;
+    const existing = db.prepare(
+      'SELECT id FROM inventory WHERE character_id = ? AND item_id = ?'
+    ).get(charId, itemId);
+    if (existing) {
+      db.prepare('UPDATE inventory SET quantity = quantity + 1 WHERE id = ?').run(existing.id);
+    } else {
+      db.prepare('INSERT INTO inventory (character_id, item_id, quantity) VALUES (?, ?, 1)').run(charId, itemId);
+    }
     db.prepare('DELETE FROM farm_queue WHERE id = ?').run(job.id);
   }
 }
@@ -111,13 +118,10 @@ function fullChar(charId) {
     ? Object.assign({}, db.prepare('SELECT * FROM items WHERE id = ?').get(char.weapon_id)) : null;
   const equippedArmor = char.armor_id
     ? Object.assign({}, db.prepare('SELECT * FROM items WHERE id = ?').get(char.armor_id)) : null;
-  const plants = db.prepare(
-    'SELECT plant_type, quantity FROM plants_inventory WHERE character_id = ? AND quantity > 0'
-  ).all(charId).map(r => Object.assign({}, r));
   const farmQueue = db.prepare(
     'SELECT id, plant_type, ready_at FROM farm_queue WHERE character_id = ? ORDER BY ready_at ASC'
   ).all(charId).map(r => Object.assign({}, r));
-  return { ...char, inventory, equippedWeapon, equippedArmor, plants, farmQueue };
+  return { ...char, inventory, equippedWeapon, equippedArmor, farmQueue };
 }
 
 // POST /api/game/:characterId/start
@@ -176,23 +180,28 @@ router.get('/:characterId/tick', (req, res) => {
   // If hero would fall, try consuming a plant from inventory to save them
   let plantConsumed = null;
   if (updates.fallen) {
-    // Prefer carrot (2 HP) over apple (1 HP)
-    const plant = db.prepare(`
-      SELECT * FROM plants_inventory
-      WHERE character_id = ? AND quantity > 0
-      ORDER BY CASE plant_type WHEN 'carrot' THEN 1 WHEN 'apple' THEN 2 END
+    // Prefer carrot (item_id 6, 2 HP) over apple (item_id 7, 1 HP)
+    const plantInv = db.prepare(`
+      SELECT inv.id, inv.item_id, inv.quantity
+      FROM inventory inv
+      WHERE inv.character_id = ? AND inv.item_id IN (6, 7) AND inv.quantity > 0
+      ORDER BY inv.item_id ASC
       LIMIT 1
     `).get(char.id);
 
-    if (plant) {
-      db.prepare('UPDATE plants_inventory SET quantity = quantity - 1 WHERE id = ?').run(plant.id);
-      const hpRestore = PLANT_HP[plant.plant_type] || 1;
+    if (plantInv) {
+      if (plantInv.quantity <= 1) {
+        db.prepare('DELETE FROM inventory WHERE id = ?').run(plantInv.id);
+      } else {
+        db.prepare('UPDATE inventory SET quantity = quantity - 1 WHERE id = ?').run(plantInv.id);
+      }
+      const hpRestore = PLANT_ITEM_HP[plantInv.item_id] || 1;
       updates.hp = Math.min(hpRestore, updates.max_hp);
       updates.fallen = false;
       updates.activity = char.activity;
       updates.activity_started_at = char.activity_started_at;
       updates.dungeon_difficulty = char.dungeon_difficulty;
-      plantConsumed = plant.plant_type;
+      plantConsumed = plantInv.item_id === 6 ? 'carrot' : 'apple';
     }
   }
 

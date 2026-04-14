@@ -114,4 +114,11 @@ if (itemCount.cnt === 0) {
   });
 }
 
+// Seed farm consumables (safe to run on every startup — INSERT OR IGNORE)
+{
+  const ins = db.prepare('INSERT OR IGNORE INTO items (id, name, type, description, icon) VALUES (?, ?, ?, ?, ?)');
+  ins.run(6, 'Carrot', 'consumable', 'Restores 2 HP.', '🥕');
+  ins.run(7, 'Apple',  'consumable', 'Restores 1 HP.', '🍎');
+}
+
 module.exports = { db, transaction };

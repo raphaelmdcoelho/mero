@@ -122,7 +122,9 @@ function renderAll(char) {
     document.getElementById('sq-farm').classList.add('disabled');
   } else {
     farmLock.style.display = 'none';
-    const totalPlants = (char.plants || []).reduce((s, p) => s + p.quantity, 0);
+    const totalPlants = (char.inventory || [])
+      .filter(i => i.item_id === 6 || i.item_id === 7)
+      .reduce((s, p) => s + p.quantity, 0);
     if (totalPlants > 0) {
       farmStock.textContent = totalPlants;
       farmStock.style.display = 'flex';
@@ -378,8 +380,8 @@ async function startGrowing(plantType) {
   if (!res.ok) { showToast(data.error || 'Failed to start growing', 'danger'); return; }
   const icon = plantType === 'carrot' ? '🥕' : '🍎';
   showToast(`${icon} ${plantType.charAt(0).toUpperCase() + plantType.slice(1)} planted!`, 'success');
-  // Update charState plants/farmQueue from response
-  charState = { ...charState, plants: data.plants, farmQueue: data.farmQueue };
+  // Update charState farmQueue from response
+  charState = { ...charState, farmQueue: data.farmQueue };
   renderAll(charState);
 }
 
@@ -391,16 +393,15 @@ function renderFarmPanel() {
 
   // Stock
   const stockList = document.getElementById('farm-stock-list');
-  const plants = char.plants || [];
+  const plants = (char.inventory || []).filter(i => i.item_id === 6 || i.item_id === 7);
   if (!plants.length) {
     stockList.innerHTML = '<span style="font-size:0.8rem;color:var(--muted);">Nothing harvested yet.</span>';
   } else {
     stockList.innerHTML = plants.map(p => {
-      const icon = p.plant_type === 'carrot' ? '🥕' : '🍎';
-      const hp   = p.plant_type === 'carrot' ? 2 : 1;
+      const hp = p.item_id === 6 ? 2 : 1;
       return `<div style="text-align:center;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:0.5rem 0.75rem;">
-        <div style="font-size:1.3rem;">${icon}</div>
-        <div style="font-size:0.75rem;font-weight:600;">${p.plant_type}</div>
+        <div style="font-size:1.3rem;">${p.icon}</div>
+        <div style="font-size:0.75rem;font-weight:600;">${escHtml(p.name)}</div>
         <div style="font-size:0.7rem;color:var(--muted);">×${p.quantity} &bull; +${hp} HP</div>
       </div>`;
     }).join('');
