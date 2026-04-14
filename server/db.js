@@ -66,6 +66,23 @@ db.exec(`
   );
 `);
 
+// Additive migrations — safe to run on existing DBs (try/catch ignores "column exists")
+const additiveMigrations = [
+  'ALTER TABLE characters ADD COLUMN attr_strength     INTEGER DEFAULT 5',
+  'ALTER TABLE characters ADD COLUMN attr_dexterity    INTEGER DEFAULT 5',
+  'ALTER TABLE characters ADD COLUMN attr_agility      INTEGER DEFAULT 5',
+  'ALTER TABLE characters ADD COLUMN attr_vitality     INTEGER DEFAULT 5',
+  'ALTER TABLE characters ADD COLUMN attr_intelligence INTEGER DEFAULT 5',
+  'ALTER TABLE characters ADD COLUMN attr_focus        INTEGER DEFAULT 5',
+  'ALTER TABLE characters ADD COLUMN attr_stamina      INTEGER DEFAULT 5',
+  'ALTER TABLE characters ADD COLUMN attr_resistance   INTEGER DEFAULT 5',
+  'ALTER TABLE characters ADD COLUMN unspent_points    INTEGER DEFAULT 0',
+];
+
+for (const sql of additiveMigrations) {
+  try { db.exec(sql); } catch { /* column already exists — skip */ }
+}
+
 // Seed starter items if table is empty
 const itemCount = db.prepare('SELECT COUNT(*) as cnt FROM items').get();
 if (itemCount.cnt === 0) {

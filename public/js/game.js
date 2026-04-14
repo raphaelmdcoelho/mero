@@ -5,9 +5,23 @@ if (!charId) { window.location.href = '/characters.html'; }
 
 const CLASS_ICONS = { Warrior: '⚔️', Mage: '🔮', Rogue: '🗡️', Cleric: '✝️' };
 
+const ATTRS = [
+  { key: 'strength',     label: 'Strength',     icon: '⚔️' },
+  { key: 'dexterity',    label: 'Dexterity',    icon: '🏹' },
+  { key: 'agility',      label: 'Agility',      icon: '💨' },
+  { key: 'vitality',     label: 'Vitality',     icon: '❤️' },
+  { key: 'intelligence', label: 'Intelligence', icon: '🔮' },
+  { key: 'focus',        label: 'Focus',        icon: '🎯' },
+  { key: 'stamina',      label: 'Stamina',      icon: '🛡️' },
+  { key: 'resistance',   label: 'Resistance',   icon: '🌀' },
+];
+
 let charState = null;
 let tickInterval = null;
 let selectedDiff = 'easy';
+
+// Pending attribute allocations { key: delta }
+let pendingAttrs = {};
 
 // ---- Init ----
 async function init() {
@@ -31,10 +45,7 @@ async function tick() {
   const data = await res.json();
   charState = data;
   renderAll(data);
-
-  if (data.fallen) {
-    showToast('Your hero has fallen! Retreating from the dungeon…', 'danger');
-  }
+  if (data.fallen) showToast('Your hero has fallen! Retreating from the dungeon…', 'danger');
 }
 
 // ---- Render ----
@@ -68,35 +79,49 @@ function renderAll(char) {
   // Level
   document.getElementById('level-display').textContent = `Level ${char.level}`;
 
+  // Unspent points indicators
+  const unspent = Number(char.unspent_points) || 0;
+  const badge = document.getElementById('unspent-badge');
+  const headerNotice = document.getElementById('unspent-header');
+  if (unspent > 0) {
+    badge.textContent = unspent;
+    badge.style.display = 'flex';
+    headerNotice.textContent = `✨ ${unspent} point${unspent !== 1 ? 's' : ''} to spend`;
+    headerNotice.style.display = 'inline';
+  } else {
+    badge.style.display = 'none';
+    headerNotice.style.display = 'none';
+  }
+
   // Activity badge
-  const badge = document.getElementById('activity-badge');
-  const label = document.getElementById('activity-label');
+  const actBadge = document.getElementById('activity-badge');
+  const actLabel = document.getElementById('activity-label');
   if (char.activity) {
-    badge.style.display = 'inline-flex';
-    label.textContent = char.activity === 'dungeon'
+    actBadge.style.display = 'inline-flex';
+    actLabel.textContent = char.activity === 'dungeon'
       ? `🏰 ${char.dungeon_difficulty || ''} dungeon`
       : '🍺 Resting';
   } else {
-    badge.style.display = 'none';
+    actBadge.style.display = 'none';
   }
 
   // Action squares
   updateActionSquares(char.activity);
 
-  // Panels (if open)
+  // Refresh open panels
   renderInventory(char);
   renderEquipment(char);
+  renderAttributes(char);
 }
 
 function updateActionSquares(activity) {
-  const dungeon  = document.getElementById('sq-dungeon');
-  const tavern   = document.getElementById('sq-tavern');
-  const inv      = document.getElementById('sq-inventory');
-  const eq       = document.getElementById('sq-equipment');
+  const dungeon = document.getElementById('sq-dungeon');
+  const tavern  = document.getElementById('sq-tavern');
+  const inv     = document.getElementById('sq-inventory');
+  const eq      = document.getElementById('sq-equipment');
+  const attrs   = document.getElementById('sq-attributes');
 
-  [dungeon, tavern, inv, eq].forEach(el => {
-    el.classList.remove('active', 'disabled');
-  });
+  [dungeon, tavern, inv, eq, attrs].forEach(el => el.classList.remove('active', 'disabled'));
 
   if (activity === 'dungeon') {
     dungeon.classList.add('active');
@@ -115,20 +140,14 @@ function updateActionSquares(activity) {
 // ---- Action handlers ----
 function handleDungeon() {
   if (!charState) return;
-  if (charState.activity === 'dungeon') {
-    stopActivity();
-  } else if (!charState.activity) {
-    openDiffModal();
-  }
+  if (charState.activity === 'dungeon') stopActivity();
+  else if (!charState.activity) openDiffModal();
 }
 
 function handleTavern() {
   if (!charState) return;
-  if (charState.activity === 'tavern') {
-    stopActivity();
-  } else if (!charState.activity) {
-    startActivity('tavern');
-  }
+  if (charState.activity === 'tavern') stopActivity();
+  else if (!charState.activity) startActivity('tavern');
 }
 
 async function startActivity(action, difficulty) {
@@ -140,9 +159,7 @@ async function startActivity(action, difficulty) {
   if (!res.ok) { showToast(data.error || 'Failed to start activity', 'danger'); return; }
   charState = data;
   renderAll(data);
-  showToast(action === 'dungeon'
-    ? `Entered ${difficulty} dungeon!`
-    : 'Resting at the tavern…', 'success');
+  showToast(action === 'dungeon' ? `Entered ${difficulty} dungeon!` : 'Resting at the tavern…', 'success');
 }
 
 async function stopActivity() {
@@ -156,87 +173,70 @@ async function stopActivity() {
 }
 
 // ---- Difficulty modal ----
-function openDiffModal() {
-  document.getElementById('diff-modal').classList.add('open');
-}
-function closeDiffModal() {
-  document.getElementById('diff-modal').classList.remove('open');
-}
+function openDiffModal() { document.getElementById('diff-modal').classList.add('open'); }
+function closeDiffModal() { document.getElementById('diff-modal').classList.remove('open'); }
 function selectDiff(el) {
   document.querySelectorAll('.diff-card').forEach(c => c.classList.remove('selected'));
   el.classList.add('selected');
   selectedDiff = el.dataset.diff;
 }
-function confirmDungeon() {
-  closeDiffModal();
-  startActivity('dungeon', selectedDiff);
-}
+function confirmDungeon() { closeDiffModal(); startActivity('dungeon', selectedDiff); }
 document.getElementById('diff-modal').addEventListener('click', function (e) {
   if (e.target === this) closeDiffModal();
 });
 
 // ---- Side panels ----
 function openPanel(type) {
-  if (type === 'inventory') {
-    document.getElementById('inv-panel').classList.add('open');
-    renderInventory(charState);
-  } else {
-    document.getElementById('eq-panel').classList.add('open');
-    renderEquipment(charState);
-  }
-}
-function closePanel(type) {
-  if (type === 'inventory') document.getElementById('inv-panel').classList.remove('open');
-  else document.getElementById('eq-panel').classList.remove('open');
+  const panelMap = { inventory: 'inv-panel', equipment: 'eq-panel', attributes: 'attr-panel' };
+  Object.values(panelMap).forEach(id => document.getElementById(id).classList.remove('open'));
+  const panelId = panelMap[type];
+  if (panelId) document.getElementById(panelId).classList.add('open');
+  if (type === 'attributes') { pendingAttrs = {}; renderAttributes(charState); }
 }
 
+function closePanel(type) {
+  const panelMap = { inventory: 'inv-panel', equipment: 'eq-panel', attributes: 'attr-panel' };
+  const panelId = panelMap[type];
+  if (panelId) document.getElementById(panelId).classList.remove('open');
+}
+
+// ---- Inventory ----
 function renderInventory(char) {
   if (!char) return;
   const grid = document.getElementById('inv-grid');
   const inv = char.inventory || [];
   const slots = Array(10).fill(null);
   inv.forEach((item, i) => { if (i < 10) slots[i] = item; });
-
   const equippedIds = new Set([char.weapon_id, char.armor_id].filter(Boolean));
 
   grid.innerHTML = slots.map((item, i) => {
     if (!item) return `<div class="inv-slot empty" title="Empty">·</div>`;
     const isEq = equippedIds.has(item.item_id);
-    return `<div class="inv-slot${isEq ? ' equipped' : ''}"
-      onclick="showItemInfo(${i})"
-      title="${escHtml(item.name)}"
-    >
+    return `<div class="inv-slot${isEq ? ' equipped' : ''}" onclick="showItemInfo(${i})" title="${escHtml(item.name)}">
       ${item.icon || '?'}
       ${item.quantity > 1 ? `<span class="qty">${item.quantity}</span>` : ''}
     </div>`;
   }).join('');
-
-  // Store for tooltip
-  grid._items = inv;
 }
 
 function showItemInfo(idx) {
   if (!charState) return;
-  const inv = charState.inventory || [];
-  const item = inv[idx];
+  const item = (charState.inventory || [])[idx];
   const tooltip = document.getElementById('item-tooltip');
   if (!item) { tooltip.style.display = 'none'; return; }
-
-  const equippedIds = { weapon: charState.weapon_id, armor: charState.armor_id };
-  const isEq = equippedIds[item.type] === item.item_id;
+  const isEq = ({ weapon: charState.weapon_id, armor: charState.armor_id })[item.type] === item.item_id;
   const canEquip = item.type === 'weapon' || item.type === 'armor';
-
   tooltip.style.display = 'block';
   tooltip.innerHTML = `
-    <strong style="font-family:'Cinzel',serif;">${item.icon} ${escHtml(item.name)}</strong>
-    <span style="color:var(--muted);font-size:0.75rem;margin-left:0.5rem;">${item.type}</span>
-    <p style="color:var(--muted);margin-top:0.25rem;">${escHtml(item.description || '')}</p>
+    <strong class="item-tt-name">${item.icon} ${escHtml(item.name)}</strong>
+    <span class="item-tt-type">${item.type}</span>
+    <p class="item-tt-desc">${escHtml(item.description || '')}</p>
     ${canEquip && !isEq
-      ? `<button class="btn btn-outline btn-sm" style="margin-top:0.5rem;" onclick="equipItem('${item.type}',${item.item_id})">Equip</button>`
-      : isEq ? `<span style="color:var(--gold);font-size:0.8rem;">✓ Equipped</span>` : ''}
-  `;
+      ? `<button type="button" class="btn btn-outline btn-sm btn-mt" onclick="equipItem('${item.type}',${item.item_id})">Equip</button>`
+      : isEq ? `<span class="item-tt-eq">✓ Equipped</span>` : ''}`;
 }
 
+// ---- Equipment ----
 function renderEquipment(char) {
   if (!char) return;
   document.getElementById('eq-weapon-name').textContent =
@@ -247,15 +247,14 @@ function renderEquipment(char) {
   const inv = (char.inventory || []).filter(i => i.type === 'weapon' || i.type === 'armor');
   const equippedIds = new Set([char.weapon_id, char.armor_id].filter(Boolean));
   const list = document.getElementById('eq-list');
-  if (!inv.length) { list.innerHTML = '<p style="color:var(--muted);font-size:0.85rem;">No equippable items.</p>'; return; }
-
+  if (!inv.length) { list.innerHTML = '<p class="muted-sm">No equippable items.</p>'; return; }
   list.innerHTML = inv.map(item => `
-    <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.5rem;background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:0.5rem 0.75rem;">
-      <span style="font-size:1.3rem;">${item.icon}</span>
-      <span style="flex:1;font-size:0.9rem;">${escHtml(item.name)} <span style="color:var(--muted);font-size:0.75rem;">${item.type}</span></span>
+    <div class="equip-list-row">
+      <span class="equip-list-icon">${item.icon}</span>
+      <span class="equip-list-name">${escHtml(item.name)} <span class="equip-list-type">${item.type}</span></span>
       ${equippedIds.has(item.item_id)
-        ? `<span style="color:var(--gold);font-size:0.8rem;">✓</span>`
-        : `<button class="btn btn-outline btn-sm" onclick="equipItem('${item.type}',${item.item_id})">Equip</button>`}
+        ? `<span class="equip-list-check">✓</span>`
+        : `<button type="button" class="btn btn-outline btn-sm" onclick="equipItem('${item.type}',${item.item_id})">Equip</button>`}
     </div>`).join('');
 }
 
@@ -270,25 +269,86 @@ async function equipItem(slot, itemId) {
   showToast('Item equipped!', 'success');
 }
 
-// ---- Avatar upload ----
-function triggerAvatarUpload() {
-  document.getElementById('avatar-input').click();
+// ---- Attributes ----
+function renderAttributes(char) {
+  if (!char) return;
+  const unspent = Number(char.unspent_points) || 0;
+  const pendingTotal = Object.values(pendingAttrs).reduce((s, v) => s + v, 0);
+  const remaining = unspent - pendingTotal;
+
+  // Unspent bar
+  const bar = document.getElementById('attr-unspent-bar');
+  const pointsEl = document.getElementById('attr-points-left');
+  if (unspent > 0) {
+    bar.classList.add('visible');
+    pointsEl.textContent = `${remaining} / ${unspent}`;
+  } else {
+    bar.classList.remove('visible');
+  }
+
+  // Confirm button
+  const confirmRow = document.getElementById('attr-confirm-row');
+  confirmRow.classList.toggle('visible', pendingTotal > 0);
+
+  // Attribute rows
+  const list = document.getElementById('attr-list');
+  list.innerHTML = ATTRS.map(({ key, label, icon }) => {
+    const base  = Number(char[`attr_${key}`]) || 5;
+    const delta = pendingAttrs[key] || 0;
+    return `
+      <div class="attr-row">
+        <span class="attr-icon">${icon}</span>
+        <span class="attr-name">${label}</span>
+        <span class="attr-value">${base}</span>
+        ${unspent > 0 ? `
+          <span class="attr-pending">${delta > 0 ? '+' + delta : ''}</span>
+          <button type="button" class="attr-btn" onclick="adjustAttr('${key}',-1)" ${delta <= 0 ? 'disabled' : ''}>−</button>
+          <button type="button" class="attr-btn" onclick="adjustAttr('${key}',1)"  ${remaining <= 0 ? 'disabled' : ''}>+</button>
+        ` : ''}
+      </div>`;
+  }).join('');
 }
+
+function adjustAttr(key, delta) {
+  if (!charState) return;
+  const unspent = Number(charState.unspent_points) || 0;
+  const pendingTotal = Object.values(pendingAttrs).reduce((s, v) => s + v, 0);
+  const current = pendingAttrs[key] || 0;
+
+  if (delta > 0 && pendingTotal >= unspent) return; // no points left
+  if (delta < 0 && current <= 0) return;            // can't go below 0 pending
+
+  pendingAttrs[key] = current + delta;
+  if (pendingAttrs[key] === 0) delete pendingAttrs[key];
+  renderAttributes(charState);
+}
+
+async function confirmAttributes() {
+  if (!Object.keys(pendingAttrs).length) return;
+  const res = await api.put(`/api/characters/${charId}/attributes`, { allocations: pendingAttrs });
+  if (!res) return;
+  const data = await res.json();
+  if (!res.ok) { showToast(data.error || 'Could not allocate points', 'danger'); return; }
+  pendingAttrs = {};
+  charState = { ...charState, ...data };
+  renderAll(charState);
+  showToast('Attributes updated!', 'success');
+}
+
+// ---- Avatar upload ----
+function triggerAvatarUpload() { document.getElementById('avatar-input').click(); }
 
 async function uploadAvatar(e) {
   const file = e.target.files[0];
   if (!file) return;
   if (file.type !== 'image/jpeg') { showToast('Only JPEG images are accepted.', 'danger'); return; }
   if (file.size > 1 * 1024 * 1024) { showToast('Image must be under 1 MB.', 'danger'); return; }
-
   const fd = new FormData();
   fd.append('avatar', file);
   const res = await api.postForm(`/api/characters/${charId}/avatar`, fd);
   if (!res) return;
   const data = await res.json();
   if (!res.ok) { showToast(data.error || 'Upload failed', 'danger'); return; }
-
-  // Update avatar
   const img = document.getElementById('avatar-img');
   img.src = data.avatarPath + '?t=' + Date.now();
   img.style.display = 'block';
