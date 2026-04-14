@@ -255,15 +255,28 @@ function renderBattlePanel(char) {
 
   const isBoss = monster.is_boss === 1;
   document.getElementById('battle-kills-label').textContent = `${run.kills} / 100 monsters`;
-  const bossLabel = document.getElementById('battle-boss-label');
-  bossLabel.style.display = isBoss ? 'inline' : 'none';
+  document.getElementById('battle-boss-label').style.display = isBoss ? 'inline' : 'none';
 
   document.getElementById('monster-icon').textContent = monster.icon;
   document.getElementById('monster-name').textContent = (isBoss ? '👑 BOSS: ' : '') + monster.name;
 
-  const mhpPct = monster.hp > 0 ? Math.min(100, (run.monster_hp / monster.hp) * 100) : 0;
-  document.getElementById('monster-hp-fill').style.width = mhpPct + '%';
-  document.getElementById('monster-hp-text').textContent = `${Math.round(run.monster_hp)} / ${monster.hp}`;
+  setMonsterHpBar(run.monster_hp, monster.hp);
+  setHeroHpBar(char.hp, char.max_hp);
+}
+
+function setMonsterHpBar(current, max) {
+  const pct = max > 0 ? Math.min(100, Math.max(0, (current / max) * 100)) : 0;
+  document.getElementById('monster-hp-fill').style.width = pct + '%';
+  document.getElementById('monster-hp-text').textContent = `${Math.max(0, Math.round(current))} / ${max}`;
+}
+
+function setHeroHpBar(current, max) {
+  const pct = max > 0 ? Math.min(100, Math.max(0, (current / max) * 100)) : 0;
+  const fill = document.getElementById('battle-hero-hp-fill');
+  fill.style.width = pct + '%';
+  fill.className   = 'stat-fill hp' + (pct < 30 ? ' low' : '');
+  document.getElementById('battle-hero-hp-text').textContent =
+    `${Math.max(0, Math.round(current * 10) / 10)} / ${max}`;
 }
 
 async function doAttack() {
@@ -272,16 +285,36 @@ async function doAttack() {
   btn.textContent = '…';
 
   const res = await api.post(`/api/game/${charId}/dungeon/attack`);
-  btn.disabled = false;
-  btn.textContent = '⚔️ Attack';
-  if (!res) return;
+  if (!res) { btn.disabled = false; btn.textContent = '⚔️ Attack'; return; }
 
   const data = await res.json();
-  if (!res.ok) { showToast(data.error || 'Attack failed', 'danger'); return; }
+  if (!res.ok) {
+    btn.disabled = false; btn.textContent = '⚔️ Attack';
+    showToast(data.error || 'Attack failed', 'danger'); return;
+  }
 
+  // Snapshot HP before the fight settled so we can animate from current values
+  const prevMonsterHp  = charState.dungeonRun ? Number(charState.dungeonRun.monster_hp) : 0;
+  const prevMonsterMax = charState.dungeonRun ? charState.dungeonRun.monster.hp : 1;
+  const monsterName    = charState.dungeonRun ? charState.dungeonRun.monster.name : 'Monster';
+  const prevHeroHp     = Number(charState.hp);
+  const heroMax        = Number(charState.max_hp);
+
+  // Animate the combat log and bars, then settle
+  await animateCombatLog(
+    data.combatLog,
+    monsterName,
+    prevMonsterHp, prevMonsterMax,
+    prevHeroHp,    heroMax,
+    data.char.dungeonRun ? Number(data.char.dungeonRun.monster_hp) : 0,
+    Number(data.char.hp)
+  );
+
+  // Apply final state
   charState = data.char;
   renderAll(data.char);
-  appendCombatLog(data.combatLog);
+  btn.disabled = false;
+  btn.textContent = '⚔️ Attack';
 
   if (data.result === 'defeat') {
     showToast('Your hero has fallen! Return to the dungeon to try again.', 'danger');
@@ -301,6 +334,68 @@ async function doAttack() {
   }
 }
 
+// Replay each round with a delay, updating HP bars live
+async function animateCombatLog(
+  log, monsterName,
+  monsterHp, monsterMax,
+  heroHp, heroMax,
+  finalMonsterHp, finalHeroHp
+) {
+  const container = document.getElementById('battle-log');
+  const empty = container.querySelector('.battle-log-empty');
+  if (empty) empty.remove();
+
+  // Add a fight separator
+  const sep0 = document.createElement('div');
+  sep0.className = 'log-fight-sep';
+  sep0.textContent = '── New fight ──';
+  container.appendChild(sep0);
+
+  // Calculate damage deltas per round so we can step HP
+  // Each round is [playerAction, optionalMonsterAction]
+  for (const round of log) {
+    for (const entry of round) {
+      const div = document.createElement('div');
+
+      if (entry.by === 'player') {
+        if (entry.type === 'hit') {
+          monsterHp = Math.max(0, monsterHp - entry.damage);
+          div.className = 'log-hit-player';
+          div.textContent =
+            `⚔️ You hit ${monsterName} for ${entry.damage} dmg — ${monsterName} HP: ${Math.round(monsterHp)}/${monsterMax}`;
+          setMonsterHpBar(monsterHp, monsterMax);
+        } else {
+          div.className = 'log-miss-player';
+          div.textContent = `💨 Your attack missed ${monsterName}!`;
+        }
+      } else {
+        if (entry.type === 'dodge') {
+          div.className = 'log-dodge';
+          div.textContent = `🌀 You dodged ${monsterName}'s attack!`;
+        } else {
+          heroHp = Math.max(0, heroHp - entry.damage);
+          div.className = 'log-hit-monster';
+          div.textContent =
+            `💥 ${monsterName} hits you for ${entry.damage} dmg — Your HP: ${Math.round(heroHp * 10) / 10}/${heroMax}`;
+          setHeroHpBar(heroHp, heroMax);
+        }
+      }
+
+      container.appendChild(div);
+      container.scrollTop = container.scrollHeight;
+    }
+
+    // Small pause between rounds so the player can follow
+    await sleep(120);
+  }
+
+  // Ensure bars settle on server truth (rounding may differ)
+  setMonsterHpBar(finalMonsterHp, monsterMax);
+  setHeroHpBar(finalHeroHp, heroMax);
+}
+
+function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
 async function doFlee() {
   const res = await api.post(`/api/game/${charId}/dungeon/flee`);
   if (!res) return;
@@ -310,40 +405,6 @@ async function doFlee() {
   renderAll(data);
   closePanel('battle');
   showToast('You fled the dungeon.', 'warn');
-}
-
-function appendCombatLog(log) {
-  const container = document.getElementById('battle-log');
-  const empty = container.querySelector('.battle-log-empty');
-  if (empty) empty.remove();
-
-  for (const round of log) {
-    for (const entry of round) {
-      const div = document.createElement('div');
-      if (entry.by === 'player') {
-        if (entry.type === 'hit') {
-          div.className = 'log-hit-player';
-          div.textContent = `You hit for ${entry.damage} damage.`;
-        } else {
-          div.className = 'log-miss-player';
-          div.textContent = 'You missed!';
-        }
-      } else {
-        if (entry.type === 'dodge') {
-          div.className = 'log-dodge';
-          div.textContent = 'You dodged the attack!';
-        } else {
-          div.className = 'log-hit-monster';
-          div.textContent = `Monster hits you for ${entry.damage} damage.`;
-        }
-      }
-      container.appendChild(div);
-    }
-    const sep = document.createElement('hr');
-    sep.className = 'log-separator';
-    container.appendChild(sep);
-  }
-  container.scrollTop = container.scrollHeight;
 }
 
 // ---- Combat Stats ----

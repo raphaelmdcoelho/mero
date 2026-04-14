@@ -816,7 +816,18 @@ input:focus, select:focus {
 .monster-info { flex: 1; }
 .monster-name { font-family: 'Cinzel', serif; font-size: 0.95rem; margin-bottom: 0.4rem; }
 .monster-hp-row { display: flex; align-items: center; gap: 0.5rem; }
+.monster-hp-row .stat-track { flex: 1; }
 .monster-hp-text { font-size: 0.75rem; color: var(--muted); white-space: nowrap; }
+
+/* Hero HP bar inside battle panel */
+.battle-hero-hp {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+.battle-hero-hp .stat-track { flex: 1; }
+.battle-hero-label { font-size: 0.75rem; color: var(--muted); white-space: nowrap; font-family: 'Cinzel', serif; }
 
 /* Combat log */
 .battle-log {
@@ -825,7 +836,7 @@ input:focus, select:focus {
   border-radius: 8px;
   padding: 0.5rem 0.75rem;
   font-size: 0.8rem;
-  height: 160px;
+  height: 200px;
   overflow-y: auto;
   margin-bottom: 0.75rem;
   display: flex;
@@ -834,10 +845,11 @@ input:focus, select:focus {
 }
 .battle-log-empty { color: var(--muted); text-align: center; margin: auto; }
 .log-hit-player  { color: var(--success); }
-.log-miss-player { color: var(--muted); }
+.log-miss-player { color: var(--muted); font-style: italic; }
 .log-hit-monster { color: var(--danger); }
 .log-dodge       { color: var(--accent); }
 .log-separator   { border: none; border-top: 1px dashed var(--border); margin: 0.2rem 0; }
+.log-fight-sep   { color: var(--muted); font-size: 0.72rem; text-align: center; margin: 0.3rem 0 0.1rem; font-style: italic; }
 
 /* Battle action buttons */
 .battle-actions { display: flex; gap: 0.5rem; }
