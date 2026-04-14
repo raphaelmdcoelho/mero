@@ -51,7 +51,8 @@ function applyTick(char) {
     hp = Math.min(max_hp, hp + (TAVERN_HP_RATE * elapsed) / 60);
   }
 
-  xp = Math.floor(xp);
+  // Keep xp as float so fractional gains accumulate between ticks.
+  // (SQLite stores it as REAL transparently; client floors for display.)
   hp = Math.max(1, Math.round(hp * 10) / 10);
 
   const leveled = levelUp({ xp, xp_to_next, level, max_hp, hp });
