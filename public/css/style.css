@@ -360,7 +360,8 @@ input:focus, select:focus {
   display: grid;
   grid-template-columns: 100px 160px 100px;
   grid-template-rows: 100px 160px 100px;
-  gap: 12px;
+  column-gap: 12px;
+  row-gap: 24px;
   align-items: center;
   justify-items: center;
 }

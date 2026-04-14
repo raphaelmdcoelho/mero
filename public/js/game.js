@@ -125,15 +125,15 @@ function updateActionSquares(activity) {
 
   if (activity === 'dungeon') {
     dungeon.classList.add('active');
-    dungeon.querySelector('span:not(.unspent-badge)').textContent = 'Stop';
+    dungeon.querySelector('span:last-child').textContent = 'Stop';
     tavern.classList.add('disabled');
   } else if (activity === 'tavern') {
     tavern.classList.add('active');
-    tavern.querySelector('span:not(.unspent-badge)').textContent = 'Stop';
+    tavern.querySelector('span:last-child').textContent = 'Stop';
     dungeon.classList.add('disabled');
   } else {
-    dungeon.querySelector('span:not(.unspent-badge)').textContent = 'Dungeon';
-    tavern.querySelector('span:not(.unspent-badge)').textContent = 'Tavern';
+    dungeon.querySelector('span:last-child').textContent = 'Dungeon';
+    tavern.querySelector('span:last-child').textContent = 'Tavern';
   }
 }
 
