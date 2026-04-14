@@ -11,17 +11,20 @@ const RATES = {
   hard:   { xp: 4, hp: -4 },
 };
 const TAVERN_HP_RATE = 2;
+const POINTS_PER_LEVEL = 5;
 
 function levelUp(char) {
-  let { xp, xp_to_next, level, max_hp, hp } = char;
+  let { xp, xp_to_next, level, max_hp, hp, unspent_points } = char;
+  unspent_points = Number(unspent_points) || 0;
   while (xp >= xp_to_next) {
     xp -= xp_to_next;
     level += 1;
     xp_to_next = Math.floor(10 * Math.pow(1.5, level - 1));
     max_hp = 10 + (level - 1) * 5;
     hp = max_hp;
+    unspent_points += POINTS_PER_LEVEL;
   }
-  return { xp, xp_to_next, level, max_hp, hp };
+  return { xp, xp_to_next, level, max_hp, hp, unspent_points };
 }
 
 function applyTick(char) {
@@ -29,8 +32,7 @@ function applyTick(char) {
   const lastTick = char.last_tick_at || char.activity_started_at || now;
   const elapsed = Math.max(0, now - lastTick);
 
-  let { xp, xp_to_next, level, max_hp, hp, activity, dungeon_difficulty } = char;
-  // Ensure numeric types (node:sqlite returns numbers but guard anyway)
+  let { xp, xp_to_next, level, max_hp, hp, activity, dungeon_difficulty, unspent_points } = char;
   xp = Number(xp); xp_to_next = Number(xp_to_next); level = Number(level);
   max_hp = Number(max_hp); hp = Number(hp);
 
@@ -51,18 +53,20 @@ function applyTick(char) {
     hp = Math.min(max_hp, hp + (TAVERN_HP_RATE * elapsed) / 60);
   }
 
-  xp = Math.floor(xp);
+  // Keep xp as float so fractional gains accumulate between ticks.
+  // (SQLite stores it as REAL transparently; client floors for display.)
   hp = Math.max(1, Math.round(hp * 10) / 10);
 
-  const leveled = levelUp({ xp, xp_to_next, level, max_hp, hp });
-  xp        = leveled.xp;
-  xp_to_next = leveled.xp_to_next;
-  level     = leveled.level;
-  max_hp    = leveled.max_hp;
-  hp        = Math.min(leveled.hp, leveled.max_hp);
+  const leveled = levelUp({ xp, xp_to_next, level, max_hp, hp, unspent_points });
+  xp             = leveled.xp;
+  xp_to_next     = leveled.xp_to_next;
+  level          = leveled.level;
+  max_hp         = leveled.max_hp;
+  hp             = Math.min(leveled.hp, leveled.max_hp);
+  unspent_points = leveled.unspent_points;
 
   return {
-    xp, xp_to_next, level, max_hp, hp,
+    xp, xp_to_next, level, max_hp, hp, unspent_points,
     activity: fallen ? null : activity,
     activity_started_at: fallen ? null : char.activity_started_at,
     dungeon_difficulty: fallen ? null : char.dungeon_difficulty,
@@ -122,10 +126,11 @@ router.post('/:characterId/stop', (req, res) => {
   const updates = applyTick(char);
   db.prepare(`
     UPDATE characters SET xp = ?, xp_to_next = ?, level = ?, max_hp = ?, hp = ?,
+      unspent_points = ?,
       activity = NULL, activity_started_at = NULL, dungeon_difficulty = NULL, last_tick_at = ?
     WHERE id = ?
   `).run(updates.xp, updates.xp_to_next, updates.level, updates.max_hp, updates.hp,
-         updates.last_tick_at, char.id);
+         updates.unspent_points, updates.last_tick_at, char.id);
 
   res.json(fullChar(char.id));
 });
@@ -142,10 +147,12 @@ router.get('/:characterId/tick', (req, res) => {
   const updates = applyTick(char);
   db.prepare(`
     UPDATE characters SET xp = ?, xp_to_next = ?, level = ?, max_hp = ?, hp = ?,
+      unspent_points = ?,
       activity = ?, activity_started_at = ?, dungeon_difficulty = ?, last_tick_at = ?
     WHERE id = ?
   `).run(
     updates.xp, updates.xp_to_next, updates.level, updates.max_hp, updates.hp,
+    updates.unspent_points,
     updates.activity, updates.activity_started_at, updates.dungeon_difficulty,
     updates.last_tick_at, char.id
   );

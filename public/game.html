@@ -63,6 +63,13 @@
           <span>Inventory</span>
         </div>
 
+        <!-- Bottom-center: Attributes -->
+        <div class="action-sq" id="sq-attributes" style="grid-column:2;grid-row:3;position:relative;" onclick="openPanel('attributes')">
+          <span class="sq-icon">⚡</span>
+          <span>Attributes</span>
+          <span id="unspent-badge" class="unspent-badge" style="display:none;"></span>
+        </div>
+
         <!-- Bottom-right: Equipment -->
         <div class="action-sq" id="sq-equipment" style="grid-column:3;grid-row:3;" onclick="openPanel('equipment')">
           <span class="sq-icon">🛡️</span>
@@ -88,8 +95,9 @@
           </div>
           <span class="stat-value" id="hp-text">10 / 10</span>
         </div>
-        <div style="text-align:center;margin-top:0.25rem;">
+        <div style="text-align:center;margin-top:0.25rem;display:flex;align-items:center;justify-content:center;gap:0.75rem;">
           <span id="level-display" style="font-family:'Cinzel',serif;font-size:0.85rem;color:var(--gold);">Level 1</span>
+          <span id="unspent-header" style="display:none;font-size:0.75rem;color:var(--accent);font-family:'Cinzel',serif;cursor:pointer;" onclick="openPanel('attributes')"></span>
         </div>
       </div>
     </div>
@@ -162,6 +170,24 @@
       <hr style="border-color:var(--border);margin:1rem 0;" />
       <p style="font-size:0.85rem;color:var(--muted);margin-bottom:0.5rem;">Equip from inventory:</p>
       <div id="eq-list"></div>
+    </div>
+  </div>
+
+  <!-- Attributes Panel -->
+  <div class="side-panel" id="attr-panel">
+    <div class="side-panel-header">
+      <span class="side-panel-title">⚡ Attributes</span>
+      <button type="button" class="close-btn" onclick="closePanel('attributes')">✕</button>
+    </div>
+    <div class="side-panel-body">
+      <div id="attr-unspent-bar" class="attr-unspent-bar">
+        <span class="attr-unspent-label">Points to Distribute</span>
+        <span id="attr-points-left" class="attr-points-left"></span>
+      </div>
+      <div id="attr-list"></div>
+      <div id="attr-confirm-row" class="attr-confirm-row">
+        <button type="button" class="btn btn-primary btn-full" onclick="confirmAttributes()">Confirm Allocation</button>
+      </div>
     </div>
   </div>
 

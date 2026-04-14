@@ -171,4 +171,53 @@ router.put('/:id/equip', (req, res) => {
   res.json(enrichCharacter(toObj(updated)));
 });
 
+// PUT /api/characters/:id/attributes
+// body: { allocations: { strength: 2, vitality: 3, ... } }
+const VALID_ATTRS = ['strength','dexterity','agility','vitality','intelligence','focus','stamina','resistance'];
+
+router.put('/:id/attributes', (req, res) => {
+  const char = ownedCharacter(req, res);
+  if (!char) return;
+
+  const { allocations } = req.body;
+  if (!allocations || typeof allocations !== 'object') {
+    return res.status(400).json({ error: 'allocations object required' });
+  }
+
+  // Validate keys and values
+  for (const [key, val] of Object.entries(allocations)) {
+    if (!VALID_ATTRS.includes(key)) {
+      return res.status(400).json({ error: `Unknown attribute: ${key}` });
+    }
+    if (!Number.isInteger(val) || val < 0) {
+      return res.status(400).json({ error: `Value for ${key} must be a non-negative integer` });
+    }
+  }
+
+  const total = Object.values(allocations).reduce((s, v) => s + v, 0);
+  const unspent = Number(char.unspent_points) || 0;
+
+  if (total > unspent) {
+    return res.status(400).json({ error: `Not enough unspent points (have ${unspent}, need ${total})` });
+  }
+  if (total === 0) {
+    return res.status(400).json({ error: 'No points allocated' });
+  }
+
+  // Build SET clause dynamically (safe — keys validated against allowlist above)
+  const sets = Object.entries(allocations)
+    .filter(([, v]) => v > 0)
+    .map(([key]) => `attr_${key} = attr_${key} + ?`)
+    .join(', ');
+  const vals = Object.entries(allocations)
+    .filter(([, v]) => v > 0)
+    .map(([, v]) => v);
+
+  db.prepare(`UPDATE characters SET ${sets}, unspent_points = unspent_points - ? WHERE id = ?`)
+    .run(...vals, total, char.id);
+
+  const updated = db.prepare('SELECT * FROM characters WHERE id = ?').get(char.id);
+  res.json(enrichCharacter(toObj(updated)));
+});
+
 module.exports = router;
