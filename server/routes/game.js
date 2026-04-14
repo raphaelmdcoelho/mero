@@ -52,6 +52,9 @@ function levelUp(char) {
   return { xp, xp_to_next, level, max_hp, hp, unspent_points };
 }
 
+const READING_POINT_INTERVAL = 30 * 60; // 30 min in seconds
+const READING_MAX_DURATION   = 60 * 60; // 1 hour in seconds
+
 function applyTick(char) {
   const now = Math.floor(Date.now() / 1000);
   const lastTick = char.last_tick_at || char.activity_started_at || now;
@@ -60,8 +63,10 @@ function applyTick(char) {
   let { xp, xp_to_next, level, max_hp, hp, activity, dungeon_difficulty, unspent_points } = char;
   xp = Number(xp); xp_to_next = Number(xp_to_next); level = Number(level);
   max_hp = Number(max_hp); hp = Number(hp);
+  let reading_points_awarded = Number(char.reading_points_awarded) || 0;
 
   let fallen = false;
+  let readingFinished = false;
 
   if (activity === 'dungeon' && dungeon_difficulty) {
     const rate = RATES[dungeon_difficulty];
@@ -76,6 +81,20 @@ function applyTick(char) {
     }
   } else if (activity === 'tavern') {
     hp = Math.min(max_hp, hp + (TAVERN_HP_RATE * elapsed) / 60);
+  } else if (activity === 'reading') {
+    const totalElapsed = Math.max(0, now - (char.activity_started_at || now));
+    // Award 1 point per 30-min interval, max 2 (at 30 min and 60 min)
+    const pointsDue = Math.min(2, Math.floor(totalElapsed / READING_POINT_INTERVAL));
+    const newPoints = pointsDue - reading_points_awarded;
+    if (newPoints > 0) {
+      unspent_points += newPoints;
+      reading_points_awarded = pointsDue;
+    }
+    // Auto-stop after 1 hour
+    if (totalElapsed >= READING_MAX_DURATION) {
+      activity = null;
+      readingFinished = true;
+    }
   }
 
   // Keep xp as float so fractional gains accumulate between ticks.
@@ -90,13 +109,16 @@ function applyTick(char) {
   hp             = Math.min(leveled.hp, leveled.max_hp);
   unspent_points = leveled.unspent_points;
 
+  const stopped = fallen || readingFinished;
   return {
     xp, xp_to_next, level, max_hp, hp, unspent_points,
-    activity: fallen ? null : activity,
-    activity_started_at: fallen ? null : char.activity_started_at,
-    dungeon_difficulty: fallen ? null : char.dungeon_difficulty,
+    reading_points_awarded: stopped ? 0 : reading_points_awarded,
+    activity: stopped ? null : activity,
+    activity_started_at: stopped ? null : char.activity_started_at,
+    dungeon_difficulty: stopped ? null : char.dungeon_difficulty,
     last_tick_at: now,
     fallen,
+    readingFinished,
   };
 }
 
@@ -130,8 +152,8 @@ router.post('/:characterId/start', (req, res) => {
   if (!char) return;
 
   const { action, difficulty } = req.body;
-  if (!['dungeon', 'tavern'].includes(action)) {
-    return res.status(400).json({ error: 'action must be "dungeon" or "tavern"' });
+  if (!['dungeon', 'tavern', 'reading'].includes(action)) {
+    return res.status(400).json({ error: 'action must be "dungeon", "tavern", or "reading"' });
   }
   if (action === 'dungeon' && !['easy', 'medium', 'hard'].includes(difficulty)) {
     return res.status(400).json({ error: 'difficulty must be easy, medium, or hard' });
@@ -139,7 +161,8 @@ router.post('/:characterId/start', (req, res) => {
 
   const now = Math.floor(Date.now() / 1000);
   db.prepare(`
-    UPDATE characters SET activity = ?, activity_started_at = ?, dungeon_difficulty = ?, last_tick_at = ?
+    UPDATE characters SET activity = ?, activity_started_at = ?, dungeon_difficulty = ?,
+      last_tick_at = ?, reading_points_awarded = 0
     WHERE id = ?
   `).run(action, now, action === 'dungeon' ? difficulty : null, now, char.id);
 
@@ -154,7 +177,7 @@ router.post('/:characterId/stop', (req, res) => {
   const updates = applyTick(char);
   db.prepare(`
     UPDATE characters SET xp = ?, xp_to_next = ?, level = ?, max_hp = ?, hp = ?,
-      unspent_points = ?,
+      unspent_points = ?, reading_points_awarded = 0,
       activity = NULL, activity_started_at = NULL, dungeon_difficulty = NULL, last_tick_at = ?
     WHERE id = ?
   `).run(updates.xp, updates.xp_to_next, updates.level, updates.max_hp, updates.hp,
@@ -207,17 +230,17 @@ router.get('/:characterId/tick', (req, res) => {
 
   db.prepare(`
     UPDATE characters SET xp = ?, xp_to_next = ?, level = ?, max_hp = ?, hp = ?,
-      unspent_points = ?,
+      unspent_points = ?, reading_points_awarded = ?,
       activity = ?, activity_started_at = ?, dungeon_difficulty = ?, last_tick_at = ?
     WHERE id = ?
   `).run(
     updates.xp, updates.xp_to_next, updates.level, updates.max_hp, updates.hp,
-    updates.unspent_points,
+    updates.unspent_points, updates.reading_points_awarded,
     updates.activity, updates.activity_started_at, updates.dungeon_difficulty,
     updates.last_tick_at, char.id
   );
 
-  res.json({ ...fullChar(char.id), fallen: updates.fallen, plantConsumed });
+  res.json({ ...fullChar(char.id), fallen: updates.fallen, plantConsumed, readingFinished: updates.readingFinished || false });
 });
 
 module.exports = router;

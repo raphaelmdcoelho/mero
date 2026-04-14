@@ -95,6 +95,7 @@ const additiveMigrations = [
   'ALTER TABLE characters ADD COLUMN attr_stamina      INTEGER DEFAULT 5',
   'ALTER TABLE characters ADD COLUMN attr_resistance   INTEGER DEFAULT 5',
   'ALTER TABLE characters ADD COLUMN unspent_points    INTEGER DEFAULT 0',
+  'ALTER TABLE characters ADD COLUMN reading_points_awarded INTEGER DEFAULT 0',
 ];
 
 for (const sql of additiveMigrations) {

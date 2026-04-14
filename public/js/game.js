@@ -50,6 +50,7 @@ async function tick() {
     const icon = data.plantConsumed === 'carrot' ? '🥕' : '🍎';
     showToast(`${icon} A ${data.plantConsumed} was consumed to keep you alive!`, 'warn');
   }
+  if (data.readingFinished) showToast('📖 Reading session complete! Check your attribute points.', 'success');
 }
 
 // ---- Render ----
@@ -102,9 +103,16 @@ function renderAll(char) {
   const actLabel = document.getElementById('activity-label');
   if (char.activity) {
     actBadge.style.display = 'inline-flex';
-    actLabel.textContent = char.activity === 'dungeon'
-      ? `🏰 ${char.dungeon_difficulty || ''} dungeon`
-      : '🍺 Resting';
+    if (char.activity === 'dungeon') {
+      actLabel.textContent = `🏰 ${char.dungeon_difficulty || ''} dungeon`;
+    } else if (char.activity === 'tavern') {
+      actLabel.textContent = '🍺 Resting';
+    } else if (char.activity === 'reading') {
+      const elapsed = Math.floor(Date.now() / 1000) - (char.activity_started_at || 0);
+      const minsLeft = Math.max(0, Math.ceil((3600 - elapsed) / 60));
+      const pts = Number(char.reading_points_awarded) || 0;
+      actLabel.textContent = `📖 Reading · ${minsLeft}m left · ${pts}/2 pts`;
+    }
   } else {
     actBadge.style.display = 'none';
   }
@@ -147,20 +155,29 @@ function updateActionSquares(activity) {
   const eq      = document.getElementById('sq-equipment');
   const attrs   = document.getElementById('sq-attributes');
   const farm    = document.getElementById('sq-farm');
+  const read    = document.getElementById('sq-read');
 
-  [dungeon, tavern, inv, eq, attrs, farm].forEach(el => el.classList.remove('active', 'disabled'));
+  [dungeon, tavern, inv, eq, attrs, farm, read].forEach(el => el.classList.remove('active', 'disabled'));
 
   if (activity === 'dungeon') {
     dungeon.classList.add('active');
     dungeon.querySelector('span:last-child').textContent = 'Stop';
     tavern.classList.add('disabled');
+    read.classList.add('disabled');
   } else if (activity === 'tavern') {
     tavern.classList.add('active');
     tavern.querySelector('span:last-child').textContent = 'Stop';
     dungeon.classList.add('disabled');
+    read.classList.add('disabled');
+  } else if (activity === 'reading') {
+    read.classList.add('active');
+    read.querySelector('span:last-child').textContent = 'Stop';
+    dungeon.classList.add('disabled');
+    tavern.classList.add('disabled');
   } else {
     dungeon.querySelector('span:last-child').textContent = 'Dungeon';
     tavern.querySelector('span:last-child').textContent = 'Tavern';
+    read.querySelector('span:last-child').textContent = 'Read';
   }
 }
 
@@ -361,6 +378,17 @@ async function confirmAttributes() {
   charState = { ...charState, ...data };
   renderAll(charState);
   showToast('Attributes updated!', 'success');
+}
+
+// ---- Read ----
+function handleRead() {
+  if (!charState) return;
+  if (charState.activity === 'reading') {
+    stopActivity();
+  } else if (!charState.activity) {
+    startActivity('reading');
+    showToast('📖 Your hero starts reading. +1 attr point every 30 min (max 2).', 'success');
+  }
 }
 
 // ---- Farm ----
