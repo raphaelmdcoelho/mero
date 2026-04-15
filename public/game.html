@@ -38,6 +38,14 @@
           <span>Dungeon</span>
         </div>
 
+        <!-- Top-center: Farm (activity, unlocks at level 3) -->
+        <div class="action-sq" id="sq-farm" style="grid-column:2;grid-row:1;position:relative;" onclick="handleFarm()">
+          <span class="sq-icon">🌱</span>
+          <span id="farm-label">Farm</span>
+          <span id="farm-lock-badge" class="unspent-badge" style="display:none;font-size:0.55rem;">Lv.3</span>
+          <span id="farm-stock-badge" class="unspent-badge" style="display:none;background:var(--accent);"></span>
+        </div>
+
         <!-- Top-right: Tavern -->
         <div class="action-sq" id="sq-tavern" style="grid-column:3;grid-row:1;" onclick="handleTavern()">
           <span class="sq-icon">🍺</span>
@@ -74,14 +82,6 @@
         <div class="action-sq" id="sq-equipment" style="grid-column:3;grid-row:3;" onclick="openPanel('equipment')">
           <span class="sq-icon">🛡️</span>
           <span>Equipment</span>
-        </div>
-
-        <!-- Row 4 left: Farm (unlocks at level 3) -->
-        <div class="action-sq" id="sq-farm" style="grid-column:1;grid-row:4;position:relative;" onclick="handleFarm()">
-          <span class="sq-icon">🌱</span>
-          <span id="farm-label">Farm</span>
-          <span id="farm-lock-badge" class="unspent-badge" style="display:none;font-size:0.55rem;">Lv.3</span>
-          <span id="farm-stock-badge" class="unspent-badge" style="display:none;background:var(--accent);"></span>
         </div>
 
         <!-- Row 4 right: Combat Stats -->

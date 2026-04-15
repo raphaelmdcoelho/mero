@@ -135,14 +135,17 @@ function applyTavernTick(char) {
   return { ...leveled, last_tick_at: now };
 }
 
-// POST /api/game/:characterId/start  (tavern only)
+// POST /api/game/:characterId/start  (tavern or farm)
 router.post('/:characterId/start', (req, res) => {
   const char = ownedChar(req, res);
   if (!char) return;
 
   const { action } = req.body;
-  if (action !== 'tavern') {
+  if (!['tavern', 'farm'].includes(action)) {
     return res.status(400).json({ error: 'Use /dungeon/enter to start a dungeon run' });
+  }
+  if (action === 'farm' && (Number(char.level) || 1) < 3) {
+    return res.status(403).json({ error: 'Farming unlocks at level 3' });
   }
   if (char.activity) {
     return res.status(400).json({ error: 'Already in an activity' });
@@ -150,9 +153,9 @@ router.post('/:characterId/start', (req, res) => {
 
   const now = Math.floor(Date.now() / 1000);
   db.prepare(`
-    UPDATE characters SET activity = 'tavern', activity_started_at = ?, last_tick_at = ?
+    UPDATE characters SET activity = ?, activity_started_at = ?, last_tick_at = ?
     WHERE id = ?
-  `).run(now, now, char.id);
+  `).run(action, now, now, char.id);
 
   res.json(fullChar(char.id));
 });

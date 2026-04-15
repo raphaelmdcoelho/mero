@@ -94,6 +94,8 @@ function renderAll(char) {
       const run = char.dungeonRun;
       const lvl = run ? run.dungeon_level : '';
       actLabel.textContent = `🏰 Dungeon Lv.${lvl}`;
+    } else if (char.activity === 'farm') {
+      actLabel.textContent = '🌱 Farming';
     } else {
       actLabel.textContent = '🍺 Resting';
     }
@@ -109,9 +111,9 @@ function renderAll(char) {
   if (level < 3) {
     farmLock.style.display = 'flex';
     farmStock.style.display = 'none';
-    document.getElementById('sq-farm').classList.add('disabled');
+    // also disable if not already handled by updateActionSquares
+    if (!char.activity) document.getElementById('sq-farm').classList.add('disabled');
   } else {
-    document.getElementById('sq-farm').classList.remove('disabled');
     farmLock.style.display = 'none';
     const totalPlants = (char.inventory || [])
       .filter(i => i.item_id === 6 || i.item_id === 7)
@@ -134,25 +136,35 @@ function renderAll(char) {
 
 function updateActionSquares(activity) {
   const dungeon = document.getElementById('sq-dungeon');
+  const farm    = document.getElementById('sq-farm');
   const tavern  = document.getElementById('sq-tavern');
   const inv     = document.getElementById('sq-inventory');
   const eq      = document.getElementById('sq-equipment');
   const attrs   = document.getElementById('sq-attributes');
   const stats   = document.getElementById('sq-stats');
 
+  // Reset activity squares (farm handled separately below)
   [dungeon, tavern, inv, eq, attrs, stats].forEach(el => el.classList.remove('active', 'disabled'));
 
   if (activity === 'dungeon') {
     dungeon.classList.add('active');
     dungeon.querySelector('span:last-child').textContent = 'Dungeon';
     tavern.classList.add('disabled');
+    farm.classList.add('disabled');
   } else if (activity === 'tavern') {
     tavern.classList.add('active');
     tavern.querySelector('span:last-child').textContent = 'Stop';
     dungeon.classList.add('disabled');
+    farm.classList.add('disabled');
+  } else if (activity === 'farm') {
+    farm.classList.add('active');
+    farm.querySelector('#farm-label').textContent = 'Stop Farm';
+    dungeon.classList.add('disabled');
+    tavern.classList.add('disabled');
   } else {
     dungeon.querySelector('span:last-child').textContent = 'Dungeon';
     tavern.querySelector('span:last-child').textContent = 'Tavern';
+    farm.querySelector('#farm-label').textContent = 'Farm';
   }
 }
 
@@ -341,8 +353,8 @@ async function startAutoBattle() {
       if (data.bossSpawned) showToast('⚠️ The Boss appears!', 'warn');
     }
 
-    // Pause between fights so the log stays readable
-    if (!autoBattleStop) await sleep(1500);
+    // Pause between fights so the log stays readable (extra 1s after each kill)
+    if (!autoBattleStop) await sleep(2500);
   }
 
   autoBattleRunning = false;
@@ -620,7 +632,20 @@ async function confirmAttributes() {
 function handleFarm() {
   if (!charState) return;
   if (Number(charState.level) < 3) { showToast('Farming unlocks at level 3!', 'danger'); return; }
+  if (charState.activity === 'farm') { stopActivity(); return; }
+  if (charState.activity) return;
+  startFarm();
+}
+
+async function startFarm() {
+  const res = await api.post(`/api/game/${charId}/start`, { action: 'farm' });
+  if (!res) return;
+  const data = await res.json();
+  if (!res.ok) { showToast(data.error || 'Failed to start farming', 'danger'); return; }
+  charState = data;
+  renderAll(data);
   openPanel('farm');
+  showToast('Started farming! Plants will grow over time.', 'success');
 }
 
 async function startGrowing(plantType) {
