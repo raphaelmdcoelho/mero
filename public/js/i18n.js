@@ -84,6 +84,12 @@
       'game.dm.note':            'Defeat 100 monsters, then face the Boss to increase your mastery.',
       'game.dm.cancel':          'Cancel',
       'game.dm.enter':           'Enter Dungeon',
+      'dungeon.set1':            'Verdant Wilds',
+      'dungeon.set2':            'Volcanic Depths',
+      'dungeon.set3':            'Frozen Wastes',
+      'dungeon.set4':            'Thunder Peaks',
+      'dungeon.set5':            'Void Realm',
+      'dungeon.set_locked':      'Unlocks at level {n}',
 
       // Battle panel
       'game.bp.hero':            '🧙 Hero',
@@ -288,6 +294,12 @@
       'game.dm.note':            'Derrote 100 monstros e então enfrente o Chefe para aumentar seu domínio.',
       'game.dm.cancel':          'Cancelar',
       'game.dm.enter':           'Entrar na Masmorra',
+      'dungeon.set1':            'Selvas Verdejantes',
+      'dungeon.set2':            'Profundezas Vulcânicas',
+      'dungeon.set3':            'Wasteland Gelado',
+      'dungeon.set4':            'Picos do Trovão',
+      'dungeon.set5':            'Reino do Vazio',
+      'dungeon.set_locked':      'Desbloqueado no nível {n}',
 
       // Battle panel
       'game.bp.hero':            '🧙 Herói',

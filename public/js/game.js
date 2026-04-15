@@ -18,10 +18,19 @@ const ATTRS = [
 
 const DUNGEON_LEVEL_ICONS = ['','🌿','🪨','💀','🌑','🔥','🧊','⚡','🌊','☠️','🐉'];
 
+const DUNGEON_SETS = [
+  { set: 1, icon: '🌿', nameKey: 'dungeon.set1', unlockLevel: 1,  masteryCol: 'dungeon_mastery' },
+  { set: 2, icon: '🌋', nameKey: 'dungeon.set2', unlockLevel: 20, masteryCol: 'dungeon_mastery_s2' },
+  { set: 3, icon: '🧊', nameKey: 'dungeon.set3', unlockLevel: 30, masteryCol: 'dungeon_mastery_s3' },
+  { set: 4, icon: '⚡', nameKey: 'dungeon.set4', unlockLevel: 40, masteryCol: 'dungeon_mastery_s4' },
+  { set: 5, icon: '🌑', nameKey: 'dungeon.set5', unlockLevel: 50, masteryCol: 'dungeon_mastery_s5' },
+];
+
 let charState  = null;
 let tickInterval = null;
 let pendingAttrs = {};
 let selectedDungeonLevel = 1;
+let selectedDungeonSet   = 1;
 
 // ---- Init ----
 async function init() {
@@ -239,7 +248,37 @@ async function stopActivity() {
 
 // ---- Dungeon level modal ----
 function openDungeonModal() {
-  const mastery = Number(charState.dungeon_mastery) || 0;
+  const charLevel = Number(charState.level) || 1;
+
+  // Ensure selectedDungeonSet is accessible for this character
+  if ((DUNGEON_SETS.find(s => s.set === selectedDungeonSet) || {}).unlockLevel > charLevel) {
+    selectedDungeonSet = 1;
+  }
+
+  // Build set tabs
+  const tabsEl = document.getElementById('dungeon-set-tabs');
+  tabsEl.innerHTML = '';
+  DUNGEON_SETS.forEach(s => {
+    const unlocked = charLevel >= s.unlockLevel;
+    const btn = document.createElement('button');
+    btn.className = 'dungeon-set-tab' +
+      (s.set === selectedDungeonSet ? ' active' : '') +
+      (!unlocked ? ' locked' : '');
+    btn.disabled = !unlocked;
+    btn.dataset.set = s.set;
+    btn.title = unlocked ? '' : t('dungeon.set_locked', { n: s.unlockLevel });
+    btn.innerHTML = `${s.icon} <span>${t(s.nameKey)}</span>`;
+    if (unlocked) btn.onclick = () => selectDungeonSet(s.set);
+    tabsEl.appendChild(btn);
+  });
+
+  renderDungeonLevelGrid();
+  document.getElementById('dungeon-modal').classList.add('open');
+}
+
+function renderDungeonLevelGrid() {
+  const setInfo = DUNGEON_SETS.find(s => s.set === selectedDungeonSet);
+  const mastery = Number(charState[setInfo.masteryCol]) || 0;
   const grid    = document.getElementById('dungeon-level-grid');
   grid.innerHTML = '';
   selectedDungeonLevel = Math.min(mastery + 1, 10);
@@ -261,8 +300,14 @@ function openDungeonModal() {
     if (unlocked) card.onclick = () => selectDungeonLevel(card, lvl);
     grid.appendChild(card);
   }
+}
 
-  document.getElementById('dungeon-modal').classList.add('open');
+function selectDungeonSet(set) {
+  selectedDungeonSet = set;
+  document.querySelectorAll('.dungeon-set-tab').forEach(b => {
+    b.classList.toggle('active', Number(b.dataset.set) === set);
+  });
+  renderDungeonLevelGrid();
 }
 
 function closeDungeonModal() {
@@ -277,7 +322,7 @@ function selectDungeonLevel(el, lvl) {
 
 async function confirmEnterDungeon() {
   closeDungeonModal();
-  const res = await api.post(`/api/game/${charId}/dungeon/enter`, { level: selectedDungeonLevel });
+  const res = await api.post(`/api/game/${charId}/dungeon/enter`, { level: selectedDungeonLevel, set: selectedDungeonSet });
   if (!res) return;
   const data = await res.json();
   if (!res.ok) { showToast(data.error || t('game.js.failed_dungeon'), 'danger'); return; }
@@ -299,8 +344,9 @@ function renderBattlePanel(char) {
   const monster = run.monster;
   if (!monster) return;
 
+  const dungeonSetInfo = DUNGEON_SETS.find(s => s.set === (Number(run.dungeon_set) || 1)) || DUNGEON_SETS[0];
   document.getElementById('battle-title').textContent =
-    t('game.js.bl.mastery', { level: run.dungeon_level, mastery: char.dungeon_mastery || 0 });
+    t('game.js.bl.mastery', { level: run.dungeon_level, mastery: char[dungeonSetInfo.masteryCol] || 0 });
 
   const isBoss = monster.is_boss === 1;
   document.getElementById('battle-kills-label').textContent = t('game.js.bl.monsters', { kills: run.kills });

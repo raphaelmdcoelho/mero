@@ -763,6 +763,30 @@ input:focus, select:focus {
 .equip-slot-stat { font-size: 0.75rem; color: var(--accent); margin-top: 0.15rem; }
 
 /* ---- Dungeon level modal ---- */
+.dungeon-set-tabs {
+  display: flex;
+  gap: 0.35rem;
+  flex-wrap: wrap;
+  justify-content: center;
+  margin-bottom: 0.75rem;
+}
+.dungeon-set-tab {
+  background: var(--surface2);
+  border: 2px solid var(--border);
+  border-radius: 8px;
+  padding: 0.35rem 0.65rem;
+  cursor: pointer;
+  font-size: 0.78rem;
+  color: var(--text);
+  font-family: 'Cinzel', serif;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+.dungeon-set-tab:hover:not(:disabled) { border-color: var(--accent); }
+.dungeon-set-tab.active { border-color: var(--accent); background: #c084fc11; color: var(--accent); }
+.dungeon-set-tab.locked { opacity: 0.4; cursor: not-allowed; }
 .dungeon-modal-note { text-align: center; font-size: 0.8rem; color: var(--muted); margin-bottom: 0.75rem; }
 .dungeon-level-grid {
   display: grid;

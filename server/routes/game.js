@@ -8,6 +8,15 @@ const KILLS_FOR_BOSS = 100;
 const TAVERN_HP_RATE = 2; // HP/min
 const POINTS_PER_LEVEL = 5;
 
+const SET_UNLOCK_LEVEL = { 1: 1, 2: 20, 3: 30, 4: 40, 5: 50 };
+const MASTERY_COL = {
+  1: 'dungeon_mastery',
+  2: 'dungeon_mastery_s2',
+  3: 'dungeon_mastery_s3',
+  4: 'dungeon_mastery_s4',
+  5: 'dungeon_mastery_s5',
+};
+
 // Move any ready farm_queue entries into the regular inventory
 function harvestFarm(charId) {
   const now = Math.floor(Date.now() / 1000);
@@ -261,7 +270,7 @@ router.get('/:characterId/stats', (req, res) => {
 });
 
 // POST /api/game/:characterId/dungeon/enter
-// body: { level: 1-10 }
+// body: { level: 1-10, set: 1-5 }
 router.post('/:characterId/dungeon/enter', (req, res) => {
   const char = ownedChar(req, res);
   if (!char) return;
@@ -278,14 +287,25 @@ router.post('/:characterId/dungeon/enter', (req, res) => {
   if (!requestedLevel || requestedLevel < 1 || requestedLevel > 10) {
     return res.status(400).json({ error: 'level must be 1-10' });
   }
-  const mastery = Number(char.dungeon_mastery) || 0;
+
+  const requestedSet = Number(req.body.set) || 1;
+  if (!SET_UNLOCK_LEVEL[requestedSet]) {
+    return res.status(400).json({ error: 'set must be 1-5' });
+  }
+  const charLevel = Number(char.level) || 1;
+  if (charLevel < SET_UNLOCK_LEVEL[requestedSet]) {
+    return res.status(403).json({ error: `Dungeon Set ${requestedSet} unlocks at level ${SET_UNLOCK_LEVEL[requestedSet]}` });
+  }
+
+  const masteryCol = MASTERY_COL[requestedSet];
+  const mastery = Number(char[masteryCol]) || 0;
   if (requestedLevel > mastery + 1) {
     return res.status(400).json({ error: `Complete dungeon level ${mastery + 1} first` });
   }
 
   const monster = Object.assign({}, db.prepare(
-    'SELECT * FROM monsters WHERE dungeon_level = ? AND is_boss = 0'
-  ).get(requestedLevel));
+    'SELECT * FROM monsters WHERE dungeon_set = ? AND dungeon_level = ? AND is_boss = 0'
+  ).get(requestedSet, requestedLevel));
   if (!monster || !monster.id) {
     return res.status(500).json({ error: 'Monster data missing' });
   }
@@ -293,9 +313,9 @@ router.post('/:characterId/dungeon/enter', (req, res) => {
   const now = Math.floor(Date.now() / 1000);
   transaction(() => {
     db.prepare(`
-      INSERT INTO dungeon_run (character_id, dungeon_level, kills, monster_id, monster_hp, started_at)
-      VALUES (?, ?, 0, ?, ?, ?)
-    `).run(char.id, requestedLevel, monster.id, monster.hp, now);
+      INSERT INTO dungeon_run (character_id, dungeon_level, dungeon_set, kills, monster_id, monster_hp, started_at)
+      VALUES (?, ?, ?, 0, ?, ?, ?)
+    `).run(char.id, requestedLevel, requestedSet, monster.id, monster.hp, now);
     db.prepare(`
       UPDATE characters SET activity = 'dungeon', activity_started_at = ?, last_tick_at = ?
       WHERE id = ?
@@ -415,13 +435,15 @@ router.post('/:characterId/dungeon/attack', (req, res) => {
 
     // Boss defeated → run complete
     if (isBossKill) {
-      const newMastery = Math.max(Number(char.dungeon_mastery) || 0, run.dungeon_level);
+      const dungeonSet  = Number(run.dungeon_set) || 1;
+      const masteryCol  = MASTERY_COL[dungeonSet] || 'dungeon_mastery';
+      const newMastery = Math.max(Number(char[masteryCol]) || 0, run.dungeon_level);
       transaction(() => {
         db.prepare('DELETE FROM dungeon_run WHERE character_id = ?').run(char.id);
         db.prepare(`
           UPDATE characters SET
             xp = ?, xp_to_next = ?, level = ?, max_hp = ?, hp = ?,
-            unspent_points = ?, dungeon_mastery = ?,
+            unspent_points = ?, ${masteryCol} = ?,
             activity = NULL, activity_started_at = NULL, last_tick_at = ?
           WHERE id = ?
         `).run(
@@ -435,9 +457,10 @@ router.post('/:characterId/dungeon/attack', (req, res) => {
 
     // Regular monster killed — advance to next
     const bossSpawned = newKills >= KILLS_FOR_BOSS;
+    const dungeonSet  = Number(run.dungeon_set) || 1;
     const nextMonster = Object.assign({}, db.prepare(
-      'SELECT * FROM monsters WHERE dungeon_level = ? AND is_boss = ?'
-    ).get(run.dungeon_level, bossSpawned ? 1 : 0));
+      'SELECT * FROM monsters WHERE dungeon_set = ? AND dungeon_level = ? AND is_boss = ?'
+    ).get(dungeonSet, run.dungeon_level, bossSpawned ? 1 : 0));
 
     transaction(() => {
       db.prepare(
