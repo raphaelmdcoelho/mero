@@ -871,11 +871,11 @@ function openAvatarPicker() {
     </div>
   `).join('');
 
-  document.getElementById('avatar-picker-modal').classList.add('active');
+  document.getElementById('avatar-picker-modal').classList.add('open');
 }
 
 function closeAvatarPicker() {
-  document.getElementById('avatar-picker-modal').classList.remove('active');
+  document.getElementById('avatar-picker-modal').classList.remove('open');
 }
 
 async function selectPresetAvatar(presetUrl, el) {
