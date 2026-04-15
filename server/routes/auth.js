@@ -1,6 +1,7 @@
+'use strict';
 const express = require('express');
 const bcrypt = require('bcryptjs');
-const { db } = require('../db');
+const { client } = require('../db');
 const { signAccess, signRefresh, verifyRefresh } = require('../auth');
 
 const router = express.Router();
@@ -31,14 +32,20 @@ router.post('/register', async (req, res) => {
     return res.status(400).json({ error: 'Password must be at least 6 characters' });
   }
 
-  const existing = db.prepare('SELECT id FROM users WHERE username = ?').get(username);
-  if (existing) {
+  const existR = await client.execute({
+    sql:  'SELECT id FROM users WHERE username = ?',
+    args: [username],
+  });
+  if (existR.rows.length) {
     return res.status(409).json({ error: 'Username already taken' });
   }
 
   const hash = await bcrypt.hash(password, SALT_ROUNDS);
-  const result = db.prepare('INSERT INTO users (username, password) VALUES (?, ?)').run(username, hash);
-  const userId = result.lastInsertRowid;
+  const result = await client.execute({
+    sql:  'INSERT INTO users (username, password) VALUES (?, ?)',
+    args: [username, hash],
+  });
+  const userId = Number(result.lastInsertRowid);
 
   const payload = { userId, username };
   res.cookie(REFRESH_COOKIE, signRefresh(payload), COOKIE_OPTS);
@@ -52,7 +59,11 @@ router.post('/login', async (req, res) => {
     return res.status(400).json({ error: 'Username and password required' });
   }
 
-  const user = db.prepare('SELECT id, username, password FROM users WHERE username = ?').get(username);
+  const userR = await client.execute({
+    sql:  'SELECT id, username, password FROM users WHERE username = ?',
+    args: [username],
+  });
+  const user = userR.rows[0] ?? null;
   if (!user) {
     return res.status(401).json({ error: 'Invalid credentials' });
   }
@@ -62,7 +73,7 @@ router.post('/login', async (req, res) => {
     return res.status(401).json({ error: 'Invalid credentials' });
   }
 
-  const payload = { userId: user.id, username: user.username };
+  const payload = { userId: Number(user.id), username: user.username };
   res.cookie(REFRESH_COOKIE, signRefresh(payload), COOKIE_OPTS);
   res.json({ accessToken: signAccess(payload), username: user.username });
 });

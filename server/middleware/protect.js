@@ -1,7 +1,7 @@
 const { verifyAccess } = require('../auth');
-const { db } = require('../db');
+const { client } = require('../db');
 
-function protect(req, res, next) {
+async function protect(req, res, next) {
   const authHeader = req.headers.authorization;
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
     return res.status(401).json({ error: 'Missing or invalid Authorization header' });
@@ -13,8 +13,11 @@ function protect(req, res, next) {
     return res.status(401).json({ error: 'Token invalid or expired' });
   }
 
-  const exists = db.prepare('SELECT 1 FROM users WHERE id = ?').get(req.user.userId);
-  if (!exists) {
+  const result = await client.execute({
+    sql:  'SELECT 1 FROM users WHERE id = ?',
+    args: [req.user.userId],
+  });
+  if (!result.rows.length) {
     return res.status(401).json({ error: 'User no longer exists' });
   }
 

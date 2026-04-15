@@ -1,7 +1,9 @@
 require('dotenv').config();
+require('express-async-errors');
 const express = require('express');
 const cookieParser = require('cookie-parser');
 const path = require('path');
+const { initDb } = require('./db');
 
 const app = express();
 
@@ -46,6 +48,13 @@ app.get('*', (req, res) => {
 });
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-  console.log(`Mero server running at http://localhost:${PORT}`);
-});
+initDb()
+  .then(() => {
+    app.listen(PORT, () => {
+      console.log(`Mero server running at http://localhost:${PORT}`);
+    });
+  })
+  .catch(err => {
+    console.error('Database initialization failed:', err);
+    process.exit(1);
+  });

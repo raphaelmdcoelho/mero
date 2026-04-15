@@ -1,6 +1,8 @@
+'use strict';
 const express = require('express');
-const { db, transaction } = require('../db');
+const { client } = require('../db');
 const protect = require('../middleware/protect');
+const { fullChar } = require('../helpers');
 
 // item_id -> HP restored (farm plants)
 const PLANT_ITEM_HP = { 6: 2, 7: 1 };
@@ -18,24 +20,33 @@ const MASTERY_COL = {
 };
 
 // Move any ready farm_queue entries into the regular inventory
-function harvestFarm(charId) {
+async function harvestFarm(charId) {
   const now = Math.floor(Date.now() / 1000);
   const PLANT_ITEM_IDS = { carrot: 6, apple: 7 };
-  const ready = db.prepare(
-    'SELECT * FROM farm_queue WHERE character_id = ? AND ready_at <= ?'
-  ).all(charId, now);
-  for (const job of ready) {
+  const r = await client.execute({
+    sql:  'SELECT * FROM farm_queue WHERE character_id = ? AND ready_at <= ?',
+    args: [charId, now],
+  });
+  for (const job of r.rows) {
     const itemId = PLANT_ITEM_IDS[job.plant_type];
     if (!itemId) continue;
-    const existing = db.prepare(
-      'SELECT id FROM inventory WHERE character_id = ? AND item_id = ?'
-    ).get(charId, itemId);
+    const existR = await client.execute({
+      sql:  'SELECT id FROM inventory WHERE character_id = ? AND item_id = ?',
+      args: [charId, itemId],
+    });
+    const existing = existR.rows[0] ?? null;
     if (existing) {
-      db.prepare('UPDATE inventory SET quantity = quantity + 1 WHERE id = ?').run(existing.id);
+      await client.execute({
+        sql:  'UPDATE inventory SET quantity = quantity + 1 WHERE id = ?',
+        args: [existing.id],
+      });
     } else {
-      db.prepare('INSERT INTO inventory (character_id, item_id, quantity) VALUES (?, ?, 1)').run(charId, itemId);
+      await client.execute({
+        sql:  'INSERT INTO inventory (character_id, item_id, quantity) VALUES (?, ?, 1)',
+        args: [charId, itemId],
+      });
     }
-    db.prepare('DELETE FROM farm_queue WHERE id = ?').run(job.id);
+    await client.execute({ sql: 'DELETE FROM farm_queue WHERE id = ?', args: [job.id] });
   }
 }
 
@@ -67,8 +78,8 @@ function levelUp(char) {
 const READING_POINT_INTERVAL = 30 * 60; // 30 min in seconds
 const READING_MAX_DURATION   = 60 * 60; // 1 hour in seconds
 
-// Derive combat stats from character row
-function combatStats(char) {
+// Derive combat stats from character row (requires weapon/armor DB lookups)
+async function combatStats(char) {
   const str = Number(char.attr_strength)   || 5;
   const dex = Number(char.attr_dexterity)  || 5;
   const agi = Number(char.attr_agility)    || 5;
@@ -76,12 +87,12 @@ function combatStats(char) {
   const res = Number(char.attr_resistance) || 5;
   const level = Number(char.level) || 1;
 
-  const weapon = char.weapon_id
-    ? Object.assign({}, db.prepare('SELECT * FROM items WHERE id = ?').get(char.weapon_id))
-    : null;
-  const armor = char.armor_id
-    ? Object.assign({}, db.prepare('SELECT * FROM items WHERE id = ?').get(char.armor_id))
-    : null;
+  const [weapR, armR] = await Promise.all([
+    char.weapon_id ? client.execute({ sql: 'SELECT * FROM items WHERE id = ?', args: [char.weapon_id] }) : Promise.resolve({ rows: [null] }),
+    char.armor_id  ? client.execute({ sql: 'SELECT * FROM items WHERE id = ?', args: [char.armor_id] })  : Promise.resolve({ rows: [null] }),
+  ]);
+  const weapon = weapR.rows[0] ? Object.assign({}, weapR.rows[0]) : null;
+  const armor  = armR.rows[0]  ? Object.assign({}, armR.rows[0])  : null;
 
   const isRanged    = weapon && weapon.weapon_type === 'ranged';
   const weaponDmg   = weapon ? (Number(weapon.damage)  || 0) : 0;
@@ -119,35 +130,14 @@ function applyReadingTick(char) {
   return { ...leveled, last_tick_at: now, reading_points_awarded, readingFinished };
 }
 
-function ownedChar(req, res) {
-  const char = db.prepare('SELECT * FROM characters WHERE id = ? AND user_id = ?')
-    .get(req.params.characterId, req.user.userId);
+async function ownedChar(req, res) {
+  const r = await client.execute({
+    sql:  'SELECT * FROM characters WHERE id = ? AND user_id = ?',
+    args: [req.params.characterId, req.user.userId],
+  });
+  const char = r.rows[0] ?? null;
   if (!char) res.status(404).json({ error: 'Character not found' });
   return char ? Object.assign({}, char) : null;
-}
-
-function fullChar(charId) {
-  const char = Object.assign({}, db.prepare('SELECT * FROM characters WHERE id = ?').get(charId));
-  const inventory = db.prepare(`
-    SELECT inv.id, inv.quantity, i.id as item_id, i.name, i.type, i.description, i.icon,
-           i.damage, i.defense, i.weapon_type, i.sell_price
-    FROM inventory inv JOIN items i ON i.id = inv.item_id
-    WHERE inv.character_id = ?
-  `).all(charId).map(r => Object.assign({}, r));
-  const equippedWeapon = char.weapon_id
-    ? Object.assign({}, db.prepare('SELECT * FROM items WHERE id = ?').get(char.weapon_id)) : null;
-  const equippedArmor = char.armor_id
-    ? Object.assign({}, db.prepare('SELECT * FROM items WHERE id = ?').get(char.armor_id)) : null;
-  const farmQueue = db.prepare(
-    'SELECT id, plant_type, ready_at FROM farm_queue WHERE character_id = ? ORDER BY ready_at ASC'
-  ).all(charId).map(r => Object.assign({}, r));
-  const runRow = db.prepare('SELECT * FROM dungeon_run WHERE character_id = ?').get(charId);
-  let dungeonRun = null;
-  if (runRow) {
-    dungeonRun = Object.assign({}, runRow);
-    dungeonRun.monster = Object.assign({}, db.prepare('SELECT * FROM monsters WHERE id = ?').get(runRow.monster_id));
-  }
-  return { ...char, inventory, equippedWeapon, equippedArmor, farmQueue, dungeonRun };
 }
 
 // ── Tavern: time-based HP regen ─────────────────────────────────────────────
@@ -171,8 +161,8 @@ function applyTavernTick(char) {
 }
 
 // POST /api/game/:characterId/start  (tavern or farm)
-router.post('/:characterId/start', (req, res) => {
-  const char = ownedChar(req, res);
+router.post('/:characterId/start', async (req, res) => {
+  const char = await ownedChar(req, res);
   if (!char) return;
 
   const { action } = req.body;
@@ -187,99 +177,103 @@ router.post('/:characterId/start', (req, res) => {
   }
 
   const now = Math.floor(Date.now() / 1000);
-  db.prepare(`
-    UPDATE characters SET activity = ?, activity_started_at = ?, last_tick_at = ?,
-      reading_points_awarded = 0
-    WHERE id = ?
-  `).run(action, now, now, char.id);
+  await client.execute({
+    sql:  `UPDATE characters SET activity = ?, activity_started_at = ?, last_tick_at = ?,
+           reading_points_awarded = 0 WHERE id = ?`,
+    args: [action, now, now, char.id],
+  });
 
-  res.json(fullChar(char.id));
+  res.json(await fullChar(char.id));
 });
 
 // POST /api/game/:characterId/stop
-router.post('/:characterId/stop', (req, res) => {
-  const char = ownedChar(req, res);
+router.post('/:characterId/stop', async (req, res) => {
+  const char = await ownedChar(req, res);
   if (!char) return;
 
   if (char.activity === 'tavern') {
     const upd = applyTavernTick(char);
-    db.prepare(`
-      UPDATE characters SET xp = ?, xp_to_next = ?, level = ?, max_hp = ?, hp = ?,
-        unspent_points = ?, activity = NULL, activity_started_at = NULL,
-        reading_points_awarded = 0, last_tick_at = ?
-      WHERE id = ?
-    `).run(upd.xp, upd.xp_to_next, upd.level, upd.max_hp, upd.hp,
-           upd.unspent_points, upd.last_tick_at, char.id);
+    await client.execute({
+      sql:  `UPDATE characters SET xp = ?, xp_to_next = ?, level = ?, max_hp = ?, hp = ?,
+             unspent_points = ?, activity = NULL, activity_started_at = NULL,
+             reading_points_awarded = 0, last_tick_at = ? WHERE id = ?`,
+      args: [upd.xp, upd.xp_to_next, upd.level, upd.max_hp, upd.hp,
+             upd.unspent_points, upd.last_tick_at, char.id],
+    });
   } else if (char.activity === 'reading') {
     const upd = applyReadingTick(char);
-    db.prepare(`
-      UPDATE characters SET xp = ?, xp_to_next = ?, level = ?, max_hp = ?, hp = ?,
-        unspent_points = ?, activity = NULL, activity_started_at = NULL,
-        reading_points_awarded = 0, last_tick_at = ?
-      WHERE id = ?
-    `).run(upd.xp, upd.xp_to_next, upd.level, upd.max_hp, upd.hp,
-           upd.unspent_points, upd.last_tick_at, char.id);
+    await client.execute({
+      sql:  `UPDATE characters SET xp = ?, xp_to_next = ?, level = ?, max_hp = ?, hp = ?,
+             unspent_points = ?, activity = NULL, activity_started_at = NULL,
+             reading_points_awarded = 0, last_tick_at = ? WHERE id = ?`,
+      args: [upd.xp, upd.xp_to_next, upd.level, upd.max_hp, upd.hp,
+             upd.unspent_points, upd.last_tick_at, char.id],
+    });
   } else {
-    db.prepare(`
-      UPDATE characters SET activity = NULL, activity_started_at = NULL,
-        reading_points_awarded = 0, last_tick_at = ?
-      WHERE id = ?
-    `).run(Math.floor(Date.now() / 1000), char.id);
+    await client.execute({
+      sql:  `UPDATE characters SET activity = NULL, activity_started_at = NULL,
+             reading_points_awarded = 0, last_tick_at = ? WHERE id = ?`,
+      args: [Math.floor(Date.now() / 1000), char.id],
+    });
   }
 
-  res.json(fullChar(char.id));
+  res.json(await fullChar(char.id));
 });
 
 // GET /api/game/:characterId/tick  (tavern HP regen tick + harvest)
-router.get('/:characterId/tick', (req, res) => {
-  const char = ownedChar(req, res);
+router.get('/:characterId/tick', async (req, res) => {
+  const char = await ownedChar(req, res);
   if (!char) return;
 
-  harvestFarm(char.id);
+  await harvestFarm(char.id);
 
   if (char.activity === 'tavern') {
     const upd = applyTavernTick(char);
-    db.prepare(`
-      UPDATE characters SET xp = ?, xp_to_next = ?, level = ?, max_hp = ?, hp = ?,
-        unspent_points = ?, last_tick_at = ?
-      WHERE id = ?
-    `).run(upd.xp, upd.xp_to_next, upd.level, upd.max_hp, upd.hp,
-           upd.unspent_points, upd.last_tick_at, char.id);
+    await client.execute({
+      sql:  `UPDATE characters SET xp = ?, xp_to_next = ?, level = ?, max_hp = ?, hp = ?,
+             unspent_points = ?, last_tick_at = ? WHERE id = ?`,
+      args: [upd.xp, upd.xp_to_next, upd.level, upd.max_hp, upd.hp,
+             upd.unspent_points, upd.last_tick_at, char.id],
+    });
   } else if (char.activity === 'reading') {
     const upd = applyReadingTick(char);
-    db.prepare(`
-      UPDATE characters SET xp = ?, xp_to_next = ?, level = ?, max_hp = ?, hp = ?,
-        unspent_points = ?, reading_points_awarded = ?, last_tick_at = ?
-        ${upd.readingFinished ? ', activity = NULL, activity_started_at = NULL' : ''}
-      WHERE id = ?
-    `).run(upd.xp, upd.xp_to_next, upd.level, upd.max_hp, upd.hp,
-           upd.unspent_points, upd.reading_points_awarded, upd.last_tick_at, char.id);
-    return res.json({ ...fullChar(char.id), readingFinished: upd.readingFinished });
+    await client.execute({
+      sql:  `UPDATE characters SET xp = ?, xp_to_next = ?, level = ?, max_hp = ?, hp = ?,
+             unspent_points = ?, reading_points_awarded = ?, last_tick_at = ?
+             ${upd.readingFinished ? ', activity = NULL, activity_started_at = NULL' : ''}
+             WHERE id = ?`,
+      args: [upd.xp, upd.xp_to_next, upd.level, upd.max_hp, upd.hp,
+             upd.unspent_points, upd.reading_points_awarded, upd.last_tick_at, char.id],
+    });
+    return res.json({ ...await fullChar(char.id), readingFinished: upd.readingFinished });
   }
 
-  res.json({ ...fullChar(char.id) });
+  res.json(await fullChar(char.id));
 });
 
 // ── Dungeon Battle System ───────────────────────────────────────────────────
 
 // GET /api/game/:characterId/stats
-router.get('/:characterId/stats', (req, res) => {
-  const char = ownedChar(req, res);
+router.get('/:characterId/stats', async (req, res) => {
+  const char = await ownedChar(req, res);
   if (!char) return;
-  res.json(combatStats(char));
+  res.json(await combatStats(char));
 });
 
 // POST /api/game/:characterId/dungeon/enter
 // body: { level: 1-10, set: 1-5 }
-router.post('/:characterId/dungeon/enter', (req, res) => {
-  const char = ownedChar(req, res);
+router.post('/:characterId/dungeon/enter', async (req, res) => {
+  const char = await ownedChar(req, res);
   if (!char) return;
 
   if (char.activity) {
     return res.status(400).json({ error: 'Stop your current activity first' });
   }
-  const existingRun = db.prepare('SELECT id FROM dungeon_run WHERE character_id = ?').get(char.id);
-  if (existingRun) {
+  const existR = await client.execute({
+    sql:  'SELECT id FROM dungeon_run WHERE character_id = ?',
+    args: [char.id],
+  });
+  if (existR.rows.length) {
     return res.status(400).json({ error: 'Already in a dungeon run. Flee first.' });
   }
 
@@ -303,57 +297,62 @@ router.post('/:characterId/dungeon/enter', (req, res) => {
     return res.status(400).json({ error: `Complete dungeon level ${mastery + 1} first` });
   }
 
-  const monster = Object.assign({}, db.prepare(
-    'SELECT * FROM monsters WHERE dungeon_set = ? AND dungeon_level = ? AND is_boss = 0'
-  ).get(requestedSet, requestedLevel));
+  const monR = await client.execute({
+    sql:  'SELECT * FROM monsters WHERE dungeon_set = ? AND dungeon_level = ? AND is_boss = 0',
+    args: [requestedSet, requestedLevel],
+  });
+  const monster = monR.rows[0] ? Object.assign({}, monR.rows[0]) : null;
   if (!monster || !monster.id) {
     return res.status(500).json({ error: 'Monster data missing' });
   }
 
   const now = Math.floor(Date.now() / 1000);
-  transaction(() => {
-    db.prepare(`
-      INSERT INTO dungeon_run (character_id, dungeon_level, dungeon_set, kills, monster_id, monster_hp, started_at)
-      VALUES (?, ?, ?, 0, ?, ?, ?)
-    `).run(char.id, requestedLevel, requestedSet, monster.id, monster.hp, now);
-    db.prepare(`
-      UPDATE characters SET activity = 'dungeon', activity_started_at = ?, last_tick_at = ?
-      WHERE id = ?
-    `).run(now, now, char.id);
-  });
+  await client.batch([
+    {
+      sql:  `INSERT INTO dungeon_run (character_id, dungeon_level, dungeon_set, kills, monster_id, monster_hp, started_at)
+             VALUES (?, ?, ?, 0, ?, ?, ?)`,
+      args: [char.id, requestedLevel, requestedSet, monster.id, monster.hp, now],
+    },
+    {
+      sql:  `UPDATE characters SET activity = 'dungeon', activity_started_at = ?, last_tick_at = ? WHERE id = ?`,
+      args: [now, now, char.id],
+    },
+  ], 'write');
 
-  res.json(fullChar(char.id));
+  res.json(await fullChar(char.id));
 });
 
 // POST /api/game/:characterId/dungeon/flee
-router.post('/:characterId/dungeon/flee', (req, res) => {
-  const char = ownedChar(req, res);
+router.post('/:characterId/dungeon/flee', async (req, res) => {
+  const char = await ownedChar(req, res);
   if (!char) return;
 
-  transaction(() => {
-    db.prepare('DELETE FROM dungeon_run WHERE character_id = ?').run(char.id);
-    db.prepare(`
-      UPDATE characters SET activity = NULL, activity_started_at = NULL, last_tick_at = ?
-      WHERE id = ?
-    `).run(Math.floor(Date.now() / 1000), char.id);
-  });
+  await client.batch([
+    { sql: 'DELETE FROM dungeon_run WHERE character_id = ?',                         args: [char.id] },
+    { sql: `UPDATE characters SET activity = NULL, activity_started_at = NULL, last_tick_at = ? WHERE id = ?`, args: [Math.floor(Date.now() / 1000), char.id] },
+  ], 'write');
 
-  res.json(fullChar(char.id));
+  res.json(await fullChar(char.id));
 });
 
 // POST /api/game/:characterId/dungeon/attack
 // Resolves a full fight against the current monster
-router.post('/:characterId/dungeon/attack', (req, res) => {
-  const char = ownedChar(req, res);
+router.post('/:characterId/dungeon/attack', async (req, res) => {
+  const char = await ownedChar(req, res);
   if (!char) return;
 
-  const run = db.prepare('SELECT * FROM dungeon_run WHERE character_id = ?').get(char.id);
+  const runR = await client.execute({
+    sql:  'SELECT * FROM dungeon_run WHERE character_id = ?',
+    args: [char.id],
+  });
+  const run = runR.rows[0] ? Object.assign({}, runR.rows[0]) : null;
   if (!run) {
     return res.status(400).json({ error: 'No active dungeon run' });
   }
 
-  const monster  = Object.assign({}, db.prepare('SELECT * FROM monsters WHERE id = ?').get(run.monster_id));
-  const pStats   = combatStats(char);
+  const monR = await client.execute({ sql: 'SELECT * FROM monsters WHERE id = ?', args: [run.monster_id] });
+  const monster  = Object.assign({}, monR.rows[0]);
+  const pStats   = await combatStats(char);
   let playerHp   = Number(char.hp);
   let monsterHp  = Number(run.monster_hp);
   const combatLog = [];
@@ -393,14 +392,11 @@ router.post('/:characterId/dungeon/attack', (req, res) => {
 
   // ── Player died ────────────────────────────────────────────────────────────
   if (playerHp <= 0) {
-    transaction(() => {
-      db.prepare('DELETE FROM dungeon_run WHERE character_id = ?').run(char.id);
-      db.prepare(`
-        UPDATE characters SET hp = 1, activity = NULL, activity_started_at = NULL,
-          last_tick_at = ? WHERE id = ?
-      `).run(Math.floor(Date.now() / 1000), char.id);
-    });
-    return res.json({ result: 'defeat', combatLog, char: fullChar(char.id) });
+    await client.batch([
+      { sql: 'DELETE FROM dungeon_run WHERE character_id = ?', args: [char.id] },
+      { sql: `UPDATE characters SET hp = 1, activity = NULL, activity_started_at = NULL, last_tick_at = ? WHERE id = ?`, args: [Math.floor(Date.now() / 1000), char.id] },
+    ], 'write');
+    return res.json({ result: 'defeat', combatLog, char: await fullChar(char.id) });
   }
 
   // ── Monster died ───────────────────────────────────────────────────────────
@@ -418,15 +414,20 @@ router.post('/:characterId/dungeon/attack', (req, res) => {
     // Roll loot drop
     let droppedItem = null;
     if (monster.drop_item_id && Math.random() * 100 < monster.drop_chance) {
-      droppedItem = Object.assign({}, db.prepare('SELECT * FROM items WHERE id = ?').get(monster.drop_item_id));
-      const existing = db.prepare(
-        'SELECT id FROM inventory WHERE character_id = ? AND item_id = ?'
-      ).get(char.id, monster.drop_item_id);
+      const itemR = await client.execute({ sql: 'SELECT * FROM items WHERE id = ?', args: [monster.drop_item_id] });
+      droppedItem = Object.assign({}, itemR.rows[0]);
+      const existR = await client.execute({
+        sql:  'SELECT id FROM inventory WHERE character_id = ? AND item_id = ?',
+        args: [char.id, monster.drop_item_id],
+      });
+      const existing = existR.rows[0] ?? null;
       if (existing) {
-        db.prepare('UPDATE inventory SET quantity = quantity + 1 WHERE id = ?').run(existing.id);
+        await client.execute({ sql: 'UPDATE inventory SET quantity = quantity + 1 WHERE id = ?', args: [existing.id] });
       } else {
-        db.prepare('INSERT INTO inventory (character_id, item_id, quantity) VALUES (?, ?, 1)')
-          .run(char.id, monster.drop_item_id);
+        await client.execute({
+          sql:  'INSERT INTO inventory (character_id, item_id, quantity) VALUES (?, ?, 1)',
+          args: [char.id, monster.drop_item_id],
+        });
       }
     }
 
@@ -438,55 +439,52 @@ router.post('/:characterId/dungeon/attack', (req, res) => {
       const dungeonSet  = Number(run.dungeon_set) || 1;
       const masteryCol  = MASTERY_COL[dungeonSet] || 'dungeon_mastery';
       const newMastery = Math.max(Number(char[masteryCol]) || 0, run.dungeon_level);
-      transaction(() => {
-        db.prepare('DELETE FROM dungeon_run WHERE character_id = ?').run(char.id);
-        db.prepare(`
-          UPDATE characters SET
-            xp = ?, xp_to_next = ?, level = ?, max_hp = ?, hp = ?,
-            unspent_points = ?, ${masteryCol} = ?,
-            activity = NULL, activity_started_at = NULL, last_tick_at = ?
-          WHERE id = ?
-        `).run(
-          afterXp.xp, afterXp.xp_to_next, afterXp.level, afterXp.max_hp, afterXp.hp,
-          afterXp.unspent_points, newMastery,
-          Math.floor(Date.now() / 1000), char.id
-        );
-      });
-      return res.json({ result: 'run_complete', gainedXp, droppedItem, combatLog, newMastery, char: fullChar(char.id) });
+      await client.batch([
+        { sql: 'DELETE FROM dungeon_run WHERE character_id = ?', args: [char.id] },
+        {
+          sql:  `UPDATE characters SET
+                 xp = ?, xp_to_next = ?, level = ?, max_hp = ?, hp = ?,
+                 unspent_points = ?, ${masteryCol} = ?,
+                 activity = NULL, activity_started_at = NULL, last_tick_at = ?
+                 WHERE id = ?`,
+          args: [afterXp.xp, afterXp.xp_to_next, afterXp.level, afterXp.max_hp, afterXp.hp,
+                 afterXp.unspent_points, newMastery, Math.floor(Date.now() / 1000), char.id],
+        },
+      ], 'write');
+      return res.json({ result: 'run_complete', gainedXp, droppedItem, combatLog, newMastery, char: await fullChar(char.id) });
     }
 
     // Regular monster killed — advance to next
     const bossSpawned = newKills >= KILLS_FOR_BOSS;
     const dungeonSet  = Number(run.dungeon_set) || 1;
-    const nextMonster = Object.assign({}, db.prepare(
-      'SELECT * FROM monsters WHERE dungeon_set = ? AND dungeon_level = ? AND is_boss = ?'
-    ).get(dungeonSet, run.dungeon_level, bossSpawned ? 1 : 0));
-
-    transaction(() => {
-      db.prepare(
-        'UPDATE dungeon_run SET kills = ?, monster_id = ?, monster_hp = ? WHERE character_id = ?'
-      ).run(newKills, nextMonster.id, nextMonster.hp, char.id);
-      db.prepare(`
-        UPDATE characters SET
-          xp = ?, xp_to_next = ?, level = ?, max_hp = ?, hp = ?,
-          unspent_points = ?, last_tick_at = ?
-        WHERE id = ?
-      `).run(
-        afterXp.xp, afterXp.xp_to_next, afterXp.level, afterXp.max_hp, afterXp.hp,
-        afterXp.unspent_points, Math.floor(Date.now() / 1000), char.id
-      );
+    const nextMonR = await client.execute({
+      sql:  'SELECT * FROM monsters WHERE dungeon_set = ? AND dungeon_level = ? AND is_boss = ?',
+      args: [dungeonSet, run.dungeon_level, bossSpawned ? 1 : 0],
     });
+    const nextMonster = Object.assign({}, nextMonR.rows[0]);
 
-    return res.json({ result: 'monster_killed', gainedXp, droppedItem, combatLog, kills: newKills, bossSpawned, char: fullChar(char.id) });
+    await client.batch([
+      {
+        sql:  'UPDATE dungeon_run SET kills = ?, monster_id = ?, monster_hp = ? WHERE character_id = ?',
+        args: [newKills, nextMonster.id, nextMonster.hp, char.id],
+      },
+      {
+        sql:  `UPDATE characters SET xp = ?, xp_to_next = ?, level = ?, max_hp = ?, hp = ?,
+               unspent_points = ?, last_tick_at = ? WHERE id = ?`,
+        args: [afterXp.xp, afterXp.xp_to_next, afterXp.level, afterXp.max_hp, afterXp.hp,
+               afterXp.unspent_points, Math.floor(Date.now() / 1000), char.id],
+      },
+    ], 'write');
+
+    return res.json({ result: 'monster_killed', gainedXp, droppedItem, combatLog, kills: newKills, bossSpawned, char: await fullChar(char.id) });
   }
 
   // Both alive after MAX_ROUNDS (shouldn't happen, persist state)
-  transaction(() => {
-    db.prepare('UPDATE dungeon_run SET monster_hp = ? WHERE character_id = ?').run(monsterHp, char.id);
-    db.prepare('UPDATE characters SET hp = ?, last_tick_at = ? WHERE id = ?')
-      .run(playerHp, Math.floor(Date.now() / 1000), char.id);
-  });
-  res.json({ result: 'ongoing', combatLog, char: fullChar(char.id) });
+  await client.batch([
+    { sql: 'UPDATE dungeon_run SET monster_hp = ? WHERE character_id = ?',        args: [monsterHp, char.id] },
+    { sql: 'UPDATE characters SET hp = ?, last_tick_at = ? WHERE id = ?', args: [playerHp, Math.floor(Date.now() / 1000), char.id] },
+  ], 'write');
+  res.json({ result: 'ongoing', combatLog, char: await fullChar(char.id) });
 });
 
 module.exports = router;
