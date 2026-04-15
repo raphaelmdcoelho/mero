@@ -66,7 +66,7 @@
       'char.failed_create':      'Failed to create character',
 
       // Game page — action squares
-      'game.dungeon':            'Dungeon',
+      'game.dungeon':            'Dungeons',
       'game.farm':               'Farm',
       'game.tavern':             'Tavern',
       'game.inventory':          'Inventory',
@@ -80,7 +80,7 @@
       'game.logout':             'Logout',
 
       // Dungeon modal
-      'game.dm.title':           'Choose Dungeon Level',
+      'game.dm.title':           'Select a Dungeon',
       'game.dm.note':            'Defeat 100 monsters, then face the Boss to increase your mastery.',
       'game.dm.cancel':          'Cancel',
       'game.dm.enter':           'Enter Dungeon',
@@ -138,7 +138,7 @@
       'game.js.resting_badge':      '🍺 Resting',
 
       // Game JS — action square labels (dynamic)
-      'game.js.dungeon_lbl':        'Dungeon',
+      'game.js.dungeon_lbl':        'Dungeons',
       'game.js.tavern_lbl':         'Tavern',
       'game.js.farm_lbl':           'Farm',
       'game.js.read_lbl':           'Read',
@@ -276,7 +276,7 @@
       'char.failed_create':      'Falha ao criar personagem',
 
       // Game page — action squares
-      'game.dungeon':            'Masmorra',
+      'game.dungeon':            'Masmorras',
       'game.farm':               'Fazenda',
       'game.tavern':             'Taverna',
       'game.inventory':          'Inventário',
@@ -290,7 +290,7 @@
       'game.logout':             'Sair',
 
       // Dungeon modal
-      'game.dm.title':           'Escolha o Nível da Masmorra',
+      'game.dm.title':           'Selecione uma Masmorra',
       'game.dm.note':            'Derrote 100 monstros e então enfrente o Chefe para aumentar seu domínio.',
       'game.dm.cancel':          'Cancelar',
       'game.dm.enter':           'Entrar na Masmorra',
@@ -348,7 +348,7 @@
       'game.js.resting_badge':      '🍺 Descansando',
 
       // Game JS — action square labels (dynamic)
-      'game.js.dungeon_lbl':        'Masmorra',
+      'game.js.dungeon_lbl':        'Masmorras',
       'game.js.tavern_lbl':         'Taverna',
       'game.js.farm_lbl':           'Fazenda',
       'game.js.read_lbl':           'Ler',
