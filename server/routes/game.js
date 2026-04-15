@@ -55,6 +55,9 @@ function levelUp(char) {
   return { xp, xp_to_next, level, max_hp, hp: Math.min(hp, max_hp), unspent_points };
 }
 
+const READING_POINT_INTERVAL = 30 * 60; // 30 min in seconds
+const READING_MAX_DURATION   = 60 * 60; // 1 hour in seconds
+
 // Derive combat stats from character row
 function combatStats(char) {
   const str = Number(char.attr_strength)   || 5;
@@ -82,6 +85,29 @@ function combatStats(char) {
   const defense     = Math.floor(res / 3) + armorDef;
 
   return { maxHp, damage, hitChance, dodgeChance, defense, isRanged, weaponDmg, armorDef };
+}
+
+// Apply reading tick (awards attr points over time, auto-stops at 1h)
+function applyReadingTick(char) {
+  const now = Math.floor(Date.now() / 1000);
+  let { xp, xp_to_next, level, hp, unspent_points } = char;
+  const vitality = Number(char.attr_vitality) || 5;
+  let reading_points_awarded = Number(char.reading_points_awarded) || 0;
+  let readingFinished = false;
+
+  const totalElapsed = Math.max(0, now - (char.activity_started_at || now));
+  const pointsDue = Math.min(2, Math.floor(totalElapsed / READING_POINT_INTERVAL));
+  const newPoints = pointsDue - reading_points_awarded;
+  if (newPoints > 0) {
+    unspent_points += newPoints;
+    reading_points_awarded = pointsDue;
+  }
+  if (totalElapsed >= READING_MAX_DURATION) {
+    readingFinished = true;
+  }
+
+  const leveled = levelUp({ xp, xp_to_next, level, hp, unspent_points, attr_vitality: vitality });
+  return { ...leveled, last_tick_at: now, reading_points_awarded, readingFinished };
 }
 
 function ownedChar(req, res) {
@@ -141,7 +167,7 @@ router.post('/:characterId/start', (req, res) => {
   if (!char) return;
 
   const { action } = req.body;
-  if (!['tavern', 'farm'].includes(action)) {
+  if (!['tavern', 'farm', 'reading'].includes(action)) {
     return res.status(400).json({ error: 'Use /dungeon/enter to start a dungeon run' });
   }
   if (action === 'farm' && (Number(char.level) || 1) < 3) {
@@ -153,7 +179,8 @@ router.post('/:characterId/start', (req, res) => {
 
   const now = Math.floor(Date.now() / 1000);
   db.prepare(`
-    UPDATE characters SET activity = ?, activity_started_at = ?, last_tick_at = ?
+    UPDATE characters SET activity = ?, activity_started_at = ?, last_tick_at = ?,
+      reading_points_awarded = 0
     WHERE id = ?
   `).run(action, now, now, char.id);
 
@@ -169,13 +196,24 @@ router.post('/:characterId/stop', (req, res) => {
     const upd = applyTavernTick(char);
     db.prepare(`
       UPDATE characters SET xp = ?, xp_to_next = ?, level = ?, max_hp = ?, hp = ?,
-        unspent_points = ?, activity = NULL, activity_started_at = NULL, last_tick_at = ?
+        unspent_points = ?, activity = NULL, activity_started_at = NULL,
+        reading_points_awarded = 0, last_tick_at = ?
+      WHERE id = ?
+    `).run(upd.xp, upd.xp_to_next, upd.level, upd.max_hp, upd.hp,
+           upd.unspent_points, upd.last_tick_at, char.id);
+  } else if (char.activity === 'reading') {
+    const upd = applyReadingTick(char);
+    db.prepare(`
+      UPDATE characters SET xp = ?, xp_to_next = ?, level = ?, max_hp = ?, hp = ?,
+        unspent_points = ?, activity = NULL, activity_started_at = NULL,
+        reading_points_awarded = 0, last_tick_at = ?
       WHERE id = ?
     `).run(upd.xp, upd.xp_to_next, upd.level, upd.max_hp, upd.hp,
            upd.unspent_points, upd.last_tick_at, char.id);
   } else {
     db.prepare(`
-      UPDATE characters SET activity = NULL, activity_started_at = NULL, last_tick_at = ?
+      UPDATE characters SET activity = NULL, activity_started_at = NULL,
+        reading_points_awarded = 0, last_tick_at = ?
       WHERE id = ?
     `).run(Math.floor(Date.now() / 1000), char.id);
   }
@@ -190,17 +228,25 @@ router.get('/:characterId/tick', (req, res) => {
 
   harvestFarm(char.id);
 
-  if (char.activity !== 'tavern') {
-    return res.json({ ...fullChar(char.id) });
+  if (char.activity === 'tavern') {
+    const upd = applyTavernTick(char);
+    db.prepare(`
+      UPDATE characters SET xp = ?, xp_to_next = ?, level = ?, max_hp = ?, hp = ?,
+        unspent_points = ?, last_tick_at = ?
+      WHERE id = ?
+    `).run(upd.xp, upd.xp_to_next, upd.level, upd.max_hp, upd.hp,
+           upd.unspent_points, upd.last_tick_at, char.id);
+  } else if (char.activity === 'reading') {
+    const upd = applyReadingTick(char);
+    db.prepare(`
+      UPDATE characters SET xp = ?, xp_to_next = ?, level = ?, max_hp = ?, hp = ?,
+        unspent_points = ?, reading_points_awarded = ?, last_tick_at = ?
+        ${upd.readingFinished ? ', activity = NULL, activity_started_at = NULL' : ''}
+      WHERE id = ?
+    `).run(upd.xp, upd.xp_to_next, upd.level, upd.max_hp, upd.hp,
+           upd.unspent_points, upd.reading_points_awarded, upd.last_tick_at, char.id);
+    return res.json({ ...fullChar(char.id), readingFinished: upd.readingFinished });
   }
-
-  const upd = applyTavernTick(char);
-  db.prepare(`
-    UPDATE characters SET xp = ?, xp_to_next = ?, level = ?, max_hp = ?, hp = ?,
-      unspent_points = ?, last_tick_at = ?
-    WHERE id = ?
-  `).run(upd.xp, upd.xp_to_next, upd.level, upd.max_hp, upd.hp,
-         upd.unspent_points, upd.last_tick_at, char.id);
 
   res.json({ ...fullChar(char.id) });
 });

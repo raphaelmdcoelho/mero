@@ -45,6 +45,12 @@ async function tick() {
   const data = await res.json();
   charState = data;
   renderAll(data);
+  if (data.fallen) showToast('Your hero has fallen! Retreating from the dungeon…', 'danger');
+  if (data.plantConsumed) {
+    const icon = data.plantConsumed === 'carrot' ? '🥕' : '🍎';
+    showToast(`${icon} A ${data.plantConsumed} was consumed to keep you alive!`, 'warn');
+  }
+  if (data.readingFinished) showToast('📖 Reading session complete! Check your attribute points.', 'success');
 }
 
 // ---- Render ----
@@ -96,6 +102,11 @@ function renderAll(char) {
       actLabel.textContent = `🏰 Dungeon Lv.${lvl}`;
     } else if (char.activity === 'farm') {
       actLabel.textContent = '🌱 Farming';
+    } else if (char.activity === 'reading') {
+      const elapsed = Math.floor(Date.now() / 1000) - (char.activity_started_at || 0);
+      const minsLeft = Math.max(0, Math.ceil((3600 - elapsed) / 60));
+      const pts = Number(char.reading_points_awarded) || 0;
+      actLabel.textContent = `📖 Reading · ${minsLeft}m left · ${pts}/2 pts`;
     } else {
       actLabel.textContent = '🍺 Resting';
     }
@@ -142,29 +153,40 @@ function updateActionSquares(activity) {
   const eq      = document.getElementById('sq-equipment');
   const attrs   = document.getElementById('sq-attributes');
   const stats   = document.getElementById('sq-stats');
+  const read    = document.getElementById('sq-read');
 
   // Reset activity squares (farm handled separately below)
-  [dungeon, tavern, inv, eq, attrs, stats].forEach(el => el.classList.remove('active', 'disabled'));
+  const resetEls = [dungeon, tavern, inv, eq, attrs, stats, read].filter(Boolean);
+  resetEls.forEach(el => el.classList.remove('active', 'disabled'));
 
   if (activity === 'dungeon') {
     dungeon.classList.add('active');
     dungeon.querySelector('span:last-child').textContent = 'Dungeon';
     tavern.classList.add('disabled');
     farm.classList.add('disabled');
+    if (read) read.classList.add('disabled');
   } else if (activity === 'tavern') {
     tavern.classList.add('active');
     tavern.querySelector('span:last-child').textContent = 'Stop';
     dungeon.classList.add('disabled');
     farm.classList.add('disabled');
+    if (read) read.classList.add('disabled');
   } else if (activity === 'farm') {
     farm.classList.add('active');
     farm.querySelector('#farm-label').textContent = 'Stop Farm';
     dungeon.classList.add('disabled');
     tavern.classList.add('disabled');
+    if (read) read.classList.add('disabled');
+  } else if (activity === 'reading') {
+    if (read) { read.classList.add('active'); read.querySelector('span:last-child').textContent = 'Stop'; }
+    dungeon.classList.add('disabled');
+    tavern.classList.add('disabled');
+    farm.classList.add('disabled');
   } else {
     dungeon.querySelector('span:last-child').textContent = 'Dungeon';
     tavern.querySelector('span:last-child').textContent = 'Tavern';
     farm.querySelector('#farm-label').textContent = 'Farm';
+    if (read) read.querySelector('span:last-child').textContent = 'Read';
   }
 }
 
@@ -626,6 +648,26 @@ async function confirmAttributes() {
   renderAll(charState);
   showToast('Attributes updated!', 'success');
   refreshCombatStats();
+}
+
+// ---- Read ----
+async function startActivity(action) {
+  const res = await api.post(`/api/game/${charId}/start`, { action });
+  if (!res) return;
+  const data = await res.json();
+  if (!res.ok) { showToast(data.error || 'Failed', 'danger'); return; }
+  charState = data;
+  renderAll(data);
+}
+
+function handleRead() {
+  if (!charState) return;
+  if (charState.activity === 'reading') {
+    stopActivity();
+  } else if (!charState.activity) {
+    startActivity('reading');
+    showToast('📖 Your hero starts reading. +1 attr point every 30 min (max 2).', 'success');
+  }
 }
 
 // ---- Farm ----
