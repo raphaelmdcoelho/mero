@@ -23,8 +23,9 @@
         <div class="activity-dot"></div>
         <span id="activity-label">Active</span>
       </div>
-      <a href="/characters.html" class="btn btn-outline btn-sm">← Heroes</a>
-      <button class="btn btn-outline btn-sm" onclick="logout()">Logout</button>
+      <div class="lang-switcher"></div>
+      <a href="/characters.html" class="btn btn-outline btn-sm" data-i18n="game.heroes_link">← Heroes</a>
+      <button class="btn btn-outline btn-sm" onclick="logout()" data-i18n="game.logout">Logout</button>
     </div>
   </header>
 
@@ -35,13 +36,13 @@
         <!-- Top-left: Dungeon -->
         <div class="action-sq" id="sq-dungeon" style="grid-column:1;grid-row:1;" onclick="handleDungeon()">
           <span class="sq-icon">🏰</span>
-          <span>Dungeon</span>
+          <span id="dungeon-label" data-i18n="game.dungeon">Dungeon</span>
         </div>
 
         <!-- Top-center: Farm (activity, unlocks at level 3) -->
         <div class="action-sq" id="sq-farm" style="grid-column:2;grid-row:1;position:relative;" onclick="handleFarm()">
           <span class="sq-icon">🌱</span>
-          <span id="farm-label">Farm</span>
+          <span id="farm-label" data-i18n="game.farm">Farm</span>
           <span id="farm-lock-badge" class="unspent-badge" style="display:none;font-size:0.55rem;">Lv.3</span>
           <span id="farm-stock-badge" class="unspent-badge" style="display:none;background:var(--accent);"></span>
         </div>
@@ -49,7 +50,7 @@
         <!-- Top-right: Tavern -->
         <div class="action-sq" id="sq-tavern" style="grid-column:3;grid-row:1;" onclick="handleTavern()">
           <span class="sq-icon">🍺</span>
-          <span>Tavern</span>
+          <span id="tavern-label" data-i18n="game.tavern">Tavern</span>
         </div>
 
         <!-- Center: Avatar -->
@@ -61,45 +62,45 @@
               <path d="M12 72c0-15.464 12.536-28 28-28s28 12.536 28 28" fill="#3d2f6e"/>
             </svg>
           </div>
-          <span class="avatar-hint">Click to upload</span>
+          <span class="avatar-hint" data-i18n="game.avatar_hint">Click to upload</span>
           <input type="file" id="avatar-input" accept="image/jpeg" style="display:none;" onchange="uploadAvatar(event)" />
         </div>
 
         <!-- Bottom-left: Inventory -->
         <div class="action-sq" id="sq-inventory" style="grid-column:1;grid-row:3;" onclick="openPanel('inventory')">
           <span class="sq-icon">🎒</span>
-          <span>Inventory</span>
+          <span data-i18n="game.inventory">Inventory</span>
         </div>
 
         <!-- Bottom-center: Attributes -->
         <div class="action-sq" id="sq-attributes" style="grid-column:2;grid-row:3;position:relative;" onclick="openPanel('attributes')">
           <span class="sq-icon">⚡</span>
-          <span>Attributes</span>
+          <span data-i18n="game.attributes">Attributes</span>
           <span id="unspent-badge" class="unspent-badge" style="display:none;"></span>
         </div>
 
         <!-- Bottom-right: Equipment -->
         <div class="action-sq" id="sq-equipment" style="grid-column:3;grid-row:3;" onclick="openPanel('equipment')">
           <span class="sq-icon">🛡️</span>
-          <span>Equipment</span>
+          <span data-i18n="game.equipment">Equipment</span>
         </div>
 
         <!-- Row 4 left: Read -->
         <div class="action-sq" id="sq-read" style="grid-column:1;grid-row:4;" onclick="handleRead()">
           <span class="sq-icon">📖</span>
-          <span>Read</span>
+          <span id="read-label" data-i18n="game.read">Read</span>
         </div>
 
         <!-- Row 4 center: Market -->
         <div class="action-sq" id="sq-market" style="grid-column:2;grid-row:4;" onclick="openPanel('market')">
           <span class="sq-icon">🏪</span>
-          <span>Market</span>
+          <span data-i18n="game.market">Market</span>
         </div>
 
         <!-- Row 4 right: Combat Stats -->
         <div class="action-sq" id="sq-stats" style="grid-column:3;grid-row:4;" onclick="openPanel('stats')">
           <span class="sq-icon">📊</span>
-          <span>Stats</span>
+          <span data-i18n="game.stats">Stats</span>
         </div>
       </div>
     </div>
@@ -133,14 +134,14 @@
   <!-- Dungeon Level Modal -->
   <div class="modal-overlay" id="dungeon-modal">
     <div class="modal">
-      <h2 class="modal-title">Choose Dungeon Level</h2>
-      <p class="dungeon-modal-note">Defeat 100 monsters, then face the Boss to increase your mastery.</p>
+      <h2 class="modal-title" data-i18n="game.dm.title">Choose Dungeon Level</h2>
+      <p class="dungeon-modal-note" data-i18n="game.dm.note">Defeat 100 monsters, then face the Boss to increase your mastery.</p>
       <div class="dungeon-level-grid" id="dungeon-level-grid">
         <!-- populated by JS -->
       </div>
       <div class="modal-footer">
-        <button class="btn btn-outline" onclick="closeDungeonModal()">Cancel</button>
-        <button class="btn btn-primary" id="enter-dungeon-btn" onclick="confirmEnterDungeon()">Enter Dungeon</button>
+        <button class="btn btn-outline" onclick="closeDungeonModal()" data-i18n="game.dm.cancel">Cancel</button>
+        <button class="btn btn-primary" id="enter-dungeon-btn" onclick="confirmEnterDungeon()" data-i18n="game.dm.enter">Enter Dungeon</button>
       </div>
     </div>
   </div>
@@ -174,7 +175,7 @@
 
       <!-- Hero HP (inside battle panel) -->
       <div class="battle-hero-hp">
-        <span class="battle-hero-label">🧙 Hero</span>
+        <span class="battle-hero-label" data-i18n="game.bp.hero">🧙 Hero</span>
         <div class="stat-track">
           <div class="stat-fill hp" id="battle-hero-hp-fill" style="width:100%;"></div>
         </div>
@@ -183,12 +184,12 @@
 
       <!-- Combat log -->
       <div class="battle-log" id="battle-log">
-        <div class="battle-log-empty">Press Attack to begin!</div>
+        <div class="battle-log-empty" data-i18n="game.bp.press_attack">Press Attack to begin!</div>
       </div>
 
       <!-- Actions -->
       <div class="battle-actions">
-        <button class="btn btn-danger battle-attack-btn" id="stop-btn" onclick="stopDungeon()">🚪 Stop Dungeon</button>
+        <button class="btn btn-danger battle-attack-btn" id="stop-btn" onclick="stopDungeon()" data-i18n="game.bp.stop">🚪 Stop Dungeon</button>
       </div>
     </div>
   </div>
@@ -200,8 +201,8 @@
       <button class="close-btn" onclick="closePanel('inventory')">✕</button>
     </div>
     <div class="side-panel-body">
-      <p style="font-size:0.8rem;color:var(--muted);margin-bottom:0.75rem;">
-        Max 10 slots &bull; Gold border = equipped
+      <p style="font-size:0.8rem;color:var(--muted);margin-bottom:0.75rem;" data-i18n="game.inv.hint">
+        Max 10 slots · Gold border = equipped
       </p>
       <div class="inv-grid" id="inv-grid"></div>
       <div id="item-tooltip" style="display:none;margin-top:1rem;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:0.75rem;font-size:0.85rem;"></div>
@@ -218,21 +219,21 @@
       <div id="eq-weapon" class="equip-slot">
         <span class="equip-slot-icon">🗡️</span>
         <div class="equip-slot-info">
-          <div class="equip-slot-label">Weapon</div>
-          <div class="equip-slot-name" id="eq-weapon-name">None</div>
+          <div class="equip-slot-label" data-i18n="game.eq.weapon">Weapon</div>
+          <div class="equip-slot-name" id="eq-weapon-name"></div>
           <div class="equip-slot-stat" id="eq-weapon-stat"></div>
         </div>
       </div>
       <div id="eq-armor" class="equip-slot">
         <span class="equip-slot-icon">🥋</span>
         <div class="equip-slot-info">
-          <div class="equip-slot-label">Armor</div>
-          <div class="equip-slot-name" id="eq-armor-name">None</div>
+          <div class="equip-slot-label" data-i18n="game.eq.armor">Armor</div>
+          <div class="equip-slot-name" id="eq-armor-name"></div>
           <div class="equip-slot-stat" id="eq-armor-stat"></div>
         </div>
       </div>
       <hr class="panel-divider" />
-      <p class="panel-sub">Equip from inventory:</p>
+      <p class="panel-sub" data-i18n="game.eq.equip_from">Equip from inventory:</p>
       <div id="eq-list"></div>
     </div>
   </div>
@@ -244,13 +245,13 @@
       <button class="close-btn" onclick="closePanel('stats')">✕</button>
     </div>
     <div class="side-panel-body">
-      <div class="combat-stat-row"><span class="cstat-label">❤️ Max HP</span><span class="cstat-value" id="cstat-hp">—</span></div>
-      <div class="combat-stat-row"><span class="cstat-label">⚔️ Damage</span><span class="cstat-value" id="cstat-dmg">—</span></div>
-      <div class="combat-stat-row"><span class="cstat-label">🎯 Hit Chance</span><span class="cstat-value" id="cstat-hit">—</span></div>
-      <div class="combat-stat-row"><span class="cstat-label">💨 Dodge Chance</span><span class="cstat-value" id="cstat-dodge">—</span></div>
-      <div class="combat-stat-row"><span class="cstat-label">🛡️ Defense</span><span class="cstat-value" id="cstat-def">—</span></div>
+      <div class="combat-stat-row"><span class="cstat-label" data-i18n="game.sp.max_hp">❤️ Max HP</span><span class="cstat-value" id="cstat-hp">—</span></div>
+      <div class="combat-stat-row"><span class="cstat-label" data-i18n="game.sp.damage">⚔️ Damage</span><span class="cstat-value" id="cstat-dmg">—</span></div>
+      <div class="combat-stat-row"><span class="cstat-label" data-i18n="game.sp.hit_chance">🎯 Hit Chance</span><span class="cstat-value" id="cstat-hit">—</span></div>
+      <div class="combat-stat-row"><span class="cstat-label" data-i18n="game.sp.dodge_chance">💨 Dodge Chance</span><span class="cstat-value" id="cstat-dodge">—</span></div>
+      <div class="combat-stat-row"><span class="cstat-label" data-i18n="game.sp.defense">🛡️ Defense</span><span class="cstat-value" id="cstat-def">—</span></div>
       <hr class="panel-divider" />
-      <p class="cstat-note">Stats include equipped gear and attribute bonuses.</p>
+      <p class="cstat-note" data-i18n="game.sp.note">Stats include equipped gear and attribute bonuses.</p>
     </div>
   </div>
 
@@ -262,12 +263,12 @@
     </div>
     <div class="side-panel-body">
       <div id="attr-unspent-bar" class="attr-unspent-bar">
-        <span class="attr-unspent-label">Points to Distribute</span>
+        <span class="attr-unspent-label" data-i18n="game.ap.points">Points to Distribute</span>
         <span id="attr-points-left" class="attr-points-left"></span>
       </div>
       <div id="attr-list"></div>
       <div id="attr-confirm-row" class="attr-confirm-row">
-        <button type="button" class="btn btn-primary btn-full" onclick="confirmAttributes()">Confirm Allocation</button>
+        <button type="button" class="btn btn-primary btn-full" onclick="confirmAttributes()" data-i18n="game.ap.confirm">Confirm Allocation</button>
       </div>
     </div>
   </div>
@@ -279,32 +280,32 @@
       <button class="close-btn" onclick="closePanel('farm')">✕</button>
     </div>
     <div class="side-panel-body">
-      <p style="font-size:0.8rem;color:var(--muted);margin-bottom:0.75rem;">
+      <p style="font-size:0.8rem;color:var(--muted);margin-bottom:0.75rem;" data-i18n="game.fp.desc">
         Grow plants to restore HP in dungeons.
       </p>
 
       <!-- Plant stock -->
       <div id="farm-stock-section" style="margin-bottom:1rem;">
-        <div style="font-size:0.8rem;color:var(--muted);margin-bottom:0.4rem;">In stock:</div>
+        <div style="font-size:0.8rem;color:var(--muted);margin-bottom:0.4rem;" data-i18n="game.fp.in_stock">In stock:</div>
         <div id="farm-stock-list" style="display:flex;gap:0.75rem;"></div>
       </div>
 
       <!-- Growing queue -->
       <div id="farm-queue-section" style="margin-bottom:1rem;">
-        <div style="font-size:0.8rem;color:var(--muted);margin-bottom:0.4rem;">Growing:</div>
+        <div style="font-size:0.8rem;color:var(--muted);margin-bottom:0.4rem;" data-i18n="game.fp.growing">Growing:</div>
         <div id="farm-queue-list"></div>
       </div>
 
       <hr style="border-color:var(--border);margin:0.75rem 0;" />
 
       <!-- Grow actions -->
-      <div style="font-size:0.8rem;color:var(--muted);margin-bottom:0.5rem;">Start growing:</div>
+      <div style="font-size:0.8rem;color:var(--muted);margin-bottom:0.5rem;" data-i18n="game.fp.start_growing">Start growing:</div>
       <div style="display:flex;gap:0.5rem;">
         <button type="button" class="btn btn-outline" style="flex:1;" onclick="startGrowing('apple')">
-          🍎 Apple <span style="font-size:0.7rem;color:var(--muted);display:block;">5 min · +1 HP</span>
+          🍎 Apple <span style="font-size:0.7rem;color:var(--muted);display:block;" data-i18n="game.fp.apple_detail">5 min · +1 HP</span>
         </button>
         <button type="button" class="btn btn-outline" style="flex:1;" onclick="startGrowing('carrot')">
-          🥕 Carrot <span style="font-size:0.7rem;color:var(--muted);display:block;">9 min · +2 HP</span>
+          🥕 Carrot <span style="font-size:0.7rem;color:var(--muted);display:block;" data-i18n="game.fp.carrot_detail">9 min · +2 HP</span>
         </button>
       </div>
     </div>
@@ -318,10 +319,10 @@
     </div>
     <div class="side-panel-body">
       <div class="market-gold-bar">
-        <span class="market-gold-label">Your gold</span>
+        <span class="market-gold-label" data-i18n="game.mp.your_gold">Your gold</span>
         <span id="market-gold-amount" class="market-gold-amount">🪙 0g</span>
       </div>
-      <p class="panel-sub">Sell items and plants for gold. Equipped items cannot be sold.</p>
+      <p class="panel-sub" data-i18n="game.mp.desc">Sell items and plants for gold. Equipped items cannot be sold.</p>
       <div id="market-list"></div>
     </div>
   </div>
@@ -329,6 +330,7 @@
   <!-- Toast container -->
   <div class="toast-container" id="toast-container"></div>
 
+  <script src="/js/i18n.js"></script>
   <script src="/js/api.js"></script>
   <script src="/js/game.js"></script>
 </body>

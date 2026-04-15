@@ -19,7 +19,7 @@ async function handleLogin(e) {
   const errEl = document.getElementById('login-error');
   errEl.textContent = '';
   btn.disabled = true;
-  btn.textContent = 'Entering…';
+  btn.textContent = t('auth.entering');
 
   try {
     const res = await fetch('/api/auth/login', {
@@ -33,16 +33,16 @@ async function handleLogin(e) {
     });
     const data = await res.json();
     if (!res.ok) {
-      errEl.textContent = data.error || 'Login failed';
+      errEl.textContent = data.error || t('auth.login_failed');
     } else {
       api.setToken(data.accessToken);
       window.location.href = '/characters.html';
     }
   } catch {
-    errEl.textContent = 'Network error — please try again';
+    errEl.textContent = t('auth.network_error');
   } finally {
     btn.disabled = false;
-    btn.textContent = 'Enter the Realm';
+    btn.textContent = t('auth.enter_realm');
   }
 }
 
@@ -57,12 +57,12 @@ async function handleRegister(e) {
   const confirm  = document.getElementById('reg-confirm').value;
 
   if (password !== confirm) {
-    errEl.textContent = 'Passwords do not match';
+    errEl.textContent = t('auth.passwords_no_match');
     return;
   }
 
   btn.disabled = true;
-  btn.textContent = 'Creating…';
+  btn.textContent = t('auth.creating');
 
   try {
     const res = await fetch('/api/auth/register', {
@@ -73,15 +73,15 @@ async function handleRegister(e) {
     });
     const data = await res.json();
     if (!res.ok) {
-      errEl.textContent = data.error || 'Registration failed';
+      errEl.textContent = data.error || t('auth.register_failed');
     } else {
       api.setToken(data.accessToken);
       window.location.href = '/characters.html';
     }
   } catch {
-    errEl.textContent = 'Network error — please try again';
+    errEl.textContent = t('auth.network_error');
   } finally {
     btn.disabled = false;
-    btn.textContent = 'Create Account';
+    btn.textContent = t('auth.create_account');
   }
 }

@@ -918,3 +918,33 @@ input:focus, select:focus {
 .market-item-name { font-size: 0.85rem; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .market-item-meta { font-size: 0.72rem; color: var(--muted); }
 .market-equipped-tag { font-size: 0.72rem; color: var(--gold); white-space: nowrap; }
+
+/* ---- Language switcher ---- */
+.lang-switcher {
+  display: flex;
+  gap: 0.2rem;
+  align-items: center;
+}
+.lang-btn {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--muted);
+  font-size: 0.7rem;
+  font-family: 'Cinzel', serif;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  padding: 0.2rem 0.45rem;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s, background 0.15s;
+}
+.lang-btn:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+.lang-btn.active {
+  background: var(--border);
+  border-color: var(--accent);
+  color: var(--text);
+}
+

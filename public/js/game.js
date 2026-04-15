@@ -6,14 +6,14 @@ if (!charId) { window.location.href = '/characters.html'; }
 const CLASS_ICONS = { Warrior: '⚔️', Mage: '🔮', Rogue: '🗡️', Cleric: '✝️' };
 
 const ATTRS = [
-  { key: 'strength',     label: 'Strength',     icon: '⚔️',  hint: 'Melee damage' },
-  { key: 'dexterity',    label: 'Dexterity',    icon: '🏹',  hint: 'Hit chance & ranged damage' },
-  { key: 'agility',      label: 'Agility',      icon: '💨',  hint: 'Dodge chance' },
-  { key: 'vitality',     label: 'Vitality',     icon: '❤️',  hint: 'Max HP' },
-  { key: 'intelligence', label: 'Intelligence', icon: '🔮',  hint: '' },
-  { key: 'focus',        label: 'Focus',        icon: '🎯',  hint: '' },
-  { key: 'stamina',      label: 'Stamina',      icon: '🛡️',  hint: '' },
-  { key: 'resistance',   label: 'Resistance',   icon: '🌀',  hint: 'Defense' },
+  { key: 'strength',     labelKey: 'attr.strength',     icon: '⚔️',  hintKey: 'attr.strength_hint' },
+  { key: 'dexterity',    labelKey: 'attr.dexterity',    icon: '🏹',  hintKey: 'attr.dexterity_hint' },
+  { key: 'agility',      labelKey: 'attr.agility',      icon: '💨',  hintKey: 'attr.agility_hint' },
+  { key: 'vitality',     labelKey: 'attr.vitality',     icon: '❤️',  hintKey: 'attr.vitality_hint' },
+  { key: 'intelligence', labelKey: 'attr.intelligence', icon: '🔮',  hintKey: 'attr.intelligence_hint' },
+  { key: 'focus',        labelKey: 'attr.focus',        icon: '🎯',  hintKey: 'attr.focus_hint' },
+  { key: 'stamina',      labelKey: 'attr.stamina',      icon: '🛡️',  hintKey: 'attr.stamina_hint' },
+  { key: 'resistance',   labelKey: 'attr.resistance',   icon: '🌀',  hintKey: 'attr.resistance_hint' },
 ];
 
 const DUNGEON_LEVEL_ICONS = ['','🌿','🪨','💀','🌑','🔥','🧊','⚡','🌊','☠️','🐉'];
@@ -45,19 +45,19 @@ async function tick() {
   const data = await res.json();
   charState = data;
   renderAll(data);
-  if (data.fallen) showToast('Your hero has fallen! Retreating from the dungeon…', 'danger');
+  if (data.fallen) showToast(t('game.js.hero_fallen'), 'danger');
   if (data.plantConsumed) {
     const icon = data.plantConsumed === 'carrot' ? '🥕' : '🍎';
-    showToast(`${icon} A ${data.plantConsumed} was consumed to keep you alive!`, 'warn');
+    showToast(t('game.js.plant_consumed', { icon, plant: data.plantConsumed }), 'warn');
   }
-  if (data.readingFinished) showToast('📖 Reading session complete! Check your attribute points.', 'success');
+  if (data.readingFinished) showToast(t('game.js.reading_done'), 'success');
 }
 
 // ---- Render ----
 function renderAll(char) {
   document.getElementById('char-name-header').textContent = char.name || '';
   document.getElementById('char-class-header').textContent =
-    `${CLASS_ICONS[char.class] || ''} ${char.class || ''} · Level ${char.level}`;
+    `${CLASS_ICONS[char.class] || ''} ${char.class || ''} · ${t('game.js.level', { n: char.level })}`;
 
   if (char.avatar_path) {
     const img = document.getElementById('avatar-img');
@@ -77,7 +77,7 @@ function renderAll(char) {
   hpFill.className = 'stat-fill hp' + (hpPct < 30 ? ' low' : '');
   document.getElementById('hp-text').textContent = `${Math.round(hp * 10) / 10} / ${char.max_hp}`;
 
-  document.getElementById('level-display').textContent = `Level ${char.level}`;
+  document.getElementById('level-display').textContent = t('game.js.level', { n: char.level });
 
   const unspent = Number(char.unspent_points) || 0;
   const badge  = document.getElementById('unspent-badge');
@@ -85,7 +85,9 @@ function renderAll(char) {
   if (unspent > 0) {
     badge.textContent = unspent;
     badge.style.display = 'flex';
-    headerNotice.textContent = `✨ ${unspent} point${unspent !== 1 ? 's' : ''} to spend`;
+    headerNotice.textContent = unspent === 1
+      ? t('game.js.points_spend_one',  { n: unspent })
+      : t('game.js.points_spend_many', { n: unspent });
     headerNotice.style.display = 'inline';
   } else {
     badge.style.display = 'none';
@@ -99,16 +101,16 @@ function renderAll(char) {
     if (char.activity === 'dungeon') {
       const run = char.dungeonRun;
       const lvl = run ? run.dungeon_level : '';
-      actLabel.textContent = `🏰 Dungeon Lv.${lvl}`;
+      actLabel.textContent = t('game.js.dungeon_badge', { n: lvl });
     } else if (char.activity === 'farm') {
-      actLabel.textContent = '🌱 Farming';
+      actLabel.textContent = t('game.js.farming_badge');
     } else if (char.activity === 'reading') {
       const elapsed = Math.floor(Date.now() / 1000) - (char.activity_started_at || 0);
       const minsLeft = Math.max(0, Math.ceil((3600 - elapsed) / 60));
       const pts = Number(char.reading_points_awarded) || 0;
-      actLabel.textContent = `📖 Reading · ${minsLeft}m left · ${pts}/2 pts`;
+      actLabel.textContent = t('game.js.reading_badge', { mins: minsLeft, pts });
     } else {
-      actLabel.textContent = '🍺 Resting';
+      actLabel.textContent = t('game.js.resting_badge');
     }
   } else {
     actBadge.style.display = 'none';
@@ -166,32 +168,35 @@ function updateActionSquares(activity) {
 
   if (activity === 'dungeon') {
     dungeon.classList.add('active');
-    dungeon.querySelector('span:last-child').textContent = 'Dungeon';
+    document.getElementById('dungeon-label').textContent = t('game.js.dungeon_lbl');
     tavern.classList.add('disabled');
     farm.classList.add('disabled');
     if (read) read.classList.add('disabled');
   } else if (activity === 'tavern') {
     tavern.classList.add('active');
-    tavern.querySelector('span:last-child').textContent = 'Stop';
+    document.getElementById('tavern-label').textContent = t('game.js.stop_lbl');
     dungeon.classList.add('disabled');
     farm.classList.add('disabled');
     if (read) read.classList.add('disabled');
   } else if (activity === 'farm') {
     farm.classList.add('active');
-    farm.querySelector('#farm-label').textContent = 'Stop Farm';
+    document.getElementById('farm-label').textContent = t('game.js.stop_farm_lbl');
     dungeon.classList.add('disabled');
     tavern.classList.add('disabled');
     if (read) read.classList.add('disabled');
   } else if (activity === 'reading') {
-    if (read) { read.classList.add('active'); read.querySelector('span:last-child').textContent = 'Stop'; }
+    if (read) {
+      read.classList.add('active');
+      document.getElementById('read-label').textContent = t('game.js.stop_lbl');
+    }
     dungeon.classList.add('disabled');
     tavern.classList.add('disabled');
     farm.classList.add('disabled');
   } else {
-    dungeon.querySelector('span:last-child').textContent = 'Dungeon';
-    tavern.querySelector('span:last-child').textContent = 'Tavern';
-    farm.querySelector('#farm-label').textContent = 'Farm';
-    if (read) read.querySelector('span:last-child').textContent = 'Read';
+    document.getElementById('dungeon-label').textContent = t('game.js.dungeon_lbl');
+    document.getElementById('tavern-label').textContent  = t('game.js.tavern_lbl');
+    document.getElementById('farm-label').textContent    = t('game.js.farm_lbl');
+    if (read) document.getElementById('read-label').textContent = t('game.js.read_lbl');
   }
 }
 
@@ -216,20 +221,20 @@ async function startTavern() {
   const res = await api.post(`/api/game/${charId}/start`, { action: 'tavern' });
   if (!res) return;
   const data = await res.json();
-  if (!res.ok) { showToast(data.error || 'Failed', 'danger'); return; }
+  if (!res.ok) { showToast(data.error || t('game.js.failed'), 'danger'); return; }
   charState = data;
   renderAll(data);
-  showToast('Resting at the tavern…', 'success');
+  showToast(t('game.js.resting_start'), 'success');
 }
 
 async function stopActivity() {
   const res = await api.post(`/api/game/${charId}/stop`);
   if (!res) return;
   const data = await res.json();
-  if (!res.ok) { showToast(data.error || 'Failed to stop', 'danger'); return; }
+  if (!res.ok) { showToast(data.error || t('game.js.failed_stop'), 'danger'); return; }
   charState = data;
   renderAll(data);
-  showToast('Activity stopped.', '');
+  showToast(t('game.js.activity_stopped'), '');
 }
 
 // ---- Dungeon level modal ----
@@ -275,10 +280,10 @@ async function confirmEnterDungeon() {
   const res = await api.post(`/api/game/${charId}/dungeon/enter`, { level: selectedDungeonLevel });
   if (!res) return;
   const data = await res.json();
-  if (!res.ok) { showToast(data.error || 'Failed to enter dungeon', 'danger'); return; }
+  if (!res.ok) { showToast(data.error || t('game.js.failed_dungeon'), 'danger'); return; }
   charState = data;
   renderAll(data);
-  showToast(`Entered Dungeon Level ${selectedDungeonLevel}!`, 'success');
+  showToast(t('game.js.entered_dungeon', { n: selectedDungeonLevel }), 'success');
   openPanel('battle');
   startAutoBattle();
 }
@@ -295,14 +300,14 @@ function renderBattlePanel(char) {
   if (!monster) return;
 
   document.getElementById('battle-title').textContent =
-    `🏰 Dungeon Lv.${run.dungeon_level} — Mastery: ${char.dungeon_mastery || 0}`;
+    t('game.js.bl.mastery', { level: run.dungeon_level, mastery: char.dungeon_mastery || 0 });
 
   const isBoss = monster.is_boss === 1;
-  document.getElementById('battle-kills-label').textContent = `${run.kills} / 100 monsters`;
+  document.getElementById('battle-kills-label').textContent = t('game.js.bl.monsters', { kills: run.kills });
   document.getElementById('battle-boss-label').style.display = isBoss ? 'inline' : 'none';
 
   document.getElementById('monster-icon').textContent = monster.icon;
-  document.getElementById('monster-name').textContent = (isBoss ? '👑 BOSS: ' : '') + monster.name;
+  document.getElementById('monster-name').textContent = (isBoss ? t('game.js.bl.boss_prefix') : '') + monster.name;
 
   setMonsterHpBar(run.monster_hp, monster.hp);
   setHeroHpBar(char.hp, char.max_hp);
@@ -342,7 +347,7 @@ async function startAutoBattle() {
     if (!res || autoBattleStop) break;
 
     const data = await res.json();
-    if (!res.ok) { showToast(data.error || 'Battle error', 'danger'); break; }
+    if (!res.ok) { showToast(data.error || t('game.js.battle_error'), 'danger'); break; }
 
     // Snapshot pre-fight state for animation
     const prevMonsterHp  = charState.dungeonRun ? Number(charState.dungeonRun.monster_hp) : 0;
@@ -363,21 +368,21 @@ async function startAutoBattle() {
     renderAll(data.char);
 
     if (data.result === 'defeat') {
-      showToast('Your hero has fallen! Return to the dungeon to try again.', 'danger');
+      showToast(t('game.js.hero_fallen_msg'), 'danger');
       closePanel('battle');
       break;
     }
 
     if (data.result === 'run_complete') {
-      showToast(`🏆 Boss defeated! Dungeon mastery is now ${data.newMastery}!`, 'success');
-      if (data.droppedItem) showToast(`💎 ${data.droppedItem.icon} ${data.droppedItem.name} dropped!`, 'success');
+      showToast(t('game.js.boss_defeated', { n: data.newMastery }), 'success');
+      if (data.droppedItem) showToast(t('game.js.item_dropped', { icon: data.droppedItem.icon, name: data.droppedItem.name }), 'success');
       closePanel('battle');
       break;
     }
 
     if (data.result === 'monster_killed') {
-      if (data.droppedItem) showToast(`💎 ${data.droppedItem.icon} ${data.droppedItem.name} dropped!`, 'success');
-      if (data.bossSpawned) showToast('⚠️ The Boss appears!', 'warn');
+      if (data.droppedItem) showToast(t('game.js.item_dropped', { icon: data.droppedItem.icon, name: data.droppedItem.name }), 'success');
+      if (data.bossSpawned) showToast(t('game.js.boss_spawned'), 'warn');
     }
 
     // Pause between fights so the log stays readable (extra 1s after each kill)
@@ -396,7 +401,7 @@ async function stopDungeon() {
   charState = data;
   renderAll(data);
   closePanel('battle');
-  showToast('You left the dungeon.', 'warn');
+  showToast(t('game.js.left_dungeon'), 'warn');
 }
 
 // Replay each round with a delay, updating HP bars live
@@ -411,7 +416,7 @@ async function animateCombatLog(
   // Fight separator
   const sep = document.createElement('div');
   sep.className = 'log-fight-sep';
-  sep.textContent = `── vs ${monsterName} ──`;
+  sep.textContent = t('game.js.bl.vs', { monster: monsterName });
   container.appendChild(sep);
 
   for (const round of log) {
@@ -423,22 +428,26 @@ async function animateCombatLog(
         if (entry.type === 'hit') {
           monsterHp = Math.max(0, monsterHp - entry.damage);
           div.className = 'log-hit-player';
-          div.textContent =
-            `⚔️ You hit ${monsterName} for ${entry.damage} — HP: ${Math.round(monsterHp)}/${monsterMax}`;
+          div.textContent = t('game.js.bl.hit_player', {
+            monster: monsterName, damage: entry.damage,
+            hp: Math.round(monsterHp), max: monsterMax,
+          });
           setMonsterHpBar(monsterHp, monsterMax);
         } else {
           div.className = 'log-miss-player';
-          div.textContent = `💨 Missed ${monsterName}!`;
+          div.textContent = t('game.js.bl.miss_player', { monster: monsterName });
         }
       } else {
         if (entry.type === 'dodge') {
           div.className = 'log-dodge';
-          div.textContent = `🌀 Dodged ${monsterName}'s attack!`;
+          div.textContent = t('game.js.bl.dodge', { monster: monsterName });
         } else {
           heroHp = Math.max(0, heroHp - entry.damage);
           div.className = 'log-hit-monster';
-          div.textContent =
-            `💥 ${monsterName} hits you for ${entry.damage} — Your HP: ${Math.round(heroHp * 10) / 10}/${heroMax}`;
+          div.textContent = t('game.js.bl.hit_monster', {
+            monster: monsterName, damage: entry.damage,
+            hp: Math.round(heroHp * 10) / 10, max: heroMax,
+          });
           setHeroHpBar(heroHp, heroMax);
         }
       }
@@ -466,7 +475,7 @@ async function refreshCombatStats() {
   const s = await res.json();
 
   document.getElementById('cstat-hp').textContent    = s.maxHp;
-  document.getElementById('cstat-dmg').textContent   = s.damage + (s.isRanged ? ' (ranged)' : ' (melee)');
+  document.getElementById('cstat-dmg').textContent   = s.damage + (s.isRanged ? ' ' + t('game.js.ranged') : ' ' + t('game.js.melee'));
   document.getElementById('cstat-hit').textContent   = s.hitChance + '%';
   document.getElementById('cstat-dodge').textContent = s.dodgeChance + '%';
   document.getElementById('cstat-def').textContent   = s.defense;
@@ -531,15 +540,15 @@ function showItemInfo(idx) {
   if (!item) { tooltip.style.display = 'none'; return; }
   const isEq = ({ weapon: charState.weapon_id, armor: charState.armor_id })[item.type] === item.item_id;
   const canEquip = item.type === 'weapon' || item.type === 'armor';
-  const statLine = item.damage ? `⚔️ ${item.damage} dmg` : item.defense ? `🛡️ ${item.defense} def` : '';
+  const statLine = item.damage ? `⚔️ ${item.damage} ${t('game.js.dmg_unit')}` : item.defense ? `🛡️ ${item.defense} ${t('game.js.def_unit')}` : '';
   tooltip.style.display = 'block';
   tooltip.innerHTML = `
     <strong class="item-tt-name">${item.icon} ${escHtml(item.name)}</strong>
     <span class="item-tt-type">${item.type}${item.weapon_type ? ' · ' + item.weapon_type : ''}</span>
     <p class="item-tt-desc">${escHtml(item.description || '')}${statLine ? ' ' + statLine : ''}</p>
     ${canEquip && !isEq
-      ? `<button type="button" class="btn btn-outline btn-sm btn-mt" onclick="equipItem('${item.type}',${item.item_id})">Equip</button>`
-      : isEq ? `<span class="item-tt-eq">✓ Equipped</span>` : ''}`;
+      ? `<button type="button" class="btn btn-outline btn-sm btn-mt" onclick="equipItem('${item.type}',${item.item_id})">${t('game.js.equip_btn')}</button>`
+      : isEq ? `<span class="item-tt-eq">${t('game.js.equipped_check')}</span>` : ''}`;
 }
 
 // ---- Equipment ----
@@ -548,20 +557,20 @@ function renderEquipment(char) {
   const w = char.equippedWeapon;
   const a = char.equippedArmor;
 
-  document.getElementById('eq-weapon-name').textContent = w ? `${w.icon} ${w.name}` : 'None';
+  document.getElementById('eq-weapon-name').textContent = w ? `${w.icon} ${w.name}` : '—';
   document.getElementById('eq-weapon-stat').textContent =
-    w && w.damage ? `⚔️ ${w.damage} damage · ${w.weapon_type}` : '';
+    w && w.damage ? `⚔️ ${w.damage} ${t('game.js.dmg_unit')} · ${w.weapon_type}` : '';
 
-  document.getElementById('eq-armor-name').textContent = a ? `${a.icon} ${a.name}` : 'None';
+  document.getElementById('eq-armor-name').textContent = a ? `${a.icon} ${a.name}` : '—';
   document.getElementById('eq-armor-stat').textContent =
-    a && a.defense ? `🛡️ ${a.defense} defense` : '';
+    a && a.defense ? `🛡️ ${a.defense} ${t('game.js.def_unit')}` : '';
 
   const inv = (char.inventory || []).filter(i => i.type === 'weapon' || i.type === 'armor');
   const equippedIds = new Set([char.weapon_id, char.armor_id].filter(Boolean));
   const list = document.getElementById('eq-list');
-  if (!inv.length) { list.innerHTML = '<p class="muted-sm">No equippable items.</p>'; return; }
+  if (!inv.length) { list.innerHTML = `<p class="muted-sm">${t('game.js.no_equippable')}</p>`; return; }
   list.innerHTML = inv.map(item => {
-    const statLine = item.damage ? `⚔️ ${item.damage} dmg` : item.defense ? `🛡️ ${item.defense} def` : '';
+    const statLine = item.damage ? `⚔️ ${item.damage} ${t('game.js.dmg_unit')}` : item.defense ? `🛡️ ${item.defense} ${t('game.js.def_unit')}` : '';
     return `
     <div class="equip-list-row">
       <span class="equip-list-icon">${item.icon}</span>
@@ -572,7 +581,7 @@ function renderEquipment(char) {
       </span>
       ${equippedIds.has(item.item_id)
         ? `<span class="equip-list-check">✓</span>`
-        : `<button type="button" class="btn btn-outline btn-sm" onclick="equipItem('${item.type}',${item.item_id})">Equip</button>`}
+        : `<button type="button" class="btn btn-outline btn-sm" onclick="equipItem('${item.type}',${item.item_id})">${t('game.js.equip_btn')}</button>`}
     </div>`;
   }).join('');
 }
@@ -581,11 +590,11 @@ async function equipItem(slot, itemId) {
   const res = await api.put(`/api/characters/${charId}/equip`, { slot, item_id: itemId });
   if (!res) return;
   const data = await res.json();
-  if (!res.ok) { showToast(data.error || 'Could not equip item', 'danger'); return; }
+  if (!res.ok) { showToast(data.error || t('game.js.cant_equip'), 'danger'); return; }
   charState = { ...charState, ...data };
   renderEquipment(charState);
   renderInventory(charState);
-  showToast('Item equipped!', 'success');
+  showToast(t('game.js.item_equipped'), 'success');
   refreshCombatStats();
 }
 
@@ -608,9 +617,11 @@ function renderAttributes(char) {
   document.getElementById('attr-confirm-row').classList.toggle('visible', pendingTotal > 0);
 
   const list = document.getElementById('attr-list');
-  list.innerHTML = ATTRS.map(({ key, label, icon, hint }) => {
+  list.innerHTML = ATTRS.map(({ key, labelKey, icon, hintKey }) => {
     const base  = Number(char[`attr_${key}`]) || 5;
     const delta = pendingAttrs[key] || 0;
+    const label = t(labelKey);
+    const hint  = t(hintKey);
     return `
       <div class="attr-row">
         <span class="attr-icon">${icon}</span>
@@ -642,11 +653,11 @@ async function confirmAttributes() {
   const res = await api.put(`/api/characters/${charId}/attributes`, { allocations: pendingAttrs });
   if (!res) return;
   const data = await res.json();
-  if (!res.ok) { showToast(data.error || 'Could not allocate points', 'danger'); return; }
+  if (!res.ok) { showToast(data.error || t('game.js.cant_attrs'), 'danger'); return; }
   pendingAttrs = {};
   charState = { ...charState, ...data };
   renderAll(charState);
-  showToast('Attributes updated!', 'success');
+  showToast(t('game.js.attrs_updated'), 'success');
   refreshCombatStats();
 }
 
@@ -655,7 +666,7 @@ async function startActivity(action) {
   const res = await api.post(`/api/game/${charId}/start`, { action });
   if (!res) return;
   const data = await res.json();
-  if (!res.ok) { showToast(data.error || 'Failed', 'danger'); return; }
+  if (!res.ok) { showToast(data.error || t('game.js.failed'), 'danger'); return; }
   charState = data;
   renderAll(data);
 }
@@ -666,14 +677,14 @@ function handleRead() {
     stopActivity();
   } else if (!charState.activity) {
     startActivity('reading');
-    showToast('📖 Your hero starts reading. +1 attr point every 30 min (max 2).', 'success');
+    showToast(t('game.js.reading_start'), 'success');
   }
 }
 
 // ---- Farm ----
 function handleFarm() {
   if (!charState) return;
-  if (Number(charState.level) < 3) { showToast('Farming unlocks at level 3!', 'danger'); return; }
+  if (Number(charState.level) < 3) { showToast(t('game.js.farm_unlock'), 'danger'); return; }
   if (charState.activity === 'farm') { stopActivity(); return; }
   if (charState.activity) return;
   startFarm();
@@ -683,20 +694,21 @@ async function startFarm() {
   const res = await api.post(`/api/game/${charId}/start`, { action: 'farm' });
   if (!res) return;
   const data = await res.json();
-  if (!res.ok) { showToast(data.error || 'Failed to start farming', 'danger'); return; }
+  if (!res.ok) { showToast(data.error || t('game.js.failed_farm'), 'danger'); return; }
   charState = data;
   renderAll(data);
   openPanel('farm');
-  showToast('Started farming! Plants will grow over time.', 'success');
+  showToast(t('game.js.farm_started'), 'success');
 }
 
 async function startGrowing(plantType) {
   const res = await api.post(`/api/farm/${charId}/grow`, { plant_type: plantType });
   if (!res) return;
   const data = await res.json();
-  if (!res.ok) { showToast(data.error || 'Failed to start growing', 'danger'); return; }
+  if (!res.ok) { showToast(data.error || t('game.js.failed_grow'), 'danger'); return; }
   const icon = plantType === 'carrot' ? '🥕' : '🍎';
-  showToast(`${icon} ${plantType.charAt(0).toUpperCase() + plantType.slice(1)} planted!`, 'success');
+  const plantName = plantType.charAt(0).toUpperCase() + plantType.slice(1);
+  showToast(t('game.js.plant_planted', { icon, plant: plantName }), 'success');
   charState = { ...charState, farmQueue: data.farmQueue };
   renderAll(charState);
 }
@@ -709,7 +721,7 @@ function renderFarmPanel() {
   const stockList = document.getElementById('farm-stock-list');
   const plants = (char.inventory || []).filter(i => i.item_id === 6 || i.item_id === 7);
   if (!plants.length) {
-    stockList.innerHTML = '<span style="font-size:0.8rem;color:var(--muted);">Nothing harvested yet.</span>';
+    stockList.innerHTML = `<span style="font-size:0.8rem;color:var(--muted);">${t('game.js.nothing_harvested')}</span>`;
   } else {
     stockList.innerHTML = plants.map(p => {
       const hp = p.item_id === 6 ? 2 : 1;
@@ -724,14 +736,14 @@ function renderFarmPanel() {
   const queueList = document.getElementById('farm-queue-list');
   const queue = char.farmQueue || [];
   if (!queue.length) {
-    queueList.innerHTML = '<span style="font-size:0.8rem;color:var(--muted);">No plants growing.</span>';
+    queueList.innerHTML = `<span style="font-size:0.8rem;color:var(--muted);">${t('game.js.no_plants_growing')}</span>`;
   } else {
     queueList.innerHTML = queue.map(job => {
       const icon     = job.plant_type === 'carrot' ? '🥕' : '🍎';
       const secsLeft = Math.max(0, job.ready_at - now);
       const mins     = Math.floor(secsLeft / 60);
       const secs     = secsLeft % 60;
-      const timeStr  = secsLeft === 0 ? 'Ready!' : `${mins}m ${String(secs).padStart(2,'0')}s`;
+      const timeStr  = secsLeft === 0 ? t('game.js.ready') : `${mins}m ${String(secs).padStart(2,'0')}s`;
       return `<div style="display:flex;align-items:center;gap:0.5rem;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:0.4rem 0.6rem;margin-bottom:0.35rem;">
         <span style="font-size:1.1rem;">${icon}</span>
         <span style="font-size:0.8rem;flex:1;">${job.plant_type}</span>
@@ -752,7 +764,7 @@ function renderMarketPanel(char) {
   const list = document.getElementById('market-list');
 
   if (!sellable.length) {
-    list.innerHTML = '<p class="muted-sm">Nothing to sell.</p>';
+    list.innerHTML = `<p class="muted-sm">${t('game.js.nothing_to_sell')}</p>`;
     return;
   }
 
@@ -767,8 +779,8 @@ function renderMarketPanel(char) {
           <span class="market-item-meta">×${item.quantity} &bull; 🪙 ${price}g each</span>
         </div>
         ${equipped
-          ? '<span class="market-equipped-tag">Equipped</span>'
-          : `<button type="button" class="btn btn-outline btn-sm" onclick="sellItem(${item.id},${item.item_id},1)">Sell 1</button>`
+          ? `<span class="market-equipped-tag">${t('game.js.equipped_tag')}</span>`
+          : `<button type="button" class="btn btn-outline btn-sm" onclick="sellItem(${item.id},${item.item_id},1)">${t('game.js.sell_one')}</button>`
         }
       </div>`;
   }).join('');
@@ -778,10 +790,10 @@ async function sellItem(invId, itemId, qty) {
   const res = await api.post(`/api/market/${charId}/sell`, { inv_id: invId, quantity: qty });
   if (!res) return;
   const data = await res.json();
-  if (!res.ok) { showToast(data.error || 'Could not sell item', 'danger'); return; }
+  if (!res.ok) { showToast(data.error || t('game.js.cant_sell'), 'danger'); return; }
   charState = data.char;
   renderAll(data.char);
-  showToast(`🪙 Sold for ${data.gold}g!`, 'success');
+  showToast(t('game.js.sold_for', { n: data.gold }), 'success');
 }
 
 // ---- Avatar upload ----
@@ -790,20 +802,20 @@ function triggerAvatarUpload() { document.getElementById('avatar-input').click()
 async function uploadAvatar(e) {
   const file = e.target.files[0];
   if (!file) return;
-  if (file.type !== 'image/jpeg') { showToast('Only JPEG images are accepted.', 'danger'); return; }
-  if (file.size > 1 * 1024 * 1024) { showToast('Image must be under 1 MB.', 'danger'); return; }
+  if (file.type !== 'image/jpeg') { showToast(t('game.js.jpeg_only'), 'danger'); return; }
+  if (file.size > 1 * 1024 * 1024) { showToast(t('game.js.image_size'), 'danger'); return; }
   const fd = new FormData();
   fd.append('avatar', file);
   const res = await api.postForm(`/api/characters/${charId}/avatar`, fd);
   if (!res) return;
   const data = await res.json();
-  if (!res.ok) { showToast(data.error || 'Upload failed', 'danger'); return; }
+  if (!res.ok) { showToast(data.error || t('game.js.failed'), 'danger'); return; }
   const img = document.getElementById('avatar-img');
   img.src = data.avatarPath + '?t=' + Date.now();
   img.style.display = 'block';
   document.getElementById('avatar-svg').style.display = 'none';
   if (charState) charState.avatar_path = data.avatarPath;
-  showToast('Avatar updated!', 'success');
+  showToast(t('game.js.avatar_updated'), 'success');
   e.target.value = '';
 }
 

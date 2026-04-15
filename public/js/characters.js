@@ -31,9 +31,9 @@ function renderChars(chars) {
   if (!chars.length) {
     grid.innerHTML = `
       <div class="empty-state">
-        <h2>No Heroes Yet</h2>
-        <p style="color:var(--muted);margin-bottom:1rem;">Your legend has not yet begun.</p>
-        <button class="btn btn-primary" onclick="openCreateModal()">+ Create Your First Hero</button>
+        <h2>${t('char.no_heroes')}</h2>
+        <p style="color:var(--muted);margin-bottom:1rem;">${t('char.legend')}</p>
+        <button class="btn btn-primary" onclick="openCreateModal()">${t('char.create_first')}</button>
       </div>`;
     return;
   }
@@ -41,7 +41,7 @@ function renderChars(chars) {
   grid.innerHTML = chars.map(c => {
     const hpPct = Math.round((c.hp / c.max_hp) * 100);
     const activity = c.activity
-      ? `<span style="font-size:0.75rem;color:var(--accent);">${c.activity === 'dungeon' ? '🏰 In Dungeon' : '🍺 Resting'}</span>`
+      ? `<span style="font-size:0.75rem;color:var(--accent);">${c.activity === 'dungeon' ? t('char.in_dungeon') : t('char.resting')}</span>`
       : '';
     return `
       <div class="char-card">
@@ -57,8 +57,8 @@ function renderChars(chars) {
         </div>
         <div style="font-size:0.75rem;color:var(--muted);text-align:center;">${Math.round(c.hp)}/${c.max_hp} HP</div>
         <div class="char-actions">
-          <button class="btn btn-primary btn-sm" onclick="playChar(${c.id})">Play</button>
-          <button class="btn btn-danger btn-sm" onclick="deleteChar(${c.id}, '${escHtml(c.name)}')">Delete</button>
+          <button class="btn btn-primary btn-sm" onclick="playChar(${c.id})">${t('char.play')}</button>
+          <button class="btn btn-danger btn-sm" onclick="deleteChar(${c.id}, '${escHtml(c.name)}')">${t('char.delete')}</button>
         </div>
       </div>`;
   }).join('');
@@ -70,13 +70,13 @@ function playChar(id) {
 }
 
 async function deleteChar(id, name) {
-  if (!confirm(`Delete "${name}"? This cannot be undone.`)) return;
+  if (!confirm(t('char.delete_confirm', { name }))) return;
   const res = await api.delete(`/api/characters/${id}`);
   if (res && res.ok) {
-    showToast(`${name} has been retired.`, 'warn');
+    showToast(t('char.retired', { name }), 'warn');
     loadChars();
   } else {
-    showToast('Could not delete character.', 'danger');
+    showToast(t('char.cant_delete'), 'danger');
   }
 }
 
@@ -108,23 +108,23 @@ async function handleCreateChar(e) {
   const errEl = document.getElementById('create-error');
   errEl.textContent = '';
   btn.disabled = true;
-  btn.textContent = 'Forging…';
+  btn.textContent = t('char.forging');
 
   const name = document.getElementById('char-name').value.trim();
   const res = await api.post('/api/characters', { name, class: selectedClass });
 
   btn.disabled = false;
-  btn.textContent = 'Create Hero';
+  btn.textContent = t('char.create_hero');
 
   if (!res) return;
   const data = await res.json();
   if (!res.ok) {
-    errEl.textContent = data.error || 'Failed to create character';
+    errEl.textContent = data.error || t('char.failed_create');
     return;
   }
 
   closeCreateModal();
-  showToast(`${data.name} the ${data.class} is ready!`, 'success');
+  showToast(t('char.ready', { name: data.name, cls: data.class }), 'success');
   loadChars();
 }
 
