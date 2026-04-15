@@ -126,9 +126,11 @@ const additiveMigrations = [
   'ALTER TABLE characters ADD COLUMN unspent_points    INTEGER DEFAULT 0',
   'ALTER TABLE characters ADD COLUMN dungeon_mastery          INTEGER DEFAULT 0',
   'ALTER TABLE characters ADD COLUMN reading_points_awarded   INTEGER DEFAULT 0',
+  'ALTER TABLE characters ADD COLUMN gold              INTEGER DEFAULT 0',
   'ALTER TABLE items ADD COLUMN damage      INTEGER DEFAULT 0',
   'ALTER TABLE items ADD COLUMN defense     INTEGER DEFAULT 0',
   'ALTER TABLE items ADD COLUMN weapon_type TEXT    DEFAULT NULL',
+  'ALTER TABLE items ADD COLUMN sell_price  INTEGER DEFAULT 0',
 ];
 
 for (const sql of additiveMigrations) {
@@ -150,28 +152,28 @@ db.exec(`
     INSERT OR IGNORE INTO items (id, name, type, description, icon) VALUES (?, ?, ?, ?, ?)
   `);
   const setStats = db.prepare(`
-    UPDATE items SET damage = ?, defense = ?, weapon_type = ? WHERE id = ?
+    UPDATE items SET damage = ?, defense = ?, weapon_type = ?, sell_price = ? WHERE id = ?
   `);
 
   const itemData = [
-    // id, name, type, description, icon, damage, defense, weapon_type
-    [1,  'Wooden Sword',  'weapon',     'A basic training sword.',        '🗡️',  2, 0, 'melee'],
-    [2,  'Iron Sword',    'weapon',     'A sturdy iron blade.',           '⚔️',  4, 0, 'melee'],
-    [3,  'Leather Armor', 'armor',      'Light but protective.',          '🥋',  0, 2, null],
-    [4,  'Iron Shield',   'armor',      'Heavy iron shield.',             '🛡️',  0, 3, null],
-    [5,  'Health Potion', 'consumable', 'Restores 5 HP.',                 '🧪',  0, 0, null],
-    [6,  'Carrot',        'consumable', 'Restores 2 HP.',                 '🥕',  0, 0, null],
-    [7,  'Apple',         'consumable', 'Restores 1 HP.',                 '🍎',  0, 0, null],
-    [8,  'Short Bow',     'weapon',     'A ranged weapon. Uses Dexterity.','🏹', 3, 0, 'ranged'],
-    [9,  'Steel Sword',   'weapon',     'A finely forged steel blade.',   '🔪',  6, 0, 'melee'],
-    [10, 'Chainmail',     'armor',      'Linked metal rings for armor.',  '🔗',  0, 4, null],
-    [11, 'Plate Armor',   'armor',      'Heavy full-body plate armor.',   '🛡️',  0, 6, null],
+    // id, name, type, description, icon, damage, defense, weapon_type, sell_price
+    [1,  'Wooden Sword',  'weapon',     'A basic training sword.',        '🗡️',  2, 0, 'melee',   5],
+    [2,  'Iron Sword',    'weapon',     'A sturdy iron blade.',           '⚔️',  4, 0, 'melee',  15],
+    [3,  'Leather Armor', 'armor',      'Light but protective.',          '🥋',  0, 2, null,     10],
+    [4,  'Iron Shield',   'armor',      'Heavy iron shield.',             '🛡️',  0, 3, null,     20],
+    [5,  'Health Potion', 'consumable', 'Restores 5 HP.',                 '🧪',  0, 0, null,      8],
+    [6,  'Carrot',        'consumable', 'Restores 2 HP.',                 '🥕',  0, 0, null,      3],
+    [7,  'Apple',         'consumable', 'Restores 1 HP.',                 '🍎',  0, 0, null,      2],
+    [8,  'Short Bow',     'weapon',     'A ranged weapon. Uses Dexterity.','🏹', 3, 0, 'ranged', 18],
+    [9,  'Steel Sword',   'weapon',     'A finely forged steel blade.',   '🔪',  6, 0, 'melee',  35],
+    [10, 'Chainmail',     'armor',      'Linked metal rings for armor.',  '🔗',  0, 4, null,     30],
+    [11, 'Plate Armor',   'armor',      'Heavy full-body plate armor.',   '🛡️',  0, 6, null,     50],
   ];
 
   transaction(() => {
-    for (const [id, name, type, desc, icon, dmg, def, wt] of itemData) {
+    for (const [id, name, type, desc, icon, dmg, def, wt, sp] of itemData) {
       upsertItem.run(id, name, type, desc, icon);
-      setStats.run(dmg, def, wt, id);
+      setStats.run(dmg, def, wt, sp, id);
     }
   });
 }

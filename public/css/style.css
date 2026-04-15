@@ -883,3 +883,38 @@ input:focus, select:focus {
   .side-panel { width: 100%; right: -100%; }
   .diff-grid { grid-template-columns: 1fr; }
 }
+
+/* ── Market panel ──────────────────────────────────────────────────────────── */
+.market-gold-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 0.5rem 0.75rem;
+  margin-bottom: 0.75rem;
+}
+.market-gold-label { font-size: 0.8rem; color: var(--muted); }
+.market-gold-amount { font-size: 1rem; font-weight: 700; color: #f5c842; }
+
+.market-row {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.5rem 0.6rem;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  margin-bottom: 0.4rem;
+}
+.market-item-icon { font-size: 1.3rem; flex-shrink: 0; }
+.market-item-info {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+}
+.market-item-name { font-size: 0.85rem; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.market-item-meta { font-size: 0.72rem; color: var(--muted); }
+.market-equipped-tag { font-size: 0.72rem; color: var(--gold); white-space: nowrap; }

@@ -137,11 +137,16 @@ function renderAll(char) {
     }
   }
 
+  // Gold display
+  const gold = Number(char.gold) || 0;
+  document.getElementById('gold-display').textContent = `🪙 ${gold}g`;
+
   renderInventory(char);
   renderEquipment(char);
   renderAttributes(char);
   renderFarmPanel();
   renderBattlePanel(char);
+  renderMarketPanel(char);
   refreshCombatStats();
 }
 
@@ -468,20 +473,23 @@ async function refreshCombatStats() {
 }
 
 // ---- Side panels ----
+const PANEL_MAP = {
+  inventory:  'inv-panel',
+  equipment:  'eq-panel',
+  attributes: 'attr-panel',
+  farm:       'farm-panel',
+  battle:     'battle-panel',
+  stats:      'stats-panel',
+  market:     'market-panel',
+};
+
 function openPanel(type) {
-  const panelMap = {
-    inventory:  'inv-panel',
-    equipment:  'eq-panel',
-    attributes: 'attr-panel',
-    farm:       'farm-panel',
-    battle:     'battle-panel',
-    stats:      'stats-panel',
-  };
-  Object.values(panelMap).forEach(id => document.getElementById(id).classList.remove('open'));
-  const panelId = panelMap[type];
+  Object.values(PANEL_MAP).forEach(id => document.getElementById(id).classList.remove('open'));
+  const panelId = PANEL_MAP[type];
   if (panelId) document.getElementById(panelId).classList.add('open');
   if (type === 'attributes') { pendingAttrs = {}; renderAttributes(charState); }
-  if (type === 'farm')       renderFarmPanel();
+  if (type === 'farm')   renderFarmPanel();
+  if (type === 'market') renderMarketPanel(charState);
   if (type === 'battle') {
     renderBattlePanel(charState);
     if (!autoBattleRunning && charState && charState.dungeonRun) {
@@ -493,15 +501,7 @@ function openPanel(type) {
 }
 
 function closePanel(type) {
-  const panelMap = {
-    inventory:  'inv-panel',
-    equipment:  'eq-panel',
-    attributes: 'attr-panel',
-    farm:       'farm-panel',
-    battle:     'battle-panel',
-    stats:      'stats-panel',
-  };
-  const panelId = panelMap[type];
+  const panelId = PANEL_MAP[type];
   if (panelId) document.getElementById(panelId).classList.remove('open');
 }
 
@@ -739,6 +739,49 @@ function renderFarmPanel() {
       </div>`;
     }).join('');
   }
+}
+
+// ---- Market ----
+function renderMarketPanel(char) {
+  if (!char) return;
+  const gold = Number(char.gold) || 0;
+  document.getElementById('market-gold-amount').textContent = `🪙 ${gold}g`;
+
+  const equippedIds = new Set([char.weapon_id, char.armor_id].filter(Boolean));
+  const sellable = (char.inventory || []).filter(i => Number(i.sell_price) > 0);
+  const list = document.getElementById('market-list');
+
+  if (!sellable.length) {
+    list.innerHTML = '<p class="muted-sm">Nothing to sell.</p>';
+    return;
+  }
+
+  list.innerHTML = sellable.map(item => {
+    const equipped = equippedIds.has(item.item_id);
+    const price = Number(item.sell_price);
+    return `
+      <div class="market-row">
+        <span class="market-item-icon">${item.icon}</span>
+        <div class="market-item-info">
+          <span class="market-item-name">${escHtml(item.name)}</span>
+          <span class="market-item-meta">×${item.quantity} &bull; 🪙 ${price}g each</span>
+        </div>
+        ${equipped
+          ? '<span class="market-equipped-tag">Equipped</span>'
+          : `<button type="button" class="btn btn-outline btn-sm" onclick="sellItem(${item.id},${item.item_id},1)">Sell 1</button>`
+        }
+      </div>`;
+  }).join('');
+}
+
+async function sellItem(invId, itemId, qty) {
+  const res = await api.post(`/api/market/${charId}/sell`, { inv_id: invId, quantity: qty });
+  if (!res) return;
+  const data = await res.json();
+  if (!res.ok) { showToast(data.error || 'Could not sell item', 'danger'); return; }
+  charState = data.char;
+  renderAll(data.char);
+  showToast(`🪙 Sold for ${data.gold}g!`, 'success');
 }
 
 // ---- Avatar upload ----

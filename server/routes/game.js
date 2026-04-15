@@ -121,7 +121,7 @@ function fullChar(charId) {
   const char = Object.assign({}, db.prepare('SELECT * FROM characters WHERE id = ?').get(charId));
   const inventory = db.prepare(`
     SELECT inv.id, inv.quantity, i.id as item_id, i.name, i.type, i.description, i.icon,
-           i.damage, i.defense, i.weapon_type
+           i.damage, i.defense, i.weapon_type, i.sell_price
     FROM inventory inv JOIN items i ON i.id = inv.item_id
     WHERE inv.character_id = ?
   `).all(charId).map(r => Object.assign({}, r));

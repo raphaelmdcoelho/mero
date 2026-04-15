@@ -90,6 +90,12 @@
           <span>Read</span>
         </div>
 
+        <!-- Row 4 center: Market -->
+        <div class="action-sq" id="sq-market" style="grid-column:2;grid-row:4;" onclick="openPanel('market')">
+          <span class="sq-icon">🏪</span>
+          <span>Market</span>
+        </div>
+
         <!-- Row 4 right: Combat Stats -->
         <div class="action-sq" id="sq-stats" style="grid-column:3;grid-row:4;" onclick="openPanel('stats')">
           <span class="sq-icon">📊</span>
@@ -117,6 +123,7 @@
         </div>
         <div style="text-align:center;margin-top:0.25rem;display:flex;align-items:center;justify-content:center;gap:0.75rem;">
           <span id="level-display" style="font-family:'Cinzel',serif;font-size:0.85rem;color:var(--gold);">Level 1</span>
+          <span id="gold-display" style="font-size:0.8rem;color:#f5c842;">🪙 0g</span>
           <span id="unspent-header" style="display:none;font-size:0.75rem;color:var(--accent);font-family:'Cinzel',serif;cursor:pointer;" onclick="openPanel('attributes')"></span>
         </div>
       </div>
@@ -300,6 +307,22 @@
           🥕 Carrot <span style="font-size:0.7rem;color:var(--muted);display:block;">9 min · +2 HP</span>
         </button>
       </div>
+    </div>
+  </div>
+
+  <!-- Market Panel -->
+  <div class="side-panel" id="market-panel">
+    <div class="side-panel-header">
+      <span class="side-panel-title">🏪 Market</span>
+      <button type="button" class="close-btn" onclick="closePanel('market')">✕</button>
+    </div>
+    <div class="side-panel-body">
+      <div class="market-gold-bar">
+        <span class="market-gold-label">Your gold</span>
+        <span id="market-gold-amount" class="market-gold-amount">🪙 0g</span>
+      </div>
+      <p class="panel-sub">Sell items and plants for gold. Equipped items cannot be sold.</p>
+      <div id="market-list"></div>
     </div>
   </div>
 
