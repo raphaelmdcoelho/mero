@@ -842,8 +842,64 @@ async function sellItem(invId, itemId, qty) {
   showToast(t('game.js.sold_for', { n: data.gold }), 'success');
 }
 
-// ---- Avatar upload ----
-function triggerAvatarUpload() { document.getElementById('avatar-input').click(); }
+// ---- Avatar picker ----
+const AVATAR_PRESETS = [
+  { id: 'iron_knight',    url: 'https://api.dicebear.com/9.x/pixel-art/svg?seed=iron-knight&backgroundColor=1e3a5f' },
+  { id: 'shield_maiden',  url: 'https://api.dicebear.com/9.x/pixel-art/svg?seed=shield-maiden&backgroundColor=1e3a5f' },
+  { id: 'arcane_scholar', url: 'https://api.dicebear.com/9.x/pixel-art/svg?seed=arcane-scholar&backgroundColor=3b0764' },
+  { id: 'storm_witch',    url: 'https://api.dicebear.com/9.x/pixel-art/svg?seed=storm-witch&backgroundColor=3b0764' },
+  { id: 'shadow_blade',   url: 'https://api.dicebear.com/9.x/pixel-art/svg?seed=shadow-blade&backgroundColor=1c1917' },
+  { id: 'night_hunter',   url: 'https://api.dicebear.com/9.x/pixel-art/svg?seed=night-hunter&backgroundColor=1c1917' },
+  { id: 'holy_light',     url: 'https://api.dicebear.com/9.x/pixel-art/svg?seed=holy-light&backgroundColor=78350f' },
+  { id: 'dawn_keeper',    url: 'https://api.dicebear.com/9.x/pixel-art/svg?seed=dawn-keeper&backgroundColor=713f12' },
+  { id: 'dragon_blood',   url: 'https://api.dicebear.com/9.x/pixel-art/svg?seed=dragon-blood&backgroundColor=450a0a' },
+  { id: 'forest_spirit',  url: 'https://api.dicebear.com/9.x/pixel-art/svg?seed=forest-spirit&backgroundColor=14532d' },
+];
+
+function openAvatarPicker() {
+  const grid = document.getElementById('avatar-preset-grid');
+  const labels = t('game.apm.preset_labels') || {};
+  const currentUrl = charState && charState.avatar_path;
+
+  grid.innerHTML = AVATAR_PRESETS.map(p => `
+    <div class="avatar-preset-item${currentUrl === p.url ? ' selected' : ''}"
+         onclick="selectPresetAvatar('${p.url}', this)">
+      <div class="avatar-preset-thumb">
+        <img src="${p.url}" alt="${labels[p.id] || p.id}" loading="lazy" />
+      </div>
+      <span class="avatar-preset-label">${labels[p.id] || p.id}</span>
+    </div>
+  `).join('');
+
+  document.getElementById('avatar-picker-modal').classList.add('active');
+}
+
+function closeAvatarPicker() {
+  document.getElementById('avatar-picker-modal').classList.remove('active');
+}
+
+async function selectPresetAvatar(presetUrl, el) {
+  document.querySelectorAll('.avatar-preset-item').forEach(i => i.classList.remove('selected'));
+  el.classList.add('selected');
+
+  const res = await api.post(`/api/characters/${charId}/avatar/preset`, { presetUrl });
+  if (!res) return;
+  const data = await res.json();
+  if (!res.ok) { showToast(data.error || t('game.js.failed'), 'danger'); return; }
+
+  const img = document.getElementById('avatar-img');
+  img.src = data.avatarPath;
+  img.style.display = 'block';
+  document.getElementById('avatar-svg').style.display = 'none';
+  if (charState) charState.avatar_path = data.avatarPath;
+  showToast(t('game.js.avatar_updated'), 'success');
+  closeAvatarPicker();
+}
+
+function triggerAvatarUpload() {
+  closeAvatarPicker();
+  document.getElementById('avatar-input').click();
+}
 
 async function uploadAvatar(e) {
   const file = e.target.files[0];

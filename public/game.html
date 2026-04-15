@@ -61,14 +61,14 @@
 
         <!-- Center: Avatar (spans columns 2-3 to stay centered) -->
         <div class="avatar-cell" style="grid-column:2/4;grid-row:2;justify-self:center;">
-          <div class="avatar-ring" id="avatar-ring" onclick="triggerAvatarUpload()">
+          <div class="avatar-ring" id="avatar-ring" onclick="openAvatarPicker()">
             <img id="avatar-img" src="" alt="Avatar" style="display:none;" />
             <svg id="avatar-svg" viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
               <circle cx="40" cy="28" r="14" fill="#3d2f6e"/>
               <path d="M12 72c0-15.464 12.536-28 28-28s28 12.536 28 28" fill="#3d2f6e"/>
             </svg>
           </div>
-          <span class="avatar-hint" data-i18n="game.avatar_hint">Click to upload</span>
+          <span class="avatar-hint" data-i18n="game.avatar_hint">Click to change</span>
           <input type="file" id="avatar-input" accept="image/jpeg" style="display:none;" onchange="uploadAvatar(event)" />
         </div>
 
@@ -327,6 +327,24 @@
       </div>
       <p class="panel-sub" data-i18n="game.mp.desc">Sell items and plants for gold. Equipped items cannot be sold.</p>
       <div id="market-list"></div>
+    </div>
+  </div>
+
+  <!-- Avatar Picker Modal -->
+  <div class="modal-overlay" id="avatar-picker-modal">
+    <div class="modal">
+      <h2 class="modal-title" data-i18n="game.apm.title">Choose Avatar</h2>
+      <p class="avatar-picker-subtitle" data-i18n="game.apm.subtitle">Pick a hero portrait or upload your own.</p>
+      <div class="avatar-preset-grid" id="avatar-preset-grid">
+        <!-- populated by JS -->
+      </div>
+      <div class="avatar-picker-divider">
+        <span data-i18n="game.apm.or">or</span>
+      </div>
+      <button type="button" class="btn btn-outline avatar-picker-upload-btn" onclick="triggerAvatarUpload()" data-i18n="game.apm.custom">📁 Upload Custom Image</button>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline" onclick="closeAvatarPicker()" data-i18n="game.apm.cancel">Cancel</button>
+      </div>
     </div>
   </div>
 

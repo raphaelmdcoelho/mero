@@ -75,9 +75,29 @@
       'game.read':               'Read',
       'game.market':             'Market',
       'game.stats':              'Stats',
-      'game.avatar_hint':        'Click to upload',
+      'game.avatar_hint':        'Click to change',
       'game.heroes_link':        '← Heroes',
       'game.logout':             'Logout',
+
+      // Avatar picker modal
+      'game.apm.title':          'Choose Avatar',
+      'game.apm.subtitle':       'Pick a hero portrait or upload your own.',
+      'game.apm.or':             'or',
+      'game.apm.custom':         '📁 Upload Custom Image',
+      'game.apm.cancel':         'Cancel',
+      'game.apm.selecting':      'Selecting…',
+      'game.apm.preset_labels': {
+        iron_knight:    'Iron Knight',
+        shield_maiden:  'Shield Maiden',
+        arcane_scholar: 'Arcane Scholar',
+        storm_witch:    'Storm Witch',
+        shadow_blade:   'Shadow Blade',
+        night_hunter:   'Night Hunter',
+        holy_light:     'Holy Light',
+        dawn_keeper:    'Dawn Keeper',
+        dragon_blood:   'Dragon Blood',
+        forest_spirit:  'Forest Spirit',
+      },
 
       // Dungeon modal
       'game.dm.title':           'Select a Dungeon',
@@ -285,9 +305,29 @@
       'game.read':               'Ler',
       'game.market':             'Mercado',
       'game.stats':              'Estatísticas',
-      'game.avatar_hint':        'Clique para enviar',
+      'game.avatar_hint':        'Clique para alterar',
       'game.heroes_link':        '← Heróis',
       'game.logout':             'Sair',
+
+      // Avatar picker modal
+      'game.apm.title':          'Escolher Avatar',
+      'game.apm.subtitle':       'Escolha um retrato de herói ou envie o seu.',
+      'game.apm.or':             'ou',
+      'game.apm.custom':         '📁 Enviar Imagem Personalizada',
+      'game.apm.cancel':         'Cancelar',
+      'game.apm.selecting':      'Selecionando…',
+      'game.apm.preset_labels': {
+        iron_knight:    'Cavaleiro de Ferro',
+        shield_maiden:  'Donzela do Escudo',
+        arcane_scholar: 'Erudito Arcano',
+        storm_witch:    'Bruxa da Tempestade',
+        shadow_blade:   'Lâmina Sombria',
+        night_hunter:   'Caçador da Noite',
+        holy_light:     'Luz Sagrada',
+        dawn_keeper:    'Guardião da Aurora',
+        dragon_blood:   'Sangue de Dragão',
+        forest_spirit:  'Espírito da Floresta',
+      },
 
       // Dungeon modal
       'game.dm.title':           'Selecione uma Masmorra',
