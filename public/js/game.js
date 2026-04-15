@@ -111,6 +111,7 @@ function renderAll(char) {
     farmStock.style.display = 'none';
     document.getElementById('sq-farm').classList.add('disabled');
   } else {
+    document.getElementById('sq-farm').classList.remove('disabled');
     farmLock.style.display = 'none';
     const totalPlants = (char.inventory || [])
       .filter(i => i.item_id === 6 || i.item_id === 7)
@@ -341,7 +342,7 @@ async function startAutoBattle() {
     }
 
     // Pause between fights so the log stays readable
-    if (!autoBattleStop) await sleep(600);
+    if (!autoBattleStop) await sleep(1500);
   }
 
   autoBattleRunning = false;
@@ -406,7 +407,7 @@ async function animateCombatLog(
       container.appendChild(div);
       container.scrollTop = container.scrollHeight;
     }
-    await sleep(100);
+    await sleep(350);
   }
 
   // Settle on server truth
