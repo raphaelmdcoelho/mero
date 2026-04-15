@@ -1,0 +1,50 @@
+<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+  <!-- Stone background -->
+  <rect width="64" height="64" fill="#4a4a4a"/>
+
+  <!-- Stone blocks pattern -->
+  <rect x="0" y="0" width="16" height="16" fill="#5a5a5a"/>
+  <rect x="32" y="0" width="16" height="16" fill="#5a5a5a"/>
+  <rect x="16" y="16" width="16" height="16" fill="#5a5a5a"/>
+  <rect x="48" y="16" width="16" height="16" fill="#5a5a5a"/>
+  <rect x="0" y="32" width="16" height="16" fill="#5a5a5a"/>
+  <rect x="32" y="32" width="16" height="16" fill="#5a5a5a"/>
+  <rect x="16" y="48" width="16" height="16" fill="#5a5a5a"/>
+  <rect x="48" y="48" width="16" height="16" fill="#5a5a5a"/>
+
+  <!-- Door/Gate frame -->
+  <rect x="12" y="16" width="40" height="40" fill="#3a3a3a" stroke="#2a2a2a" stroke-width="2"/>
+
+  <!-- Door planks -->
+  <rect x="16" y="20" width="8" height="32" fill="#5d4e37" stroke="#3d2e17" stroke-width="1"/>
+  <rect x="28" y="20" width="8" height="32" fill="#5d4e37" stroke="#3d2e17" stroke-width="1"/>
+  <rect x="40" y="20" width="8" height="32" fill="#5d4e37" stroke="#3d2e17" stroke-width="1"/>
+
+  <!-- Door metal bands -->
+  <rect x="14" y="24" width="36" height="3" fill="#c0a080" stroke="#8a7a60" stroke-width="1"/>
+  <rect x="14" y="36" width="36" height="3" fill="#c0a080" stroke="#8a7a60" stroke-width="1"/>
+  <rect x="14" y="48" width="36" height="3" fill="#c0a080" stroke="#8a7a60" stroke-width="1"/>
+
+  <!-- Door knocker -->
+  <circle cx="32" cy="40" r="3" fill="#c0a080" stroke="#8a7a60" stroke-width="1"/>
+
+  <!-- Stone arch top left -->
+  <rect x="10" y="10" width="4" height="10" fill="#6a6a6a"/>
+  <rect x="14" y="8" width="4" height="4" fill="#6a6a6a"/>
+
+  <!-- Stone arch top right -->
+  <rect x="50" y="10" width="4" height="10" fill="#6a6a6a"/>
+  <rect x="46" y="8" width="4" height="4" fill="#6a6a6a"/>
+
+  <!-- Torches on sides -->
+  <rect x="6" y="28" width="3" height="3" fill="#ff8c00"/>
+  <rect x="5" y="32" width="5" height="2" fill="#3a3a3a"/>
+  <rect x="7" y="34" width="1" height="3" fill="#5a5a5a"/>
+
+  <rect x="55" y="28" width="3" height="3" fill="#ff8c00"/>
+  <rect x="54" y="32" width="5" height="2" fill="#3a3a3a"/>
+  <rect x="56" y="34" width="1" height="3" fill="#5a5a5a"/>
+
+  <!-- Glowing effect (optional) -->
+  <circle cx="32" cy="32" r="20" fill="none" stroke="#ff6b00" stroke-width="1" opacity="0.2"/>
+</svg>

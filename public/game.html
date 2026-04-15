@@ -35,7 +35,7 @@
       <div class="action-grid">
         <!-- Top-left: Dungeon -->
         <div class="action-sq" id="sq-dungeon" style="grid-column:1;grid-row:1;" onclick="handleDungeon()">
-          <span class="sq-icon">🏰</span>
+          <img src="/dungeon-icon.svg" alt="Dungeon" class="sq-icon" style="padding:4px;filter:brightness(1.2);" />
           <span id="dungeon-label" data-i18n="game.dungeon">Dungeon</span>
         </div>
 
@@ -159,7 +159,7 @@
   <!-- Battle Panel -->
   <div class="side-panel" id="battle-panel">
     <div class="side-panel-header">
-      <span class="side-panel-title" id="battle-title">🏰 Dungeon</span>
+      <span class="side-panel-title" id="battle-title"><img src="/dungeon-icon.svg" alt="Dungeon" style="height:1.2rem;width:1.2rem;display:inline;margin-right:0.5rem;vertical-align:middle;filter:brightness(1.2);" /> Dungeon</span>
       <button class="close-btn" onclick="closePanel('battle')">✕</button>
     </div>
     <div class="side-panel-body">
