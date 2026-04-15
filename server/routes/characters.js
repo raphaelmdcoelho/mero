@@ -130,8 +130,8 @@ router.delete('/:id', async (req, res) => {
 });
 
 // POST /api/characters/:id/avatar/preset  — store a DiceBear URL as avatar
-router.post('/:id/avatar/preset', (req, res) => {
-  const char = ownedCharacter(req, res);
+router.post('/:id/avatar/preset', async (req, res) => {
+  const char = await ownedCharacter(req, res);
   if (!char) return;
 
   const { presetUrl } = req.body;
@@ -148,7 +148,7 @@ router.post('/:id/avatar/preset', (req, res) => {
     if (fs.existsSync(old)) fs.unlinkSync(old);
   }
 
-  db.prepare('UPDATE characters SET avatar_path = ? WHERE id = ?').run(presetUrl, char.id);
+  await client.execute({ sql: 'UPDATE characters SET avatar_path = ? WHERE id = ?', args: [presetUrl, char.id] });
   res.json({ avatarPath: presetUrl });
 });
 
