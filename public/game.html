@@ -39,7 +39,7 @@
           <span id="dungeon-label" data-i18n="game.dungeon">Dungeon</span>
         </div>
 
-        <!-- Top-center: Farm (activity, unlocks at level 3) -->
+        <!-- Top center-left: Farm (activity, unlocks at level 3) -->
         <div class="action-sq" id="sq-farm" style="grid-column:2;grid-row:1;position:relative;" onclick="handleFarm()">
           <span class="sq-icon">🌱</span>
           <span id="farm-label" data-i18n="game.farm">Farm</span>
@@ -47,14 +47,20 @@
           <span id="farm-stock-badge" class="unspent-badge" style="display:none;background:var(--accent);"></span>
         </div>
 
-        <!-- Top-right: Tavern -->
+        <!-- Top center-right: Tavern -->
         <div class="action-sq" id="sq-tavern" style="grid-column:3;grid-row:1;" onclick="handleTavern()">
           <span class="sq-icon">🍺</span>
           <span id="tavern-label" data-i18n="game.tavern">Tavern</span>
         </div>
 
-        <!-- Center: Avatar -->
-        <div class="avatar-cell" style="grid-column:2;grid-row:2;">
+        <!-- Top-right: Read (moved here — same row as all activities) -->
+        <div class="action-sq" id="sq-read" style="grid-column:4;grid-row:1;" onclick="handleRead()">
+          <span class="sq-icon">📖</span>
+          <span id="read-label" data-i18n="game.read">Read</span>
+        </div>
+
+        <!-- Center: Avatar (spans columns 2-3 to stay centered) -->
+        <div class="avatar-cell" style="grid-column:2/4;grid-row:2;justify-self:center;">
           <div class="avatar-ring" id="avatar-ring" onclick="triggerAvatarUpload()">
             <img id="avatar-img" src="" alt="Avatar" style="display:none;" />
             <svg id="avatar-svg" viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -83,12 +89,6 @@
         <div class="action-sq" id="sq-equipment" style="grid-column:3;grid-row:3;" onclick="openPanel('equipment')">
           <span class="sq-icon">🛡️</span>
           <span data-i18n="game.equipment">Equipment</span>
-        </div>
-
-        <!-- Row 4 left: Read -->
-        <div class="action-sq" id="sq-read" style="grid-column:1;grid-row:4;" onclick="handleRead()">
-          <span class="sq-icon">📖</span>
-          <span id="read-label" data-i18n="game.read">Read</span>
         </div>
 
         <!-- Row 4 center: Market -->

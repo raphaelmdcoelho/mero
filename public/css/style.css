@@ -358,7 +358,7 @@ input:focus, select:focus {
 }
 .action-grid {
   display: grid;
-  grid-template-columns: 100px 160px 100px;
+  grid-template-columns: repeat(4, 100px);
   grid-template-rows: 100px 160px 100px 100px;
   column-gap: 12px;
   row-gap: 24px;
@@ -871,7 +871,7 @@ input:focus, select:focus {
 /* ---- Mobile (375px) ---- */
 @media (max-width: 480px) {
   .action-grid {
-    grid-template-columns: 80px 130px 80px;
+    grid-template-columns: repeat(4, 80px);
     grid-template-rows: 80px 130px 80px 80px;
     gap: 8px;
   }
