@@ -158,7 +158,10 @@ function updateActionSquares(activity) {
 // ---- Action handlers ----
 function handleDungeon() {
   if (!charState) return;
-  if (charState.activity === 'dungeon') { openPanel('battle'); return; }
+  if (charState.activity === 'dungeon') {
+    openPanel('battle'); // openPanel will call startAutoBattle if not running
+    return;
+  }
   if (charState.activity) return;
   openDungeonModal();
 }
@@ -235,8 +238,9 @@ async function confirmEnterDungeon() {
   if (!res.ok) { showToast(data.error || 'Failed to enter dungeon', 'danger'); return; }
   charState = data;
   renderAll(data);
-  openPanel('battle');
   showToast(`Entered Dungeon Level ${selectedDungeonLevel}!`, 'success');
+  openPanel('battle');
+  startAutoBattle();
 }
 
 document.getElementById('dungeon-modal').addEventListener('click', function(e) {
@@ -279,59 +283,80 @@ function setHeroHpBar(current, max) {
     `${Math.max(0, Math.round(current * 10) / 10)} / ${max}`;
 }
 
-async function doAttack() {
-  const btn = document.getElementById('attack-btn');
-  btn.disabled = true;
-  btn.textContent = '…';
+// ---- Auto-battle loop ----
+let autoBattleRunning = false;
+let autoBattleStop    = false;
 
-  const res = await api.post(`/api/game/${charId}/dungeon/attack`);
-  if (!res) { btn.disabled = false; btn.textContent = '⚔️ Attack'; return; }
+async function startAutoBattle() {
+  if (autoBattleRunning) return;
+  autoBattleRunning = true;
+  autoBattleStop    = false;
 
+  // Clear log for new run
+  const container = document.getElementById('battle-log');
+  container.innerHTML = '';
+
+  while (!autoBattleStop) {
+    // --- call the server for one monster fight ---
+    const res = await api.post(`/api/game/${charId}/dungeon/attack`);
+    if (!res || autoBattleStop) break;
+
+    const data = await res.json();
+    if (!res.ok) { showToast(data.error || 'Battle error', 'danger'); break; }
+
+    // Snapshot pre-fight state for animation
+    const prevMonsterHp  = charState.dungeonRun ? Number(charState.dungeonRun.monster_hp) : 0;
+    const prevMonsterMax = charState.dungeonRun ? charState.dungeonRun.monster.hp : 1;
+    const monsterName    = charState.dungeonRun ? charState.dungeonRun.monster.name : 'Monster';
+    const prevHeroHp     = Number(charState.hp);
+    const heroMax        = Number(charState.max_hp);
+
+    await animateCombatLog(
+      data.combatLog, monsterName,
+      prevMonsterHp, prevMonsterMax,
+      prevHeroHp, heroMax,
+      data.char.dungeonRun ? Number(data.char.dungeonRun.monster_hp) : 0,
+      Number(data.char.hp)
+    );
+
+    charState = data.char;
+    renderAll(data.char);
+
+    if (data.result === 'defeat') {
+      showToast('Your hero has fallen! Return to the dungeon to try again.', 'danger');
+      closePanel('battle');
+      break;
+    }
+
+    if (data.result === 'run_complete') {
+      showToast(`🏆 Boss defeated! Dungeon mastery is now ${data.newMastery}!`, 'success');
+      if (data.droppedItem) showToast(`💎 ${data.droppedItem.icon} ${data.droppedItem.name} dropped!`, 'success');
+      closePanel('battle');
+      break;
+    }
+
+    if (data.result === 'monster_killed') {
+      if (data.droppedItem) showToast(`💎 ${data.droppedItem.icon} ${data.droppedItem.name} dropped!`, 'success');
+      if (data.bossSpawned) showToast('⚠️ The Boss appears!', 'warn');
+    }
+
+    // Pause between fights so the log stays readable
+    if (!autoBattleStop) await sleep(600);
+  }
+
+  autoBattleRunning = false;
+}
+
+async function stopDungeon() {
+  autoBattleStop = true;
+  const res = await api.post(`/api/game/${charId}/dungeon/flee`);
+  if (!res) return;
   const data = await res.json();
-  if (!res.ok) {
-    btn.disabled = false; btn.textContent = '⚔️ Attack';
-    showToast(data.error || 'Attack failed', 'danger'); return;
-  }
-
-  // Snapshot HP before the fight settled so we can animate from current values
-  const prevMonsterHp  = charState.dungeonRun ? Number(charState.dungeonRun.monster_hp) : 0;
-  const prevMonsterMax = charState.dungeonRun ? charState.dungeonRun.monster.hp : 1;
-  const monsterName    = charState.dungeonRun ? charState.dungeonRun.monster.name : 'Monster';
-  const prevHeroHp     = Number(charState.hp);
-  const heroMax        = Number(charState.max_hp);
-
-  // Animate the combat log and bars, then settle
-  await animateCombatLog(
-    data.combatLog,
-    monsterName,
-    prevMonsterHp, prevMonsterMax,
-    prevHeroHp,    heroMax,
-    data.char.dungeonRun ? Number(data.char.dungeonRun.monster_hp) : 0,
-    Number(data.char.hp)
-  );
-
-  // Apply final state
-  charState = data.char;
-  renderAll(data.char);
-  btn.disabled = false;
-  btn.textContent = '⚔️ Attack';
-
-  if (data.result === 'defeat') {
-    showToast('Your hero has fallen! Return to the dungeon to try again.', 'danger');
-    closePanel('battle');
-    return;
-  }
-  if (data.result === 'run_complete') {
-    showToast(`🏆 Boss defeated! Dungeon mastery is now ${data.newMastery}!`, 'success');
-    if (data.droppedItem) showToast(`💎 Dropped: ${data.droppedItem.icon} ${data.droppedItem.name}!`, 'success');
-    closePanel('battle');
-    return;
-  }
-  if (data.result === 'monster_killed') {
-    showToast(`+${data.gainedXp} XP`, 'success');
-    if (data.droppedItem) showToast(`💎 ${data.droppedItem.icon} ${data.droppedItem.name} dropped!`, 'success');
-    if (data.bossSpawned) showToast('⚠️ The Boss appears!', 'warn');
-  }
+  if (!res.ok) { showToast(data.error || 'Failed', 'danger'); return; }
+  charState = data;
+  renderAll(data);
+  closePanel('battle');
+  showToast('You left the dungeon.', 'warn');
 }
 
 // Replay each round with a delay, updating HP bars live
@@ -342,18 +367,15 @@ async function animateCombatLog(
   finalMonsterHp, finalHeroHp
 ) {
   const container = document.getElementById('battle-log');
-  const empty = container.querySelector('.battle-log-empty');
-  if (empty) empty.remove();
 
-  // Add a fight separator
-  const sep0 = document.createElement('div');
-  sep0.className = 'log-fight-sep';
-  sep0.textContent = '── New fight ──';
-  container.appendChild(sep0);
+  // Fight separator
+  const sep = document.createElement('div');
+  sep.className = 'log-fight-sep';
+  sep.textContent = `── vs ${monsterName} ──`;
+  container.appendChild(sep);
 
-  // Calculate damage deltas per round so we can step HP
-  // Each round is [playerAction, optionalMonsterAction]
   for (const round of log) {
+    if (autoBattleStop) break;
     for (const entry of round) {
       const div = document.createElement('div');
 
@@ -362,21 +384,21 @@ async function animateCombatLog(
           monsterHp = Math.max(0, monsterHp - entry.damage);
           div.className = 'log-hit-player';
           div.textContent =
-            `⚔️ You hit ${monsterName} for ${entry.damage} dmg — ${monsterName} HP: ${Math.round(monsterHp)}/${monsterMax}`;
+            `⚔️ You hit ${monsterName} for ${entry.damage} — HP: ${Math.round(monsterHp)}/${monsterMax}`;
           setMonsterHpBar(monsterHp, monsterMax);
         } else {
           div.className = 'log-miss-player';
-          div.textContent = `💨 Your attack missed ${monsterName}!`;
+          div.textContent = `💨 Missed ${monsterName}!`;
         }
       } else {
         if (entry.type === 'dodge') {
           div.className = 'log-dodge';
-          div.textContent = `🌀 You dodged ${monsterName}'s attack!`;
+          div.textContent = `🌀 Dodged ${monsterName}'s attack!`;
         } else {
           heroHp = Math.max(0, heroHp - entry.damage);
           div.className = 'log-hit-monster';
           div.textContent =
-            `💥 ${monsterName} hits you for ${entry.damage} dmg — Your HP: ${Math.round(heroHp * 10) / 10}/${heroMax}`;
+            `💥 ${monsterName} hits you for ${entry.damage} — Your HP: ${Math.round(heroHp * 10) / 10}/${heroMax}`;
           setHeroHpBar(heroHp, heroMax);
         }
       }
@@ -384,28 +406,15 @@ async function animateCombatLog(
       container.appendChild(div);
       container.scrollTop = container.scrollHeight;
     }
-
-    // Small pause between rounds so the player can follow
-    await sleep(120);
+    await sleep(100);
   }
 
-  // Ensure bars settle on server truth (rounding may differ)
+  // Settle on server truth
   setMonsterHpBar(finalMonsterHp, monsterMax);
   setHeroHpBar(finalHeroHp, heroMax);
 }
 
 function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
-
-async function doFlee() {
-  const res = await api.post(`/api/game/${charId}/dungeon/flee`);
-  if (!res) return;
-  const data = await res.json();
-  if (!res.ok) { showToast(data.error || 'Failed', 'danger'); return; }
-  charState = data;
-  renderAll(data);
-  closePanel('battle');
-  showToast('You fled the dungeon.', 'warn');
-}
 
 // ---- Combat Stats ----
 async function refreshCombatStats() {
@@ -439,8 +448,11 @@ function openPanel(type) {
   if (type === 'attributes') { pendingAttrs = {}; renderAttributes(charState); }
   if (type === 'farm')       renderFarmPanel();
   if (type === 'battle') {
-    document.getElementById('battle-log').innerHTML = '<div class="battle-log-empty">Press Attack to begin!</div>';
     renderBattlePanel(charState);
+    if (!autoBattleRunning && charState && charState.dungeonRun) {
+      document.getElementById('battle-log').innerHTML = '';
+      startAutoBattle();
+    }
   }
   if (type === 'stats') refreshCombatStats();
 }
