@@ -70,7 +70,9 @@ function renderAll(char) {
 
   if (char.avatar_path) {
     const img = document.getElementById('avatar-img');
-    img.src = char.avatar_path + '?t=' + Date.now();
+    // Preset URLs (DiceBear) already have query params — only add cache-bust for local uploads
+    const isRemote = char.avatar_path.startsWith('https://');
+    img.src = isRemote ? char.avatar_path : char.avatar_path + '?t=' + Date.now();
     img.style.display = 'block';
     document.getElementById('avatar-svg').style.display = 'none';
   }
