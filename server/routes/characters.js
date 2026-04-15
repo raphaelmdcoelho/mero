@@ -129,6 +129,29 @@ router.delete('/:id', async (req, res) => {
   res.json({ ok: true });
 });
 
+// POST /api/characters/:id/avatar/preset  — store a DiceBear URL as avatar
+router.post('/:id/avatar/preset', (req, res) => {
+  const char = ownedCharacter(req, res);
+  if (!char) return;
+
+  const { presetUrl } = req.body;
+  if (
+    typeof presetUrl !== 'string' ||
+    !presetUrl.startsWith('https://api.dicebear.com/')
+  ) {
+    return res.status(400).json({ error: 'Invalid preset URL' });
+  }
+
+  // Clean up any previously uploaded (local) avatar
+  if (char.avatar_path && !char.avatar_path.startsWith('https://')) {
+    const old = path.join(__dirname, '..', '..', 'public', char.avatar_path);
+    if (fs.existsSync(old)) fs.unlinkSync(old);
+  }
+
+  db.prepare('UPDATE characters SET avatar_path = ? WHERE id = ?').run(presetUrl, char.id);
+  res.json({ avatarPath: presetUrl });
+});
+
 // POST /api/characters/:id/avatar
 router.post('/:id/avatar', async (req, res) => {
   const char = await ownedCharacter(req, res);
