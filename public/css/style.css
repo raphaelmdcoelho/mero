@@ -389,6 +389,44 @@ input:focus, select:focus {
   position: relative;
 }
 .action-sq .sq-icon { font-size: 2.2rem; line-height: 1; }
+
+/* Pixel-art icon buttons — image fills the full tile */
+#sq-dungeon,
+#sq-farm,
+#sq-tavern,
+#sq-read {
+  overflow: hidden;
+  padding: 0;
+  justify-content: flex-end;
+  padding-bottom: 6px;
+}
+#sq-dungeon .sq-icon,
+#sq-farm    .sq-icon,
+#sq-tavern  .sq-icon,
+#sq-read    .sq-icon {
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  object-fit: cover;
+  padding: 0;
+  font-size: unset;
+  filter: brightness(1.15);
+}
+#sq-dungeon #dungeon-label,
+#sq-farm    #farm-label,
+#sq-tavern  #tavern-label,
+#sq-read    #read-label {
+  position: relative;
+  z-index: 1;
+  font-size: 0.62rem;
+  letter-spacing: 0.02em;
+  width: 100%;
+  text-align: center;
+  text-shadow: 0 1px 4px rgba(0,0,0,0.85);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 .action-sq:hover:not(.disabled) {
   border-color: var(--accent);
   color: var(--text);

@@ -1,0 +1,51 @@
+<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+  <!-- Sky background -->
+  <rect width="64" height="64" fill="#1a3a1a"/>
+
+  <!-- Soil rows -->
+  <rect x="0" y="44" width="64" height="20" fill="#3b2a1a"/>
+  <rect x="0" y="44" width="64" height="3" fill="#2a1a0a"/>
+  <rect x="8" y="47" width="4" height="2" fill="#2a1a0a"/>
+  <rect x="24" y="47" width="4" height="2" fill="#2a1a0a"/>
+  <rect x="40" y="47" width="4" height="2" fill="#2a1a0a"/>
+  <rect x="56" y="47" width="4" height="2" fill="#2a1a0a"/>
+
+  <!-- Wheat stalk 1 -->
+  <rect x="6"  y="28" width="3" height="16" fill="#8a7a30"/>
+  <rect x="4"  y="22" width="3" height="8"  fill="#a08a30"/>
+  <rect x="8"  y="20" width="3" height="8"  fill="#c0a840"/>
+  <rect x="5"  y="18" width="5" height="4"  fill="#e8c840"/>
+
+  <!-- Wheat stalk 2 -->
+  <rect x="20" y="28" width="3" height="16" fill="#8a7a30"/>
+  <rect x="18" y="22" width="3" height="8"  fill="#a08a30"/>
+  <rect x="22" y="20" width="3" height="8"  fill="#c0a840"/>
+  <rect x="19" y="18" width="5" height="4"  fill="#e8c840"/>
+
+  <!-- Wheat stalk 3 -->
+  <rect x="34" y="28" width="3" height="16" fill="#8a7a30"/>
+  <rect x="32" y="22" width="3" height="8"  fill="#a08a30"/>
+  <rect x="36" y="20" width="3" height="8"  fill="#c0a840"/>
+  <rect x="33" y="18" width="5" height="4"  fill="#e8c840"/>
+
+  <!-- Wheat stalk 4 -->
+  <rect x="48" y="28" width="3" height="16" fill="#8a7a30"/>
+  <rect x="46" y="22" width="3" height="8"  fill="#a08a30"/>
+  <rect x="50" y="20" width="3" height="8"  fill="#c0a840"/>
+  <rect x="47" y="18" width="5" height="4"  fill="#e8c840"/>
+
+  <!-- Small sprout between stalks -->
+  <rect x="14" y="36" width="2" height="8" fill="#4a8a30"/>
+  <rect x="12" y="32" width="4" height="4" fill="#3a7a20"/>
+  <rect x="28" y="36" width="2" height="8" fill="#4a8a30"/>
+  <rect x="26" y="32" width="4" height="4" fill="#3a7a20"/>
+  <rect x="42" y="36" width="2" height="8" fill="#4a8a30"/>
+  <rect x="40" y="32" width="4" height="4" fill="#3a7a20"/>
+
+  <!-- Sun rays (top right) -->
+  <rect x="52" y="4"  width="4" height="4"  fill="#f5c842"/>
+  <rect x="56" y="8"  width="4" height="2"  fill="#f5c842"/>
+  <rect x="48" y="2"  width="2" height="4"  fill="#f5c842"/>
+  <rect x="58" y="4"  width="2" height="2"  fill="#f5c842" opacity="0.6"/>
+  <rect x="50" y="8"  width="2" height="2"  fill="#f5c842" opacity="0.6"/>
+</svg>

@@ -35,13 +35,13 @@
       <div class="action-grid">
         <!-- Top-left: Dungeon -->
         <div class="action-sq" id="sq-dungeon" style="grid-column:1;grid-row:1;" onclick="handleDungeon()">
-          <img src="/dungeon-icon.svg" alt="Dungeon" class="sq-icon" style="padding:4px;filter:brightness(1.2);" />
+          <img src="/dungeon-icon.svg" alt="Dungeon" class="sq-icon" />
           <span id="dungeon-label" data-i18n="game.dungeon">Dungeon</span>
         </div>
 
         <!-- Top center-left: Farm (activity, unlocks at level 3) -->
         <div class="action-sq" id="sq-farm" style="grid-column:2;grid-row:1;position:relative;" onclick="handleFarm()">
-          <span class="sq-icon">🌱</span>
+          <img src="/farm-icon.svg" alt="Farm" class="sq-icon" />
           <span id="farm-label" data-i18n="game.farm">Farm</span>
           <span id="farm-lock-badge" class="unspent-badge" style="display:none;font-size:0.55rem;">Lv.3</span>
           <span id="farm-stock-badge" class="unspent-badge" style="display:none;background:var(--accent);"></span>
@@ -49,13 +49,13 @@
 
         <!-- Top center-right: Tavern -->
         <div class="action-sq" id="sq-tavern" style="grid-column:3;grid-row:1;" onclick="handleTavern()">
-          <span class="sq-icon">🍺</span>
+          <img src="/tavern-icon.svg" alt="Tavern" class="sq-icon" />
           <span id="tavern-label" data-i18n="game.tavern">Tavern</span>
         </div>
 
         <!-- Top-right: Read (moved here — same row as all activities) -->
         <div class="action-sq" id="sq-read" style="grid-column:4;grid-row:1;" onclick="handleRead()">
-          <span class="sq-icon">📖</span>
+          <img src="/read-icon.svg" alt="Read" class="sq-icon" />
           <span id="read-label" data-i18n="game.read">Read</span>
         </div>
 
