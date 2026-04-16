@@ -1003,7 +1003,7 @@ input:focus, select:focus {
 /* Pickaxe animation */
 .pickaxe-wrap {
   position: absolute;
-  right: -70px;
+  right: -92px;
   top: 40px;
   width: 64px;
   height: 64px;
@@ -1035,7 +1035,7 @@ input:focus, select:focus {
   .action-sq .sq-icon { font-size: 1.8rem; }
   .avatar-cell { width: 130px; height: 130px; }
   .avatar-ring { border-radius: 50%; }
-  .pickaxe-wrap { right: -56px; top: 30px; width: 48px; height: 48px; transform-origin: 44px 40px; }
+  .pickaxe-wrap { right: -72px; top: 30px; width: 48px; height: 48px; transform-origin: 44px 40px; }
   .pickaxe-wrap svg { width: 48px; height: 48px; }
   .char-grid { grid-template-columns: 1fr 1fr; }
   .side-panel { width: 100%; right: -100%; }
