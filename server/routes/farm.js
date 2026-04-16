@@ -12,10 +12,9 @@ const PLANT_ITEM_IDS = { carrot: 6, apple: 7 };
 
 // Move any ready farm_queue entries into the regular inventory
 async function harvestReady(charId) {
-  const now = Math.floor(Date.now() / 1000);
   const r = await client.execute({
-    sql:  'SELECT * FROM farm_queue WHERE character_id = ? AND ready_at <= ?',
-    args: [charId, now],
+    sql:  'SELECT * FROM farm_queue WHERE character_id = ? AND COALESCE(remaining_seconds, 0) <= 0',
+    args: [charId],
   });
 
   for (const job of r.rows) {
@@ -44,7 +43,7 @@ async function harvestReady(charId) {
 async function farmStatus(charId) {
   await harvestReady(charId);
   const r = await client.execute({
-    sql:  'SELECT id, plant_type, ready_at FROM farm_queue WHERE character_id = ? ORDER BY ready_at ASC',
+    sql:  'SELECT id, plant_type, ready_at, remaining_seconds FROM farm_queue WHERE character_id = ? ORDER BY id ASC',
     args: [charId],
   });
   return { farmQueue: r.rows.map(row => Object.assign({}, row)) };
@@ -81,10 +80,10 @@ router.post('/:characterId/grow', async (req, res) => {
   }
 
   const now = Math.floor(Date.now() / 1000);
-  const readyAt = now + GROW_TIME[plant_type];
+  const remainingSeconds = GROW_TIME[plant_type];
   await client.execute({
-    sql:  'INSERT INTO farm_queue (character_id, plant_type, ready_at) VALUES (?, ?, ?)',
-    args: [char.id, plant_type, readyAt],
+    sql:  'INSERT INTO farm_queue (character_id, plant_type, ready_at, remaining_seconds, last_progress_at) VALUES (?, ?, ?, ?, ?)',
+    args: [char.id, plant_type, now + remainingSeconds, remainingSeconds, null],
   });
 
   res.json(await farmStatus(char.id));

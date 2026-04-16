@@ -50,6 +50,7 @@ async function initDb() {
       avatar_path         TEXT,
       weapon_id           INTEGER REFERENCES items(id),
       armor_id            INTEGER REFERENCES items(id),
+      shield_id           INTEGER REFERENCES items(id),
       activity            TEXT    DEFAULT NULL,
       activity_started_at INTEGER DEFAULT NULL,
       dungeon_difficulty  TEXT    DEFAULT NULL,
@@ -76,7 +77,9 @@ async function initDb() {
       id           INTEGER PRIMARY KEY AUTOINCREMENT,
       character_id INTEGER NOT NULL REFERENCES characters(id),
       plant_type   TEXT NOT NULL CHECK(plant_type IN ('carrot', 'apple')),
-      ready_at     INTEGER NOT NULL
+      ready_at     INTEGER NOT NULL,
+      remaining_seconds INTEGER DEFAULT NULL,
+      last_progress_at  INTEGER DEFAULT NULL
     );
 
     CREATE TABLE IF NOT EXISTS monsters (
@@ -124,17 +127,28 @@ async function initDb() {
     'ALTER TABLE characters ADD COLUMN dungeon_mastery_s3 INTEGER DEFAULT 0',
     'ALTER TABLE characters ADD COLUMN dungeon_mastery_s4 INTEGER DEFAULT 0',
     'ALTER TABLE characters ADD COLUMN dungeon_mastery_s5 INTEGER DEFAULT 0',
+    'ALTER TABLE characters ADD COLUMN shield_id INTEGER REFERENCES items(id)',
     'ALTER TABLE items ADD COLUMN damage      INTEGER DEFAULT 0',
     'ALTER TABLE items ADD COLUMN defense     INTEGER DEFAULT 0',
     'ALTER TABLE items ADD COLUMN weapon_type TEXT    DEFAULT NULL',
+    'ALTER TABLE items ADD COLUMN armor_slot  TEXT    DEFAULT NULL',
     'ALTER TABLE items ADD COLUMN sell_price  INTEGER DEFAULT 0',
     'ALTER TABLE monsters ADD COLUMN dungeon_set INTEGER NOT NULL DEFAULT 1',
     'ALTER TABLE dungeon_run ADD COLUMN dungeon_set INTEGER NOT NULL DEFAULT 1',
+    'ALTER TABLE farm_queue ADD COLUMN remaining_seconds INTEGER DEFAULT NULL',
+    'ALTER TABLE farm_queue ADD COLUMN last_progress_at INTEGER DEFAULT NULL',
   ];
 
   for (const sql of additiveMigrations) {
     try { await client.execute(sql); } catch { /* column already exists — skip */ }
   }
+
+  // Convert legacy farm_queue rows (ready_at absolute unix time) into pauseable remaining_seconds.
+  await client.execute(`
+    UPDATE farm_queue
+    SET remaining_seconds = MAX(0, ready_at - unixepoch())
+    WHERE remaining_seconds IS NULL
+  `);
 
   // Recalculate max_hp for all characters to include vitality bonus:
   // max_hp = 10 + (level-1)*5 + vitality*2
@@ -145,20 +159,28 @@ async function initDb() {
     WHERE 1=1
   `);
 
-  // Seed / update items with damage, defense, weapon_type
-  // id, name, type, description, icon, damage, defense, weapon_type, sell_price
+  // Seed / update items with combat and slot metadata.
+  // id, name, type, description, icon, damage, defense, weapon_type, armor_slot, sell_price
   const itemData = [
-    [1,  'Wooden Sword',  'weapon',     'A basic training sword.',        '🗡️',  2, 0, 'melee',   5],
-    [2,  'Iron Sword',    'weapon',     'A sturdy iron blade.',           '⚔️',  4, 0, 'melee',  15],
-    [3,  'Leather Armor', 'armor',      'Light but protective.',          '🥋',  0, 2,  null,    10],
-    [4,  'Iron Shield',   'armor',      'Heavy iron shield.',             '🛡️',  0, 3,  null,    20],
-    [5,  'Health Potion', 'consumable', 'Restores 5 HP.',                 '🧪',  0, 0,  null,     8],
-    [6,  'Carrot',        'consumable', 'Restores 2 HP.',                 '🥕',  0, 0,  null,     3],
-    [7,  'Apple',         'consumable', 'Restores 1 HP.',                 '🍎',  0, 0,  null,     2],
-    [8,  'Short Bow',     'weapon',     'A ranged weapon. Uses Dexterity.','🏹', 3, 0, 'ranged', 18],
-    [9,  'Steel Sword',   'weapon',     'A finely forged steel blade.',   '🔪',  6, 0, 'melee',  35],
-    [10, 'Chainmail',     'armor',      'Linked metal rings for armor.',  '🔗',  0, 4,  null,    30],
-    [11, 'Plate Armor',   'armor',      'Heavy full-body plate armor.',   '🛡️',  0, 6,  null,    50],
+    [1,  'Wooden Sword',   'weapon',     'A basic training sword.',          '🗡️',  2,  0, 'melee',  null,     5],
+    [2,  'Iron Sword',     'weapon',     'A sturdy iron blade.',             '⚔️',  4,  0, 'melee',  null,    15],
+    [3,  'Leather Armor',  'armor',      'Light but protective.',            '🥋',  0,  2, null,    'body',   10],
+    [4,  'Iron Shield',    'armor',      'Heavy iron shield.',               '🛡️',  0,  3, null,    'shield', 20],
+    [5,  'Health Potion',  'consumable', 'Restores 5 HP.',                   '🧪',  0,  0, null,    null,      8],
+    [6,  'Carrot',         'consumable', 'Restores 2 HP.',                   '🥕',  0,  0, null,    null,      3],
+    [7,  'Apple',          'consumable', 'Restores 1 HP.',                   '🍎',  0,  0, null,    null,      2],
+    [8,  'Short Bow',      'weapon',     'A ranged weapon. Uses Dexterity.', '🏹',  3,  0, 'ranged', null,    18],
+    [9,  'Steel Sword',    'weapon',     'A finely forged steel blade.',     '🔪',  6,  0, 'melee',  null,    35],
+    [10, 'Chainmail',      'armor',      'Linked metal rings for armor.',    '🔗',  0,  4, null,    'body',   30],
+    [11, 'Plate Armor',    'armor',      'Heavy full-body plate armor.',     '🛡️',  0,  6, null,    'body',   50],
+    [12, 'Oak Shield',     'armor',      'A sturdy oak shield.',             '🪵',  0,  2, null,    'shield', 12],
+    [13, 'Steel Shield',   'armor',      'Balanced defense with steel ribs.', '🛡️', 0,  5, null,    'shield', 34],
+    [14, 'Knight Shield',  'armor',      'Towering protection for champions.','🛡️', 0,  8, null,    'shield', 60],
+    [15, 'Hunter Jacket',  'armor',      'Flexible armor for quick skirmish.','🧥', 0,  3, null,    'body',   20],
+    [16, 'War Axe',        'weapon',     'A heavy axe built for crushing hits.','🪓',7, 0, 'melee',  null,    40],
+    [17, 'Longbow',        'weapon',     'High-tension bow with strong pull.','🏹', 6,  0, 'ranged', null,    38],
+    [18, 'Guardian Armor', 'armor',      'Layered plates for elite guards.', '🦾', 0,  8, null,    'body',   60],
+    [19, 'Tower Shield',   'armor',      'Massive shield with near-wall cover.','🧱',0,10, null,    'shield', 75],
   ];
 
   await client.batch([
@@ -166,11 +188,23 @@ async function initDb() {
       sql:  'INSERT OR IGNORE INTO items (id, name, type, description, icon) VALUES (?, ?, ?, ?, ?)',
       args: [id, name, type, desc, icon],
     })),
-    ...itemData.map(([id, , , , , dmg, def, wt, sp]) => ({
-      sql:  'UPDATE items SET damage = ?, defense = ?, weapon_type = ?, sell_price = ? WHERE id = ?',
-      args: [dmg, def, wt, sp, id],
+    ...itemData.map(([id, , , , , dmg, def, wt, as, sp]) => ({
+      sql:  'UPDATE items SET damage = ?, defense = ?, weapon_type = ?, armor_slot = ?, sell_price = ? WHERE id = ?',
+      args: [dmg, def, wt, as, sp, id],
     })),
   ], 'write');
+
+  // Safety migration for older saves where a shield was equipped in armor slot.
+  await client.execute(`
+    UPDATE characters
+    SET shield_id = armor_id,
+        armor_id  = NULL
+    WHERE shield_id IS NULL
+      AND armor_id IN (
+        SELECT id FROM items
+        WHERE type = 'armor' AND COALESCE(armor_slot, 'body') = 'shield'
+      )
+  `);
 
   // ── Seed monsters ───────────────────────────────────────────────────────────
   // format per row: [dungeon_level, name, icon, hp, dmg, hit%, dodge%, def, xp, is_boss, drop_item_id, drop%]
