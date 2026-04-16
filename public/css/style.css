@@ -359,7 +359,7 @@ input:focus, select:focus {
 .action-grid {
   display: grid;
   grid-template-columns: repeat(5, 100px);
-  grid-template-rows: 100px 160px 100px 100px;
+  grid-template-rows: 120px 160px 100px 100px;
   column-gap: 12px;
   row-gap: 24px;
   align-items: center;
@@ -390,6 +390,26 @@ input:focus, select:focus {
 }
 .action-sq .sq-icon { font-size: 2.2rem; line-height: 1; }
 
+/* Top-row action button wrappers — label above, button below */
+.action-sq-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 5px;
+  height: 100%;
+}
+.sq-label {
+  font-size: 0.62rem;
+  font-family: 'Cinzel', serif;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--muted);
+  text-align: center;
+  white-space: nowrap;
+  line-height: 1;
+}
+
 /* Pixel-art icon buttons — image fills the full tile */
 #sq-dungeon,
 #sq-farm,
@@ -398,8 +418,6 @@ input:focus, select:focus {
 #sq-research {
   overflow: hidden;
   padding: 0;
-  justify-content: flex-end;
-  padding-bottom: 6px;
 }
 #sq-dungeon  .sq-icon,
 #sq-farm     .sq-icon,
@@ -413,22 +431,6 @@ input:focus, select:focus {
   padding: 0;
   font-size: unset;
   filter: brightness(1.15);
-}
-#sq-dungeon  #dungeon-label,
-#sq-farm     #farm-label,
-#sq-tavern   #tavern-label,
-#sq-read     #read-label,
-#sq-research #research-label {
-  position: relative;
-  z-index: 1;
-  font-size: 0.62rem;
-  letter-spacing: 0.02em;
-  width: 100%;
-  text-align: center;
-  text-shadow: 0 1px 4px rgba(0,0,0,0.85);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
 }
 .action-sq:hover:not(.disabled) {
   border-color: var(--accent);
@@ -1002,7 +1004,7 @@ input:focus, select:focus {
 @media (max-width: 480px) {
   .action-grid {
     grid-template-columns: repeat(5, 80px);
-    grid-template-rows: 80px 130px 80px 80px;
+    grid-template-rows: 100px 130px 80px 80px;
     gap: 8px;
   }
   .action-sq { width: 80px; height: 80px; font-size: 0.6rem; }
