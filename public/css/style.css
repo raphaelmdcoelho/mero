@@ -358,7 +358,7 @@ input:focus, select:focus {
 }
 .action-grid {
   display: grid;
-  grid-template-columns: repeat(4, 100px);
+  grid-template-columns: repeat(5, 100px);
   grid-template-rows: 100px 160px 100px 100px;
   column-gap: 12px;
   row-gap: 24px;
@@ -394,16 +394,18 @@ input:focus, select:focus {
 #sq-dungeon,
 #sq-farm,
 #sq-tavern,
-#sq-read {
+#sq-read,
+#sq-research {
   overflow: hidden;
   padding: 0;
   justify-content: flex-end;
   padding-bottom: 6px;
 }
-#sq-dungeon .sq-icon,
-#sq-farm    .sq-icon,
-#sq-tavern  .sq-icon,
-#sq-read    .sq-icon {
+#sq-dungeon  .sq-icon,
+#sq-farm     .sq-icon,
+#sq-tavern   .sq-icon,
+#sq-read     .sq-icon,
+#sq-research .sq-icon {
   position: absolute;
   top: 0; left: 0;
   width: 100%; height: 100%;
@@ -412,10 +414,11 @@ input:focus, select:focus {
   font-size: unset;
   filter: brightness(1.15);
 }
-#sq-dungeon #dungeon-label,
-#sq-farm    #farm-label,
-#sq-tavern  #tavern-label,
-#sq-read    #read-label {
+#sq-dungeon  #dungeon-label,
+#sq-farm     #farm-label,
+#sq-tavern   #tavern-label,
+#sq-read     #read-label,
+#sq-research #research-label {
   position: relative;
   z-index: 1;
   font-size: 0.62rem;
@@ -998,7 +1001,7 @@ input:focus, select:focus {
 /* ---- Mobile (375px) ---- */
 @media (max-width: 480px) {
   .action-grid {
-    grid-template-columns: repeat(4, 80px);
+    grid-template-columns: repeat(5, 80px);
     grid-template-rows: 80px 130px 80px 80px;
     gap: 8px;
   }
