@@ -1,0 +1,46 @@
+<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+  <!-- Dark background -->
+  <rect width="64" height="64" fill="#0d0a1a"/>
+
+  <!-- Book left page -->
+  <rect x="4"  y="14" width="26" height="38" fill="#d4c49a"/>
+  <rect x="4"  y="14" width="26" height="3"  fill="#b8a880"/>
+  <rect x="4"  y="49" width="26" height="3"  fill="#b8a880"/>
+
+  <!-- Book right page -->
+  <rect x="34" y="14" width="26" height="38" fill="#c8b88a"/>
+  <rect x="34" y="14" width="26" height="3"  fill="#b0a070"/>
+  <rect x="34" y="49" width="26" height="3"  fill="#b0a070"/>
+
+  <!-- Spine / binding -->
+  <rect x="28" y="12" width="8"  height="42" fill="#5d3a1a"/>
+  <rect x="30" y="12" width="4"  height="42" fill="#7a4a20"/>
+
+  <!-- Left page text lines -->
+  <rect x="8"  y="22" width="18" height="2"  fill="#8a7a5a"/>
+  <rect x="8"  y="27" width="18" height="2"  fill="#8a7a5a"/>
+  <rect x="8"  y="32" width="14" height="2"  fill="#8a7a5a"/>
+  <rect x="8"  y="37" width="18" height="2"  fill="#8a7a5a"/>
+  <rect x="8"  y="42" width="10" height="2"  fill="#8a7a5a"/>
+
+  <!-- Right page text lines -->
+  <rect x="38" y="22" width="18" height="2"  fill="#7a6a4a"/>
+  <rect x="38" y="27" width="18" height="2"  fill="#7a6a4a"/>
+  <rect x="38" y="32" width="12" height="2"  fill="#7a6a4a"/>
+  <rect x="38" y="37" width="18" height="2"  fill="#7a6a4a"/>
+  <rect x="38" y="42" width="14" height="2"  fill="#7a6a4a"/>
+
+  <!-- Left page drop-cap -->
+  <rect x="8"  y="18" width="6"  height="2"  fill="#5a4a2a"/>
+  <rect x="8"  y="16" width="2"  height="6"  fill="#5a4a2a"/>
+
+  <!-- Candle glow (top right) -->
+  <rect x="56" y="4"  width="4"  height="10" fill="#e8d090"/>
+  <rect x="56" y="2"  width="4"  height="4"  fill="#c08820"/>
+  <rect x="57" y="0"  width="2"  height="4"  fill="#ff8c00"/>
+  <rect x="52" y="2"  width="8"  height="2"  fill="#ffcc00" opacity="0.4"/>
+  <rect x="50" y="4"  width="12" height="2"  fill="#ffcc00" opacity="0.2"/>
+
+  <!-- Book shadow -->
+  <rect x="4"  y="52" width="56" height="4"  fill="#0d0a1a" opacity="0.5"/>
+</svg>

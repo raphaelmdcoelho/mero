@@ -34,33 +34,50 @@
     <div class="game-arena">
       <div class="action-grid">
         <!-- Top-left: Dungeon -->
-        <div class="action-sq" id="sq-dungeon" style="grid-column:1;grid-row:1;" onclick="handleDungeon()">
-          <img src="/dungeon-icon.svg" alt="Dungeon" class="sq-icon" style="padding:4px;filter:brightness(1.2);" />
-          <span id="dungeon-label" data-i18n="game.dungeon">Dungeon</span>
+        <div class="action-sq-wrap" style="grid-column:1;grid-row:1;">
+          <span id="dungeon-label" class="sq-label" data-i18n="game.dungeon">Dungeon</span>
+          <div class="action-sq" id="sq-dungeon" onclick="handleDungeon()">
+            <img src="/dungeon-icon.svg" alt="Dungeon" class="sq-icon" />
+          </div>
         </div>
 
         <!-- Top center-left: Farm (activity, unlocks at level 3) -->
-        <div class="action-sq" id="sq-farm" style="grid-column:2;grid-row:1;position:relative;" onclick="handleFarm()">
-          <span class="sq-icon">🌱</span>
-          <span id="farm-label" data-i18n="game.farm">Farm</span>
-          <span id="farm-lock-badge" class="unspent-badge" style="display:none;font-size:0.55rem;">Lv.3</span>
-          <span id="farm-stock-badge" class="unspent-badge" style="display:none;background:var(--accent);"></span>
+        <div class="action-sq-wrap" style="grid-column:2;grid-row:1;position:relative;">
+          <span id="farm-label" class="sq-label" data-i18n="game.farm">Farm</span>
+          <div class="action-sq" id="sq-farm" onclick="handleFarm()">
+            <img src="/farm-icon.svg" alt="Farm" class="sq-icon" />
+            <span id="farm-lock-badge" class="unspent-badge" style="display:none;font-size:0.55rem;">Lv.3</span>
+            <span id="farm-stock-badge" class="unspent-badge" style="display:none;background:var(--accent);"></span>
+          </div>
         </div>
 
         <!-- Top center-right: Tavern -->
-        <div class="action-sq" id="sq-tavern" style="grid-column:3;grid-row:1;" onclick="handleTavern()">
-          <span class="sq-icon">🍺</span>
-          <span id="tavern-label" data-i18n="game.tavern">Tavern</span>
+        <div class="action-sq-wrap" style="grid-column:3;grid-row:1;">
+          <span id="tavern-label" class="sq-label" data-i18n="game.tavern">Tavern</span>
+          <div class="action-sq" id="sq-tavern" onclick="handleTavern()">
+            <img src="/tavern-icon.svg" alt="Tavern" class="sq-icon" />
+          </div>
         </div>
 
-        <!-- Top-right: Read (moved here — same row as all activities) -->
-        <div class="action-sq" id="sq-read" style="grid-column:4;grid-row:1;" onclick="handleRead()">
-          <span class="sq-icon">📖</span>
-          <span id="read-label" data-i18n="game.read">Read</span>
+        <!-- Top-right: Read -->
+        <div class="action-sq-wrap" style="grid-column:4;grid-row:1;">
+          <span id="read-label" class="sq-label" data-i18n="game.read">Read</span>
+          <div class="action-sq" id="sq-read" onclick="handleRead()">
+            <img src="/read-icon.svg" alt="Read" class="sq-icon" />
+          </div>
         </div>
 
-        <!-- Center: Avatar (spans columns 2-3 to stay centered) -->
-        <div class="avatar-cell" style="grid-column:2/4;grid-row:2;justify-self:center;">
+        <!-- Row 1 far-right: Research (coming soon) -->
+        <div class="action-sq-wrap" style="grid-column:5;grid-row:1;">
+          <span id="research-label" class="sq-label" data-i18n="game.research">Research</span>
+          <div class="action-sq disabled" id="sq-research">
+            <img src="/research-icon.svg" alt="Research" class="sq-icon" />
+            <span class="unspent-badge" style="font-size:0.5rem;" data-i18n="game.coming_soon">Soon</span>
+          </div>
+        </div>
+
+        <!-- Center: Avatar (spans columns 2-4 to stay centered in 5-col grid) -->
+        <div class="avatar-cell" style="grid-column:2/5;grid-row:2;justify-self:center;">
           <div class="avatar-ring" id="avatar-ring" onclick="openAvatarPicker()">
             <img id="avatar-img" src="" alt="Avatar" style="display:none;" />
             <svg id="avatar-svg" viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -70,6 +87,47 @@
           </div>
           <span class="avatar-hint" data-i18n="game.avatar_hint">Click to change</span>
           <input type="file" id="avatar-input" accept="image/jpeg" style="display:none;" onchange="uploadAvatar(event)" />
+
+          <!-- Pixel art pickaxe — appears on the right of the avatar when an activity is active -->
+          <div id="pickaxe-wrap" class="pickaxe-wrap">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" style="image-rendering:pixelated;image-rendering:crisp-edges;">
+              <!-- Upper prong tip -->
+              <rect x="0"  y="0"  width="4" height="4" fill="#f1f5f9"/>
+              <!-- Upper prong body -->
+              <rect x="0"  y="4"  width="4" height="4" fill="#94a3b8"/>
+              <rect x="4"  y="4"  width="4" height="4" fill="#64748b"/>
+              <rect x="4"  y="8"  width="4" height="4" fill="#94a3b8"/>
+              <rect x="8"  y="8"  width="4" height="4" fill="#64748b"/>
+              <!-- Head body -->
+              <rect x="8"  y="12" width="4" height="4" fill="#94a3b8"/>
+              <rect x="12" y="12" width="4" height="4" fill="#94a3b8"/>
+              <rect x="16" y="12" width="4" height="4" fill="#64748b"/>
+              <rect x="20" y="12" width="4" height="4" fill="#475569"/>
+              <rect x="8"  y="16" width="4" height="4" fill="#64748b"/>
+              <rect x="12" y="16" width="4" height="4" fill="#64748b"/>
+              <rect x="16" y="16" width="4" height="4" fill="#475569"/>
+              <rect x="20" y="16" width="4" height="4" fill="#334155"/>
+              <!-- Lower prong -->
+              <rect x="4"  y="20" width="4" height="4" fill="#94a3b8"/>
+              <rect x="8"  y="20" width="4" height="4" fill="#64748b"/>
+              <rect x="0"  y="24" width="4" height="4" fill="#94a3b8"/>
+              <rect x="4"  y="24" width="4" height="4" fill="#64748b"/>
+              <!-- Lower prong tip -->
+              <rect x="0"  y="28" width="4" height="4" fill="#cbd5e1"/>
+              <!-- Handle — joins head at col 6 then steps diagonally lower-right -->
+              <rect x="24" y="12" width="4" height="4" fill="#d97706"/>
+              <rect x="24" y="16" width="4" height="4" fill="#92400e"/>
+              <rect x="28" y="20" width="4" height="4" fill="#d97706"/>
+              <rect x="32" y="24" width="4" height="4" fill="#92400e"/>
+              <rect x="36" y="28" width="4" height="4" fill="#d97706"/>
+              <rect x="40" y="32" width="4" height="4" fill="#92400e"/>
+              <rect x="44" y="36" width="4" height="4" fill="#d97706"/>
+              <rect x="48" y="40" width="4" height="4" fill="#92400e"/>
+              <rect x="52" y="44" width="4" height="4" fill="#d97706"/>
+              <rect x="56" y="48" width="4" height="4" fill="#92400e"/>
+              <rect x="60" y="52" width="4" height="4" fill="#d97706"/>
+            </svg>
+          </div>
         </div>
 
         <!-- Bottom-left: Inventory -->
@@ -232,6 +290,7 @@
           <div class="equip-slot-label" data-i18n="game.eq.weapon">Weapon</div>
           <div class="equip-slot-name" id="eq-weapon-name"></div>
           <div class="equip-slot-stat" id="eq-weapon-stat"></div>
+          <div id="eq-weapon-action" style="margin-top:0.35rem;"></div>
         </div>
       </div>
       <div id="eq-armor" class="equip-slot">
@@ -240,6 +299,16 @@
           <div class="equip-slot-label" data-i18n="game.eq.armor">Armor</div>
           <div class="equip-slot-name" id="eq-armor-name"></div>
           <div class="equip-slot-stat" id="eq-armor-stat"></div>
+          <div id="eq-armor-action" style="margin-top:0.35rem;"></div>
+        </div>
+      </div>
+      <div id="eq-shield" class="equip-slot">
+        <span class="equip-slot-icon">🛡️</span>
+        <div class="equip-slot-info">
+          <div class="equip-slot-label" data-i18n="game.eq.shield">Shield</div>
+          <div class="equip-slot-name" id="eq-shield-name"></div>
+          <div class="equip-slot-stat" id="eq-shield-stat"></div>
+          <div id="eq-shield-action" style="margin-top:0.35rem;"></div>
         </div>
       </div>
       <hr class="panel-divider" />
@@ -293,6 +362,11 @@
       <p style="font-size:0.8rem;color:var(--muted);margin-bottom:0.75rem;" data-i18n="game.fp.desc">
         Grow plants to restore HP in dungeons.
       </p>
+
+      <div style="margin-bottom:0.75rem;display:flex;align-items:center;gap:0.6rem;justify-content:space-between;">
+        <span id="farm-activity-status" style="font-size:0.78rem;color:var(--muted);"></span>
+        <button type="button" class="btn btn-outline btn-sm" id="farm-activity-btn" onclick="toggleFarmActivity()"></button>
+      </div>
 
       <!-- Plant stock -->
       <div id="farm-stock-section" style="margin-bottom:1rem;">

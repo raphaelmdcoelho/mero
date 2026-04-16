@@ -44,7 +44,8 @@ function toObj(row) {
 async function enrichCharacter(char) {
   const c = toObj(char);
   const invR = await client.execute({
-    sql: `SELECT inv.id, inv.quantity, i.id as item_id, i.name, i.type, i.description, i.icon
+    sql: `SELECT inv.id, inv.quantity, i.id as item_id, i.name, i.type, i.description, i.icon,
+                 i.damage, i.defense, i.weapon_type, i.armor_slot, i.sell_price
           FROM inventory inv
           JOIN items i ON i.id = inv.item_id
           WHERE inv.character_id = ?`,
@@ -52,15 +53,17 @@ async function enrichCharacter(char) {
   });
   const inventoryRows = invR.rows.map(toObj);
 
-  const [weapR, armR] = await Promise.all([
+  const [weapR, armR, shieldR] = await Promise.all([
     c.weapon_id ? client.execute({ sql: 'SELECT * FROM items WHERE id = ?', args: [c.weapon_id] }) : Promise.resolve({ rows: [null] }),
     c.armor_id  ? client.execute({ sql: 'SELECT * FROM items WHERE id = ?', args: [c.armor_id] })  : Promise.resolve({ rows: [null] }),
+    c.shield_id ? client.execute({ sql: 'SELECT * FROM items WHERE id = ?', args: [c.shield_id] }) : Promise.resolve({ rows: [null] }),
   ]);
 
   const weapon = weapR.rows[0] ? toObj(weapR.rows[0]) : null;
   const armor  = armR.rows[0]  ? toObj(armR.rows[0])  : null;
+  const shield = shieldR.rows[0] ? toObj(shieldR.rows[0]) : null;
 
-  return { ...c, inventory: inventoryRows, equippedWeapon: weapon, equippedArmor: armor };
+  return { ...c, inventory: inventoryRows, equippedWeapon: weapon, equippedArmor: armor, equippedShield: shield };
 }
 
 // All routes require auth
@@ -91,7 +94,7 @@ router.post('/', async (req, res) => {
   try {
     const char = await transaction(async (tx) => {
       const result = await tx.execute({
-        sql:  'INSERT INTO characters (user_id, name, class, weapon_id, armor_id) VALUES (?, ?, ?, 1, 3)',
+        sql:  'INSERT INTO characters (user_id, name, class, weapon_id, armor_id, shield_id) VALUES (?, ?, ?, 1, 3, 12)',
         args: [req.user.userId, name.trim(), cls],
       });
       const charId = Number(result.lastInsertRowid);
@@ -101,6 +104,10 @@ router.post('/', async (req, res) => {
       });
       await tx.execute({
         sql:  'INSERT INTO inventory (character_id, item_id, quantity) VALUES (?, 3, 1)',
+        args: [charId],
+      });
+      await tx.execute({
+        sql:  'INSERT INTO inventory (character_id, item_id, quantity) VALUES (?, 12, 1)',
         args: [charId],
       });
       const sel = await tx.execute({
@@ -130,8 +137,8 @@ router.delete('/:id', async (req, res) => {
 });
 
 // POST /api/characters/:id/avatar/preset  — store a DiceBear URL as avatar
-router.post('/:id/avatar/preset', (req, res) => {
-  const char = ownedCharacter(req, res);
+router.post('/:id/avatar/preset', async (req, res) => {
+  const char = await ownedCharacter(req, res);
   if (!char) return;
 
   const { presetUrl } = req.body;
@@ -148,7 +155,7 @@ router.post('/:id/avatar/preset', (req, res) => {
     if (fs.existsSync(old)) fs.unlinkSync(old);
   }
 
-  db.prepare('UPDATE characters SET avatar_path = ? WHERE id = ?').run(presetUrl, char.id);
+  await client.execute({ sql: 'UPDATE characters SET avatar_path = ? WHERE id = ?', args: [presetUrl, char.id] });
   res.json({ avatarPath: presetUrl });
 });
 
@@ -191,25 +198,47 @@ router.put('/:id/equip', async (req, res) => {
   if (!char) return;
 
   const { slot, item_id } = req.body;
-  if (!['weapon', 'armor'].includes(slot)) {
-    return res.status(400).json({ error: 'slot must be "weapon" or "armor"' });
-  }
-  if (!item_id) {
-    return res.status(400).json({ error: 'item_id required' });
+  if (!['weapon', 'armor', 'shield'].includes(slot)) {
+    return res.status(400).json({ error: 'slot must be "weapon", "armor" or "shield"' });
   }
 
-  const invR = await client.execute({
-    sql:  'SELECT inv.id FROM inventory inv JOIN items i ON i.id = inv.item_id WHERE inv.character_id = ? AND inv.item_id = ? AND i.type = ?',
-    args: [char.id, item_id, slot],
-  });
+  const col = slot === 'weapon' ? 'weapon_id' : slot === 'armor' ? 'armor_id' : 'shield_id';
+
+  if (item_id == null) {
+    await client.execute({
+      sql:  `UPDATE characters SET ${col} = NULL WHERE id = ?`,
+      args: [char.id],
+    });
+    const updR = await client.execute({ sql: 'SELECT * FROM characters WHERE id = ?', args: [char.id] });
+    return res.json(await enrichCharacter(toObj(updR.rows[0])));
+  }
+
+  const parsedItemId = Number(item_id);
+  if (!parsedItemId) return res.status(400).json({ error: 'item_id required' });
+
+  let invSql = '';
+  let invArgs = [];
+  if (slot === 'weapon') {
+    invSql = 'SELECT inv.id FROM inventory inv JOIN items i ON i.id = inv.item_id WHERE inv.character_id = ? AND inv.item_id = ? AND i.type = ?';
+    invArgs = [char.id, parsedItemId, 'weapon'];
+  } else if (slot === 'armor') {
+    invSql = `SELECT inv.id FROM inventory inv JOIN items i ON i.id = inv.item_id
+              WHERE inv.character_id = ? AND inv.item_id = ? AND i.type = 'armor' AND COALESCE(i.armor_slot, 'body') = 'body'`;
+    invArgs = [char.id, parsedItemId];
+  } else {
+    invSql = `SELECT inv.id FROM inventory inv JOIN items i ON i.id = inv.item_id
+              WHERE inv.character_id = ? AND inv.item_id = ? AND i.type = 'armor' AND COALESCE(i.armor_slot, 'body') = 'shield'`;
+    invArgs = [char.id, parsedItemId];
+  }
+
+  const invR = await client.execute({ sql: invSql, args: invArgs });
   if (!invR.rows.length) {
-    return res.status(400).json({ error: 'Item not in inventory or wrong type' });
+    return res.status(400).json({ error: 'Item not in inventory or wrong slot type' });
   }
 
-  const col = slot === 'weapon' ? 'weapon_id' : 'armor_id';
   await client.execute({
     sql:  `UPDATE characters SET ${col} = ? WHERE id = ?`,
-    args: [item_id, char.id],
+    args: [parsedItemId, char.id],
   });
 
   const updR = await client.execute({ sql: 'SELECT * FROM characters WHERE id = ?', args: [char.id] });

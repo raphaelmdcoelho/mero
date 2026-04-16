@@ -76,6 +76,7 @@
       'game.market':             'Market',
       'game.stats':              'Stats',
       'game.castle':             'Castle',
+      'game.research':           'Research',
       'game.coming_soon':        'Soon',
       'game.avatar_hint':        'Click to change',
       'game.heroes_link':        '← Heroes',
@@ -124,6 +125,7 @@
       // Equipment panel
       'game.eq.weapon':          'Weapon',
       'game.eq.armor':           'Armor',
+      'game.eq.shield':          'Shield',
       'game.eq.equip_from':      'Equip from inventory:',
 
       // Stats panel
@@ -145,6 +147,11 @@
       'game.fp.start_growing':   'Start growing:',
       'game.fp.apple_detail':    '5 min · +1 HP',
       'game.fp.carrot_detail':   '9 min · +2 HP',
+      'game.fp.start_action':    'Start Farm',
+      'game.fp.stop_action':     'Stop Farm',
+      'game.fp.idle_status':     'Farm is idle',
+      'game.fp.running_status':  'Farm is running',
+      'game.fp.busy_other_activity': 'Stop your current activity first',
 
       // Market panel
       'game.mp.your_gold':       'Your gold',
@@ -215,8 +222,10 @@
       'game.js.dmg_unit':           'dmg',
       'game.js.def_unit':           'def',
       'game.js.equip_btn':          'Equip',
+      'game.js.unequip_btn':        'Unequip',
       'game.js.equipped_check':     '✓ Equipped',
       'game.js.no_equippable':      'No equippable items.',
+      'game.js.item_unequipped':    'Item unequipped!',
       'game.js.nothing_harvested':  'Nothing harvested yet.',
       'game.js.no_plants_growing':  'No plants growing.',
       'game.js.ready':              'Ready!',
@@ -308,6 +317,7 @@
       'game.market':             'Mercado',
       'game.stats':              'Estatísticas',
       'game.castle':             'Castelo',
+      'game.research':           'Pesquisa',
       'game.coming_soon':        'Em breve',
       'game.avatar_hint':        'Clique para alterar',
       'game.heroes_link':        '← Heróis',
@@ -356,6 +366,7 @@
       // Equipment panel
       'game.eq.weapon':          'Arma',
       'game.eq.armor':           'Armadura',
+      'game.eq.shield':          'Escudo',
       'game.eq.equip_from':      'Equipar do inventário:',
 
       // Stats panel
@@ -377,6 +388,11 @@
       'game.fp.start_growing':   'Começar a cultivar:',
       'game.fp.apple_detail':    '5 min · +1 HP',
       'game.fp.carrot_detail':   '9 min · +2 HP',
+      'game.fp.start_action':    'Iniciar Fazenda',
+      'game.fp.stop_action':     'Parar Fazenda',
+      'game.fp.idle_status':     'Fazenda parada',
+      'game.fp.running_status':  'Fazenda em andamento',
+      'game.fp.busy_other_activity': 'Pare sua atividade atual primeiro',
 
       // Market panel
       'game.mp.your_gold':       'Seu ouro',
@@ -447,8 +463,10 @@
       'game.js.dmg_unit':           'dano',
       'game.js.def_unit':           'def',
       'game.js.equip_btn':          'Equipar',
+      'game.js.unequip_btn':        'Desequipar',
       'game.js.equipped_check':     '✓ Equipado',
       'game.js.no_equippable':      'Nenhum item equipável.',
+      'game.js.item_unequipped':    'Item desequipado!',
       'game.js.nothing_harvested':  'Nada colhido ainda.',
       'game.js.no_plants_growing':  'Nenhuma planta crescendo.',
       'game.js.ready':              'Pronto!',
