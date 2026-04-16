@@ -36,7 +36,7 @@ router.post('/:characterId/sell', async (req, res) => {
   if (invRow.quantity < qty) return res.status(400).json({ error: 'Not enough quantity' });
 
   // Cannot sell equipped items
-  if (invRow.item_id === char.weapon_id || invRow.item_id === char.armor_id) {
+  if (invRow.item_id === char.weapon_id || invRow.item_id === char.armor_id || invRow.item_id === char.shield_id) {
     return res.status(400).json({ error: 'Unequip the item before selling' });
   }
 

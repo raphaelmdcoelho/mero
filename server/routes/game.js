@@ -21,11 +21,10 @@ const MASTERY_COL = {
 
 // Move any ready farm_queue entries into the regular inventory
 async function harvestFarm(charId) {
-  const now = Math.floor(Date.now() / 1000);
   const PLANT_ITEM_IDS = { carrot: 6, apple: 7 };
   const r = await client.execute({
-    sql:  'SELECT * FROM farm_queue WHERE character_id = ? AND ready_at <= ?',
-    args: [charId, now],
+    sql:  'SELECT * FROM farm_queue WHERE character_id = ? AND COALESCE(remaining_seconds, 0) <= 0',
+    args: [charId],
   });
   for (const job of r.rows) {
     const itemId = PLANT_ITEM_IDS[job.plant_type];
@@ -48,6 +47,23 @@ async function harvestFarm(charId) {
     }
     await client.execute({ sql: 'DELETE FROM farm_queue WHERE id = ?', args: [job.id] });
   }
+}
+
+async function progressFarmCountdown(char, nowTs) {
+  if (char.activity !== 'farm') return;
+
+  const lastTick = Number(char.last_tick_at) || Number(char.activity_started_at) || nowTs;
+  const elapsed = Math.max(0, nowTs - lastTick);
+  if (elapsed <= 0) return;
+
+  await client.execute({
+    sql: `UPDATE farm_queue
+          SET remaining_seconds = MAX(0, COALESCE(remaining_seconds, 0) - ?),
+              ready_at = ? + MAX(0, COALESCE(remaining_seconds, 0) - ?),
+              last_progress_at = ?
+          WHERE character_id = ?`,
+    args: [elapsed, nowTs, elapsed, nowTs, char.id],
+  });
 }
 
 const router = express.Router();
@@ -78,7 +94,7 @@ function levelUp(char) {
 const READING_POINT_INTERVAL = 30 * 60; // 30 min in seconds
 const READING_MAX_DURATION   = 60 * 60; // 1 hour in seconds
 
-// Derive combat stats from character row (requires weapon/armor DB lookups)
+// Derive combat stats from character row (requires equipment DB lookups)
 async function combatStats(char) {
   const str = Number(char.attr_strength)   || 5;
   const dex = Number(char.attr_dexterity)  || 5;
@@ -87,24 +103,67 @@ async function combatStats(char) {
   const res = Number(char.attr_resistance) || 5;
   const level = Number(char.level) || 1;
 
-  const [weapR, armR] = await Promise.all([
+  const [weapR, armR, shieldR] = await Promise.all([
     char.weapon_id ? client.execute({ sql: 'SELECT * FROM items WHERE id = ?', args: [char.weapon_id] }) : Promise.resolve({ rows: [null] }),
     char.armor_id  ? client.execute({ sql: 'SELECT * FROM items WHERE id = ?', args: [char.armor_id] })  : Promise.resolve({ rows: [null] }),
+    char.shield_id ? client.execute({ sql: 'SELECT * FROM items WHERE id = ?', args: [char.shield_id] }) : Promise.resolve({ rows: [null] }),
   ]);
   const weapon = weapR.rows[0] ? Object.assign({}, weapR.rows[0]) : null;
   const armor  = armR.rows[0]  ? Object.assign({}, armR.rows[0])  : null;
+  const shield = shieldR.rows[0] ? Object.assign({}, shieldR.rows[0]) : null;
 
   const isRanged    = weapon && weapon.weapon_type === 'ranged';
   const weaponDmg   = weapon ? (Number(weapon.damage)  || 0) : 0;
   const armorDef    = armor  ? (Number(armor.defense)  || 0) : 0;
+  const shieldDef   = shield ? (Number(shield.defense) || 0) : 0;
 
   const maxHp       = calcMaxHp(level, vit);
   const damage      = Math.max(1, 1 + Math.floor((isRanged ? dex : str) / 3) + weaponDmg);
   const hitChance   = Math.min(95, 60 + Math.floor(dex / 2));
   const dodgeChance = Math.min(50, Math.floor(agi / 2));
-  const defense     = Math.floor(res / 3) + armorDef;
+  const defense     = Math.floor(res / 3) + armorDef + shieldDef;
 
-  return { maxHp, damage, hitChance, dodgeChance, defense, isRanged, weaponDmg, armorDef };
+  return { maxHp, damage, hitChance, dodgeChance, defense, isRanged, weaponDmg, armorDef, shieldDef };
+}
+
+async function rollRandomGearDrop(monster) {
+  const isBoss = Number(monster.is_boss) === 1;
+  const configuredChance = Number(monster.drop_chance) || 0;
+  // Keep drops rare while still rewarding bosses more often.
+  const finalChance = Math.min(18, Math.max(isBoss ? 7 : 3, Math.floor(configuredChance / 3) + (isBoss ? 4 : 1)));
+  if (Math.random() * 100 >= finalChance) return null;
+
+  const level = Number(monster.dungeon_level) || 1;
+  const maxStat = Math.max(3, level * 2 + (isBoss ? 3 : 0));
+
+  const allGearR = await client.execute({
+    sql: `SELECT *
+          FROM items
+          WHERE (type = 'weapon' AND damage > 0 AND damage <= ?)
+             OR (type = 'armor'  AND defense > 0 AND defense <= ?)
+          ORDER BY id ASC`,
+    args: [maxStat, maxStat],
+  });
+  let gear = allGearR.rows.map(row => Object.assign({}, row));
+
+  if (!gear.length) {
+    const fallbackR = await client.execute({
+      sql: `SELECT * FROM items WHERE type = 'weapon' OR type = 'armor' ORDER BY id ASC`,
+      args: [],
+    });
+    gear = fallbackR.rows.map(row => Object.assign({}, row));
+  }
+  if (!gear.length) return null;
+
+  const desiredSlot = ['weapon', 'body', 'shield'][Math.floor(Math.random() * 3)];
+  const slotPool = gear.filter(item => {
+    if (desiredSlot === 'weapon') return item.type === 'weapon';
+    if (desiredSlot === 'shield') return item.type === 'armor' && (item.armor_slot || 'body') === 'shield';
+    return item.type === 'armor' && (item.armor_slot || 'body') === 'body';
+  });
+  const pool = slotPool.length ? slotPool : gear;
+
+  return pool[Math.floor(Math.random() * pool.length)] || null;
 }
 
 // Apply reading tick (awards attr points over time, auto-stops at 1h)
@@ -225,6 +284,8 @@ router.get('/:characterId/tick', async (req, res) => {
   const char = await ownedChar(req, res);
   if (!char) return;
 
+  const now = Math.floor(Date.now() / 1000);
+  await progressFarmCountdown(char, now);
   await harvestFarm(char.id);
 
   if (char.activity === 'tavern') {
@@ -246,6 +307,11 @@ router.get('/:characterId/tick', async (req, res) => {
              upd.unspent_points, upd.reading_points_awarded, upd.last_tick_at, char.id],
     });
     return res.json({ ...await fullChar(char.id), readingFinished: upd.readingFinished });
+  } else if (char.activity === 'farm') {
+    await client.execute({
+      sql:  'UPDATE characters SET last_tick_at = ? WHERE id = ?',
+      args: [now, char.id],
+    });
   }
 
   res.json(await fullChar(char.id));
@@ -411,14 +477,12 @@ router.post('/:characterId/dungeon/attack', async (req, res) => {
       attr_vitality: Number(char.attr_vitality) || 5,
     });
 
-    // Roll loot drop
-    let droppedItem = null;
-    if (monster.drop_item_id && Math.random() * 100 < monster.drop_chance) {
-      const itemR = await client.execute({ sql: 'SELECT * FROM items WHERE id = ?', args: [monster.drop_item_id] });
-      droppedItem = Object.assign({}, itemR.rows[0]);
+    // Roll random gear drop (rare by design).
+    let droppedItem = await rollRandomGearDrop(monster);
+    if (droppedItem) {
       const existR = await client.execute({
         sql:  'SELECT id FROM inventory WHERE character_id = ? AND item_id = ?',
-        args: [char.id, monster.drop_item_id],
+        args: [char.id, droppedItem.id],
       });
       const existing = existR.rows[0] ?? null;
       if (existing) {
@@ -426,7 +490,7 @@ router.post('/:characterId/dungeon/attack', async (req, res) => {
       } else {
         await client.execute({
           sql:  'INSERT INTO inventory (character_id, item_id, quantity) VALUES (?, ?, 1)',
-          args: [char.id, monster.drop_item_id],
+          args: [char.id, droppedItem.id],
         });
       }
     }

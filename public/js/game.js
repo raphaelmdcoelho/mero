@@ -139,6 +139,7 @@ function renderAll(char) {
     if (!char.activity) document.getElementById('sq-farm').classList.add('disabled');
   } else {
     farmLock.style.display = 'none';
+    if (!char.activity) document.getElementById('sq-farm').classList.remove('disabled');
     const totalPlants = (char.inventory || [])
       .filter(i => i.item_id === 6 || i.item_id === 7)
       .reduce((s, p) => s + p.quantity, 0);
@@ -173,13 +174,17 @@ function updateActionSquares(activity) {
   const stats   = document.getElementById('sq-stats');
   const read    = document.getElementById('sq-read');
 
-  // Reset activity squares (farm handled separately below)
-  const resetEls = [dungeon, tavern, inv, eq, attrs, stats, read].filter(Boolean);
+  // Always start from a clean base, then apply activity-specific states.
+  const resetEls = [dungeon, farm, tavern, inv, eq, attrs, stats, read].filter(Boolean);
   resetEls.forEach(el => el.classList.remove('active', 'disabled'));
+
+  document.getElementById('dungeon-label').textContent = t('game.js.dungeon_lbl');
+  document.getElementById('tavern-label').textContent  = t('game.js.tavern_lbl');
+  document.getElementById('farm-label').textContent    = t('game.js.farm_lbl');
+  if (read) document.getElementById('read-label').textContent = t('game.js.read_lbl');
 
   if (activity === 'dungeon') {
     dungeon.classList.add('active');
-    document.getElementById('dungeon-label').textContent = t('game.js.dungeon_lbl');
     tavern.classList.add('disabled');
     farm.classList.add('disabled');
     if (read) read.classList.add('disabled');
@@ -191,7 +196,6 @@ function updateActionSquares(activity) {
     if (read) read.classList.add('disabled');
   } else if (activity === 'farm') {
     farm.classList.add('active');
-    document.getElementById('farm-label').textContent = t('game.js.stop_farm_lbl');
     dungeon.classList.add('disabled');
     tavern.classList.add('disabled');
     if (read) read.classList.add('disabled');
@@ -203,11 +207,6 @@ function updateActionSquares(activity) {
     dungeon.classList.add('disabled');
     tavern.classList.add('disabled');
     farm.classList.add('disabled');
-  } else {
-    document.getElementById('dungeon-label').textContent = t('game.js.dungeon_lbl');
-    document.getElementById('tavern-label').textContent  = t('game.js.tavern_lbl');
-    document.getElementById('farm-label').textContent    = t('game.js.farm_lbl');
-    if (read) document.getElementById('read-label').textContent = t('game.js.read_lbl');
   }
 }
 
@@ -562,6 +561,21 @@ function closePanel(type) {
   if (panelId) document.getElementById(panelId).classList.remove('open');
 }
 
+function itemEquipSlot(item) {
+  if (!item) return null;
+  if (item.type === 'weapon') return 'weapon';
+  if (item.type !== 'armor') return null;
+  return item.armor_slot === 'shield' ? 'shield' : 'armor';
+}
+
+function equippedSlotMap(char) {
+  return {
+    weapon: char.weapon_id || null,
+    armor: char.armor_id || null,
+    shield: char.shield_id || null,
+  };
+}
+
 // ---- Inventory ----
 function renderInventory(char) {
   if (!char) return;
@@ -569,7 +583,7 @@ function renderInventory(char) {
   const inv  = char.inventory || [];
   const slots = Array(10).fill(null);
   inv.forEach((item, i) => { if (i < 10) slots[i] = item; });
-  const equippedIds = new Set([char.weapon_id, char.armor_id].filter(Boolean));
+  const equippedIds = new Set([char.weapon_id, char.armor_id, char.shield_id].filter(Boolean));
 
   grid.innerHTML = slots.map((item, i) => {
     if (!item) return `<div class="inv-slot empty" title="Empty">·</div>`;
@@ -586,8 +600,10 @@ function showItemInfo(idx) {
   const item = (charState.inventory || [])[idx];
   const tooltip = document.getElementById('item-tooltip');
   if (!item) { tooltip.style.display = 'none'; return; }
-  const isEq = ({ weapon: charState.weapon_id, armor: charState.armor_id })[item.type] === item.item_id;
-  const canEquip = item.type === 'weapon' || item.type === 'armor';
+  const slot = itemEquipSlot(item);
+  const equipMap = equippedSlotMap(charState);
+  const isEq = slot ? equipMap[slot] === item.item_id : false;
+  const canEquip = slot !== null;
   const statLine = item.damage ? `⚔️ ${item.damage} ${t('game.js.dmg_unit')}` : item.defense ? `🛡️ ${item.defense} ${t('game.js.def_unit')}` : '';
   tooltip.style.display = 'block';
   tooltip.innerHTML = `
@@ -595,8 +611,12 @@ function showItemInfo(idx) {
     <span class="item-tt-type">${item.type}${item.weapon_type ? ' · ' + item.weapon_type : ''}</span>
     <p class="item-tt-desc">${escHtml(item.description || '')}${statLine ? ' ' + statLine : ''}</p>
     ${canEquip && !isEq
-      ? `<button type="button" class="btn btn-outline btn-sm btn-mt" onclick="equipItem('${item.type}',${item.item_id})">${t('game.js.equip_btn')}</button>`
-      : isEq ? `<span class="item-tt-eq">${t('game.js.equipped_check')}</span>` : ''}`;
+      ? `<button type="button" class="btn btn-outline btn-sm btn-mt" onclick="equipItem('${slot}',${item.item_id})">${t('game.js.equip_btn')}</button>`
+      : ''}
+    ${canEquip && isEq
+      ? `<span class="item-tt-eq">${t('game.js.equipped_check')}</span>
+         <button type="button" class="btn btn-outline btn-sm btn-mt" onclick="unequipItem('${slot}')">${t('game.js.unequip_btn')}</button>`
+      : ''}`;
 }
 
 // ---- Equipment ----
@@ -604,6 +624,7 @@ function renderEquipment(char) {
   if (!char) return;
   const w = char.equippedWeapon;
   const a = char.equippedArmor;
+  const s = char.equippedShield;
 
   document.getElementById('eq-weapon-name').textContent = w ? `${w.icon} ${w.name}` : '—';
   document.getElementById('eq-weapon-stat').textContent =
@@ -613,23 +634,36 @@ function renderEquipment(char) {
   document.getElementById('eq-armor-stat').textContent =
     a && a.defense ? `🛡️ ${a.defense} ${t('game.js.def_unit')}` : '';
 
-  const inv = (char.inventory || []).filter(i => i.type === 'weapon' || i.type === 'armor');
-  const equippedIds = new Set([char.weapon_id, char.armor_id].filter(Boolean));
+  document.getElementById('eq-shield-name').textContent = s ? `${s.icon} ${s.name}` : '—';
+  document.getElementById('eq-shield-stat').textContent =
+    s && s.defense ? `🛡️ ${s.defense} ${t('game.js.def_unit')}` : '';
+
+  document.getElementById('eq-weapon-action').innerHTML =
+    w ? `<button type="button" class="btn btn-outline btn-sm" onclick="unequipItem('weapon')">${t('game.js.unequip_btn')}</button>` : '';
+  document.getElementById('eq-armor-action').innerHTML =
+    a ? `<button type="button" class="btn btn-outline btn-sm" onclick="unequipItem('armor')">${t('game.js.unequip_btn')}</button>` : '';
+  document.getElementById('eq-shield-action').innerHTML =
+    s ? `<button type="button" class="btn btn-outline btn-sm" onclick="unequipItem('shield')">${t('game.js.unequip_btn')}</button>` : '';
+
+  const inv = (char.inventory || []).filter(i => itemEquipSlot(i));
+  const equippedBySlot = equippedSlotMap(char);
   const list = document.getElementById('eq-list');
   if (!inv.length) { list.innerHTML = `<p class="muted-sm">${t('game.js.no_equippable')}</p>`; return; }
   list.innerHTML = inv.map(item => {
     const statLine = item.damage ? `⚔️ ${item.damage} ${t('game.js.dmg_unit')}` : item.defense ? `🛡️ ${item.defense} ${t('game.js.def_unit')}` : '';
+    const slot = itemEquipSlot(item);
+    const equipped = slot ? equippedBySlot[slot] === item.item_id : false;
     return `
     <div class="equip-list-row">
       <span class="equip-list-icon">${item.icon}</span>
       <span class="equip-list-name">
         ${escHtml(item.name)}
-        <span class="equip-list-type">${item.type}${item.weapon_type ? ' · ' + item.weapon_type : ''}</span>
+        <span class="equip-list-type">${item.type}${item.weapon_type ? ' · ' + item.weapon_type : ''}${item.armor_slot ? ' · ' + item.armor_slot : ''}</span>
         ${statLine ? `<span class="equip-list-type"> · ${statLine}</span>` : ''}
       </span>
-      ${equippedIds.has(item.item_id)
-        ? `<span class="equip-list-check">✓</span>`
-        : `<button type="button" class="btn btn-outline btn-sm" onclick="equipItem('${item.type}',${item.item_id})">${t('game.js.equip_btn')}</button>`}
+      ${equipped
+        ? `<button type="button" class="btn btn-outline btn-sm" onclick="unequipItem('${slot}')">${t('game.js.unequip_btn')}</button>`
+        : `<button type="button" class="btn btn-outline btn-sm" onclick="equipItem('${slot}',${item.item_id})">${t('game.js.equip_btn')}</button>`}
     </div>`;
   }).join('');
 }
@@ -643,6 +677,18 @@ async function equipItem(slot, itemId) {
   renderEquipment(charState);
   renderInventory(charState);
   showToast(t('game.js.item_equipped'), 'success');
+  refreshCombatStats();
+}
+
+async function unequipItem(slot) {
+  const res = await api.put(`/api/characters/${charId}/equip`, { slot, item_id: null });
+  if (!res) return;
+  const data = await res.json();
+  if (!res.ok) { showToast(data.error || t('game.js.cant_equip'), 'danger'); return; }
+  charState = { ...charState, ...data };
+  renderEquipment(charState);
+  renderInventory(charState);
+  showToast(t('game.js.item_unequipped'), 'success');
   refreshCombatStats();
 }
 
@@ -733,12 +779,10 @@ function handleRead() {
 function handleFarm() {
   if (!charState) return;
   if (Number(charState.level) < 3) { showToast(t('game.js.farm_unlock'), 'danger'); return; }
-  if (charState.activity === 'farm') { stopActivity(); return; }
-  if (charState.activity) return;
-  startFarm();
+  openPanel('farm');
 }
 
-async function startFarm() {
+async function startFarmActivity() {
   const res = await api.post(`/api/game/${charId}/start`, { action: 'farm' });
   if (!res) return;
   const data = await res.json();
@@ -747,6 +791,28 @@ async function startFarm() {
   renderAll(data);
   openPanel('farm');
   showToast(t('game.js.farm_started'), 'success');
+}
+
+async function stopFarmActivity() {
+  if (!charState || charState.activity !== 'farm') return;
+  await stopActivity();
+  openPanel('farm');
+}
+
+async function toggleFarmActivity() {
+  if (!charState) return;
+  const level = Number(charState.level) || 1;
+  if (level < 3) { showToast(t('game.js.farm_unlock'), 'danger'); return; }
+
+  if (charState.activity === 'farm') {
+    await stopFarmActivity();
+    return;
+  }
+  if (charState.activity) {
+    showToast(t('game.fp.busy_other_activity'), 'warn');
+    return;
+  }
+  await startFarmActivity();
 }
 
 async function startGrowing(plantType) {
@@ -765,6 +831,27 @@ function renderFarmPanel() {
   const char = charState;
   if (!char) return;
   const now = Math.floor(Date.now() / 1000);
+  const level = Number(char.level) || 1;
+
+  const activityStatusEl = document.getElementById('farm-activity-status');
+  const activityBtnEl = document.getElementById('farm-activity-btn');
+  if (level < 3) {
+    activityStatusEl.textContent = t('game.js.farm_unlock');
+    activityBtnEl.textContent = t('game.fp.start_action');
+    activityBtnEl.disabled = true;
+  } else if (char.activity === 'farm') {
+    activityStatusEl.textContent = t('game.fp.running_status');
+    activityBtnEl.textContent = t('game.fp.stop_action');
+    activityBtnEl.disabled = false;
+  } else if (char.activity) {
+    activityStatusEl.textContent = t('game.fp.busy_other_activity');
+    activityBtnEl.textContent = t('game.fp.start_action');
+    activityBtnEl.disabled = true;
+  } else {
+    activityStatusEl.textContent = t('game.fp.idle_status');
+    activityBtnEl.textContent = t('game.fp.start_action');
+    activityBtnEl.disabled = false;
+  }
 
   const stockList = document.getElementById('farm-stock-list');
   const plants = (char.inventory || []).filter(i => i.item_id === 6 || i.item_id === 7);
@@ -788,7 +875,9 @@ function renderFarmPanel() {
   } else {
     queueList.innerHTML = queue.map(job => {
       const icon     = job.plant_type === 'carrot' ? '🥕' : '🍎';
-      const secsLeft = Math.max(0, job.ready_at - now);
+      const secsLeft = Number.isFinite(Number(job.remaining_seconds))
+        ? Math.max(0, Number(job.remaining_seconds))
+        : Math.max(0, (Number(job.ready_at) || 0) - now);
       const mins     = Math.floor(secsLeft / 60);
       const secs     = secsLeft % 60;
       const timeStr  = secsLeft === 0 ? t('game.js.ready') : `${mins}m ${String(secs).padStart(2,'0')}s`;
@@ -807,7 +896,7 @@ function renderMarketPanel(char) {
   const gold = Number(char.gold) || 0;
   document.getElementById('market-gold-amount').textContent = `🪙 ${gold}g`;
 
-  const equippedIds = new Set([char.weapon_id, char.armor_id].filter(Boolean));
+  const equippedIds = new Set([char.weapon_id, char.armor_id, char.shield_id].filter(Boolean));
   const sellable = (char.inventory || []).filter(i => Number(i.sell_price) > 0);
   const list = document.getElementById('market-list');
 

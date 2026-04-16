@@ -232,6 +232,7 @@
           <div class="equip-slot-label" data-i18n="game.eq.weapon">Weapon</div>
           <div class="equip-slot-name" id="eq-weapon-name"></div>
           <div class="equip-slot-stat" id="eq-weapon-stat"></div>
+          <div id="eq-weapon-action" style="margin-top:0.35rem;"></div>
         </div>
       </div>
       <div id="eq-armor" class="equip-slot">
@@ -240,6 +241,16 @@
           <div class="equip-slot-label" data-i18n="game.eq.armor">Armor</div>
           <div class="equip-slot-name" id="eq-armor-name"></div>
           <div class="equip-slot-stat" id="eq-armor-stat"></div>
+          <div id="eq-armor-action" style="margin-top:0.35rem;"></div>
+        </div>
+      </div>
+      <div id="eq-shield" class="equip-slot">
+        <span class="equip-slot-icon">🛡️</span>
+        <div class="equip-slot-info">
+          <div class="equip-slot-label" data-i18n="game.eq.shield">Shield</div>
+          <div class="equip-slot-name" id="eq-shield-name"></div>
+          <div class="equip-slot-stat" id="eq-shield-stat"></div>
+          <div id="eq-shield-action" style="margin-top:0.35rem;"></div>
         </div>
       </div>
       <hr class="panel-divider" />
@@ -293,6 +304,11 @@
       <p style="font-size:0.8rem;color:var(--muted);margin-bottom:0.75rem;" data-i18n="game.fp.desc">
         Grow plants to restore HP in dungeons.
       </p>
+
+      <div style="margin-bottom:0.75rem;display:flex;align-items:center;gap:0.6rem;justify-content:space-between;">
+        <span id="farm-activity-status" style="font-size:0.78rem;color:var(--muted);"></span>
+        <button type="button" class="btn btn-outline btn-sm" id="farm-activity-btn" onclick="toggleFarmActivity()"></button>
+      </div>
 
       <!-- Plant stock -->
       <div id="farm-stock-section" style="margin-bottom:1rem;">
