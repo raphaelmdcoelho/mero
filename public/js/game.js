@@ -209,6 +209,9 @@ function updateActionSquares(activity) {
     document.getElementById('farm-label').textContent    = t('game.js.farm_lbl');
     if (read) document.getElementById('read-label').textContent = t('game.js.read_lbl');
   }
+
+  const pickaxe = document.getElementById('pickaxe-wrap');
+  if (pickaxe) pickaxe.classList.toggle('mining', !!activity);
 }
 
 // ---- Action handlers ----

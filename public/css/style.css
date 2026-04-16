@@ -1000,6 +1000,30 @@ input:focus, select:focus {
 .cstat-value { font-size: 1rem; font-weight: 700; color: var(--gold); }
 .cstat-note  { font-size: 0.75rem; color: var(--muted); text-align: center; margin-top: 0.5rem; }
 
+/* Pickaxe animation */
+.pickaxe-wrap {
+  position: absolute;
+  right: -70px;
+  top: 40px;
+  width: 64px;
+  height: 64px;
+  transform-origin: 60px 52px;
+  transform: rotate(-30deg);
+  opacity: 0.18;
+  pointer-events: none;
+  transition: opacity 0.35s;
+}
+.pickaxe-wrap.mining {
+  opacity: 1;
+  will-change: transform;
+  animation: pickaxe-swing 0.55s ease-in-out infinite;
+}
+@keyframes pickaxe-swing {
+  0%   { transform: rotate(-42deg); }
+  50%  { transform: rotate(16deg); }
+  100% { transform: rotate(-42deg); }
+}
+
 /* ---- Mobile (375px) ---- */
 @media (max-width: 480px) {
   .action-grid {
@@ -1011,6 +1035,8 @@ input:focus, select:focus {
   .action-sq .sq-icon { font-size: 1.8rem; }
   .avatar-cell { width: 130px; height: 130px; }
   .avatar-ring { border-radius: 50%; }
+  .pickaxe-wrap { right: -56px; top: 30px; width: 48px; height: 48px; transform-origin: 44px 40px; }
+  .pickaxe-wrap svg { width: 48px; height: 48px; }
   .char-grid { grid-template-columns: 1fr 1fr; }
   .side-panel { width: 100%; right: -100%; }
   .diff-grid { grid-template-columns: 1fr; }

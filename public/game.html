@@ -87,6 +87,47 @@
           </div>
           <span class="avatar-hint" data-i18n="game.avatar_hint">Click to change</span>
           <input type="file" id="avatar-input" accept="image/jpeg" style="display:none;" onchange="uploadAvatar(event)" />
+
+          <!-- Pixel art pickaxe — appears on the right of the avatar when an activity is active -->
+          <div id="pickaxe-wrap" class="pickaxe-wrap">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" style="image-rendering:pixelated;image-rendering:crisp-edges;">
+              <!-- Upper prong tip -->
+              <rect x="0"  y="0"  width="4" height="4" fill="#f1f5f9"/>
+              <!-- Upper prong body -->
+              <rect x="0"  y="4"  width="4" height="4" fill="#94a3b8"/>
+              <rect x="4"  y="4"  width="4" height="4" fill="#64748b"/>
+              <rect x="4"  y="8"  width="4" height="4" fill="#94a3b8"/>
+              <rect x="8"  y="8"  width="4" height="4" fill="#64748b"/>
+              <!-- Head body -->
+              <rect x="8"  y="12" width="4" height="4" fill="#94a3b8"/>
+              <rect x="12" y="12" width="4" height="4" fill="#94a3b8"/>
+              <rect x="16" y="12" width="4" height="4" fill="#64748b"/>
+              <rect x="20" y="12" width="4" height="4" fill="#475569"/>
+              <rect x="8"  y="16" width="4" height="4" fill="#64748b"/>
+              <rect x="12" y="16" width="4" height="4" fill="#64748b"/>
+              <rect x="16" y="16" width="4" height="4" fill="#475569"/>
+              <rect x="20" y="16" width="4" height="4" fill="#334155"/>
+              <!-- Lower prong -->
+              <rect x="4"  y="20" width="4" height="4" fill="#94a3b8"/>
+              <rect x="8"  y="20" width="4" height="4" fill="#64748b"/>
+              <rect x="0"  y="24" width="4" height="4" fill="#94a3b8"/>
+              <rect x="4"  y="24" width="4" height="4" fill="#64748b"/>
+              <!-- Lower prong tip -->
+              <rect x="0"  y="28" width="4" height="4" fill="#cbd5e1"/>
+              <!-- Handle — joins head at col 6 then steps diagonally lower-right -->
+              <rect x="24" y="12" width="4" height="4" fill="#d97706"/>
+              <rect x="24" y="16" width="4" height="4" fill="#92400e"/>
+              <rect x="28" y="20" width="4" height="4" fill="#d97706"/>
+              <rect x="32" y="24" width="4" height="4" fill="#92400e"/>
+              <rect x="36" y="28" width="4" height="4" fill="#d97706"/>
+              <rect x="40" y="32" width="4" height="4" fill="#92400e"/>
+              <rect x="44" y="36" width="4" height="4" fill="#d97706"/>
+              <rect x="48" y="40" width="4" height="4" fill="#92400e"/>
+              <rect x="52" y="44" width="4" height="4" fill="#d97706"/>
+              <rect x="56" y="48" width="4" height="4" fill="#92400e"/>
+              <rect x="60" y="52" width="4" height="4" fill="#d97706"/>
+            </svg>
+          </div>
         </div>
 
         <!-- Bottom-left: Inventory -->
