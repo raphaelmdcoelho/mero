@@ -148,3 +148,100 @@ describe('POST /api/market/:characterId/sell', () => {
     expect(res.body.gold).toBe(8);
   });
 });
+
+// ── GET /api/market/:characterId/shop ─────────────────────────────────────────
+
+describe('GET /api/market/:characterId/shop', () => {
+  it('returns 404 if character not found', async () => {
+    executeSpy.mockResolvedValueOnce({ rows: [] });
+    const res = await request(app).get('/api/market/10/shop');
+    expect(res.status).toBe(404);
+  });
+
+  it('returns list of items with buy_price > 0', async () => {
+    const shopItems = [
+      { id: 5, name: 'Health Potion', type: 'consumable', description: 'Restores 5 HP', icon: '🧪', damage: 0, defense: 0, weapon_type: null, armor_slot: null, sell_price: 8, buy_price: 15 },
+    ];
+    executeSpy
+      .mockResolvedValueOnce({ rows: [{ id: 10 }] })
+      .mockResolvedValueOnce({ rows: shopItems });
+    const res = await request(app).get('/api/market/10/shop');
+    expect(res.status).toBe(200);
+    expect(res.body.items).toHaveLength(1);
+    expect(res.body.items[0].buy_price).toBe(15);
+  });
+});
+
+// ── POST /api/market/:characterId/buy ─────────────────────────────────────────
+
+describe('POST /api/market/:characterId/buy', () => {
+  it('returns 404 if character not found', async () => {
+    executeSpy.mockResolvedValueOnce({ rows: [] });
+    const res = await request(app).post('/api/market/10/buy').send({ item_id: 5, quantity: 1 });
+    expect(res.status).toBe(404);
+  });
+
+  it('returns 400 if item_id is missing', async () => {
+    executeSpy.mockResolvedValueOnce({ rows: [baseChar] });
+    const res = await request(app).post('/api/market/10/buy').send({ quantity: 1 });
+    expect(res.status).toBe(400);
+    expect(res.body.error).toMatch(/item_id/);
+  });
+
+  it('returns 404 if item not available for purchase', async () => {
+    executeSpy
+      .mockResolvedValueOnce({ rows: [baseChar] })
+      .mockResolvedValueOnce({ rows: [] });
+    const res = await request(app).post('/api/market/10/buy').send({ item_id: 99, quantity: 1 });
+    expect(res.status).toBe(404);
+    expect(res.body.error).toMatch(/not available/i);
+  });
+
+  it('returns 400 if not enough gold', async () => {
+    const shopItem = { id: 5, name: 'Health Potion', buy_price: 15 };
+    executeSpy
+      .mockResolvedValueOnce({ rows: [{ ...baseChar, gold: 5 }] })
+      .mockResolvedValueOnce({ rows: [shopItem] });
+    const res = await request(app).post('/api/market/10/buy').send({ item_id: 5, quantity: 1 });
+    expect(res.status).toBe(400);
+    expect(res.body.error).toMatch(/Not enough gold/);
+  });
+
+  it('inserts new inventory row when item not already owned', async () => {
+    const shopItem = { id: 5, name: 'Health Potion', buy_price: 15 };
+    executeSpy
+      .mockResolvedValueOnce({ rows: [{ ...baseChar, gold: 50 }] })
+      .mockResolvedValueOnce({ rows: [shopItem] })
+      .mockResolvedValueOnce({ rows: [] }); // no existing inventory row
+    batchSpy.mockResolvedValueOnce({});
+    const res = await request(app).post('/api/market/10/buy').send({ item_id: 5, quantity: 1 });
+    expect(res.status).toBe(200);
+    expect(res.body.spent).toBe(15);
+    expect(batchSpy.mock.calls[0][0][0].sql).toContain('INSERT INTO inventory');
+  });
+
+  it('increments quantity when item already in inventory', async () => {
+    const shopItem = { id: 5, name: 'Health Potion', buy_price: 15 };
+    executeSpy
+      .mockResolvedValueOnce({ rows: [{ ...baseChar, gold: 100 }] })
+      .mockResolvedValueOnce({ rows: [shopItem] })
+      .mockResolvedValueOnce({ rows: [{ id: 7 }] }); // existing inventory row id 7
+    batchSpy.mockResolvedValueOnce({});
+    const res = await request(app).post('/api/market/10/buy').send({ item_id: 5, quantity: 2 });
+    expect(res.status).toBe(200);
+    expect(res.body.spent).toBe(30);
+    expect(batchSpy.mock.calls[0][0][0].sql).toContain('UPDATE inventory SET quantity = quantity + ?');
+  });
+
+  it('treats quantity: 0 as quantity: 1 (minimum floor)', async () => {
+    const shopItem = { id: 5, name: 'Health Potion', buy_price: 15 };
+    executeSpy
+      .mockResolvedValueOnce({ rows: [{ ...baseChar, gold: 50 }] })
+      .mockResolvedValueOnce({ rows: [shopItem] })
+      .mockResolvedValueOnce({ rows: [] });
+    batchSpy.mockResolvedValueOnce({});
+    const res = await request(app).post('/api/market/10/buy').send({ item_id: 5, quantity: 0 });
+    expect(res.status).toBe(200);
+    expect(res.body.spent).toBe(15);
+  });
+});

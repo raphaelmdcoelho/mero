@@ -133,6 +133,7 @@ async function initDb() {
     'ALTER TABLE items ADD COLUMN weapon_type TEXT    DEFAULT NULL',
     'ALTER TABLE items ADD COLUMN armor_slot  TEXT    DEFAULT NULL',
     'ALTER TABLE items ADD COLUMN sell_price  INTEGER DEFAULT 0',
+    'ALTER TABLE items ADD COLUMN buy_price   INTEGER DEFAULT 0',
     'ALTER TABLE monsters ADD COLUMN dungeon_set INTEGER NOT NULL DEFAULT 1',
     'ALTER TABLE dungeon_run ADD COLUMN dungeon_set INTEGER NOT NULL DEFAULT 1',
     'ALTER TABLE farm_queue ADD COLUMN remaining_seconds INTEGER DEFAULT NULL',
@@ -160,27 +161,27 @@ async function initDb() {
   `);
 
   // Seed / update items with combat and slot metadata.
-  // id, name, type, description, icon, damage, defense, weapon_type, armor_slot, sell_price
+  // id, name, type, description, icon, damage, defense, weapon_type, armor_slot, sell_price, buy_price
   const itemData = [
-    [1,  'Wooden Sword',   'weapon',     'A basic training sword.',          '🗡️',  2,  0, 'melee',  null,     5],
-    [2,  'Iron Sword',     'weapon',     'A sturdy iron blade.',             '⚔️',  4,  0, 'melee',  null,    15],
-    [3,  'Leather Armor',  'armor',      'Light but protective.',            '🥋',  0,  2, null,    'body',   10],
-    [4,  'Iron Shield',    'armor',      'Heavy iron shield.',               '🛡️',  0,  3, null,    'shield', 20],
-    [5,  'Health Potion',  'consumable', 'Restores 5 HP.',                   '🧪',  0,  0, null,    null,      8],
-    [6,  'Carrot',         'consumable', 'Restores 2 HP.',                   '🥕',  0,  0, null,    null,      3],
-    [7,  'Apple',          'consumable', 'Restores 1 HP.',                   '🍎',  0,  0, null,    null,      2],
-    [8,  'Short Bow',      'weapon',     'A ranged weapon. Uses Dexterity.', '🏹',  3,  0, 'ranged', null,    18],
-    [9,  'Steel Sword',    'weapon',     'A finely forged steel blade.',     '🔪',  6,  0, 'melee',  null,    35],
-    [10, 'Chainmail',      'armor',      'Linked metal rings for armor.',    '🔗',  0,  4, null,    'body',   30],
-    [11, 'Plate Armor',    'armor',      'Heavy full-body plate armor.',     '🛡️',  0,  6, null,    'body',   50],
-    [12, 'Oak Shield',     'armor',      'A sturdy oak shield.',             '🪵',  0,  2, null,    'shield', 12],
-    [13, 'Steel Shield',   'armor',      'Balanced defense with steel ribs.', '🛡️', 0,  5, null,    'shield', 34],
-    [14, 'Knight Shield',  'armor',      'Towering protection for champions.','🛡️', 0,  8, null,    'shield', 60],
-    [15, 'Hunter Jacket',  'armor',      'Flexible armor for quick skirmish.','🧥', 0,  3, null,    'body',   20],
-    [16, 'War Axe',        'weapon',     'A heavy axe built for crushing hits.','🪓',7, 0, 'melee',  null,    40],
-    [17, 'Longbow',        'weapon',     'High-tension bow with strong pull.','🏹', 6,  0, 'ranged', null,    38],
-    [18, 'Guardian Armor', 'armor',      'Layered plates for elite guards.', '🦾', 0,  8, null,    'body',   60],
-    [19, 'Tower Shield',   'armor',      'Massive shield with near-wall cover.','🧱',0,10, null,    'shield', 75],
+    [1,  'Wooden Sword',   'weapon',     'A basic training sword.',           '🗡️',  2,  0, 'melee',  null,     5,  10],
+    [2,  'Iron Sword',     'weapon',     'A sturdy iron blade.',              '⚔️',  4,  0, 'melee',  null,    15,  30],
+    [3,  'Leather Armor',  'armor',      'Light but protective.',             '🥋',  0,  2, null,    'body',   10,  20],
+    [4,  'Iron Shield',    'armor',      'Heavy iron shield.',                '🛡️',  0,  3, null,    'shield', 20,  40],
+    [5,  'Health Potion',  'consumable', 'Restores 5 HP.',                    '🧪',  0,  0, null,    null,      8,  15],
+    [6,  'Carrot',         'consumable', 'Restores 2 HP.',                    '🥕',  0,  0, null,    null,      3,   5],
+    [7,  'Apple',          'consumable', 'Restores 1 HP.',                    '🍎',  0,  0, null,    null,      2,   4],
+    [8,  'Short Bow',      'weapon',     'A ranged weapon. Uses Dexterity.',  '🏹',  3,  0, 'ranged', null,    18,  35],
+    [9,  'Steel Sword',    'weapon',     'A finely forged steel blade.',      '🔪',  6,  0, 'melee',  null,    35,  70],
+    [10, 'Chainmail',      'armor',      'Linked metal rings for armor.',     '🔗',  0,  4, null,    'body',   30,  60],
+    [11, 'Plate Armor',    'armor',      'Heavy full-body plate armor.',      '🛡️',  0,  6, null,    'body',   50, 100],
+    [12, 'Oak Shield',     'armor',      'A sturdy oak shield.',              '🪵',  0,  2, null,    'shield', 12,  24],
+    [13, 'Steel Shield',   'armor',      'Balanced defense with steel ribs.', '🛡️', 0,  5, null,    'shield', 34,  68],
+    [14, 'Knight Shield',  'armor',      'Towering protection for champions.','🛡️', 0,  8, null,    'shield', 60, 120],
+    [15, 'Hunter Jacket',  'armor',      'Flexible armor for quick skirmish.','🧥', 0,  3, null,    'body',   20,  40],
+    [16, 'War Axe',        'weapon',     'A heavy axe built for crushing hits.','🪓',7, 0, 'melee',  null,    40,  80],
+    [17, 'Longbow',        'weapon',     'High-tension bow with strong pull.', '🏹', 6,  0, 'ranged', null,   38,  75],
+    [18, 'Guardian Armor', 'armor',      'Layered plates for elite guards.',  '🦾', 0,  8, null,    'body',   60, 120],
+    [19, 'Tower Shield',   'armor',      'Massive shield with near-wall cover.','🧱',0,10, null,    'shield', 75, 150],
   ];
 
   await client.batch([
@@ -188,9 +189,9 @@ async function initDb() {
       sql:  'INSERT OR IGNORE INTO items (id, name, type, description, icon) VALUES (?, ?, ?, ?, ?)',
       args: [id, name, type, desc, icon],
     })),
-    ...itemData.map(([id, , , , , dmg, def, wt, as, sp]) => ({
-      sql:  'UPDATE items SET damage = ?, defense = ?, weapon_type = ?, armor_slot = ?, sell_price = ? WHERE id = ?',
-      args: [dmg, def, wt, as, sp, id],
+    ...itemData.map(([id, , , , , dmg, def, wt, as, sp, bp]) => ({
+      sql:  'UPDATE items SET damage = ?, defense = ?, weapon_type = ?, armor_slot = ?, sell_price = ?, buy_price = ? WHERE id = ?',
+      args: [dmg, def, wt, as, sp, bp, id],
     })),
   ], 'write');
 

@@ -406,8 +406,18 @@
         <span class="market-gold-label" data-i18n="game.mp.your_gold">Your gold</span>
         <span id="market-gold-amount" class="market-gold-amount">🪙 0g</span>
       </div>
-      <p class="panel-sub" data-i18n="game.mp.desc">Sell items and plants for gold. Equipped items cannot be sold.</p>
-      <div id="market-list"></div>
+      <div class="market-tabs">
+        <button type="button" class="market-tab active" id="market-tab-sell" onclick="switchMarketTab('sell')" data-i18n="game.mp.tab_sell">Sell</button>
+        <button type="button" class="market-tab" id="market-tab-buy" onclick="switchMarketTab('buy')" data-i18n="game.mp.tab_buy">Buy</button>
+      </div>
+      <div id="market-sell-pane">
+        <p class="panel-sub" data-i18n="game.mp.sell_desc">Sell items for gold. Equipped items cannot be sold.</p>
+        <div id="market-list"></div>
+      </div>
+      <div id="market-buy-pane" style="display:none">
+        <p class="panel-sub" data-i18n="game.mp.buy_desc">Browse the shop and purchase items.</p>
+        <div id="market-shop-list"></div>
+      </div>
     </div>
   </div>
 

@@ -548,7 +548,7 @@ function openPanel(type) {
   if (panelId) document.getElementById(panelId).classList.add('open');
   if (type === 'attributes') { pendingAttrs = {}; renderAttributes(charState); }
   if (type === 'farm')   renderFarmPanel();
-  if (type === 'market') renderMarketPanel(charState);
+  if (type === 'market') { switchMarketTab('sell'); renderMarketPanel(charState); }
   if (type === 'battle') {
     renderBattlePanel(charState);
     if (!autoBattleRunning && charState && charState.dungeonRun) {
@@ -894,6 +894,17 @@ function renderFarmPanel() {
 }
 
 // ---- Market ----
+let marketTab = 'sell';
+
+function switchMarketTab(tab) {
+  marketTab = tab;
+  document.getElementById('market-tab-sell').classList.toggle('active', tab === 'sell');
+  document.getElementById('market-tab-buy').classList.toggle('active', tab === 'buy');
+  document.getElementById('market-sell-pane').style.display = tab === 'sell' ? '' : 'none';
+  document.getElementById('market-buy-pane').style.display  = tab === 'buy'  ? '' : 'none';
+  if (tab === 'buy') renderShopPane();
+}
+
 function renderMarketPanel(char) {
   if (!char) return;
   const gold = Number(char.gold) || 0;
@@ -926,6 +937,42 @@ function renderMarketPanel(char) {
   }).join('');
 }
 
+async function renderShopPane() {
+  const shopList = document.getElementById('market-shop-list');
+  shopList.innerHTML = `<p class="muted-sm">${t('game.js.loading')}</p>`;
+  const res = await api.get(`/api/market/${charId}/shop`);
+  if (!res) return;
+  const data = await res.json();
+  if (!res.ok) { shopList.innerHTML = `<p class="muted-sm">${data.error}</p>`; return; }
+
+  const items = data.items || [];
+  if (!items.length) {
+    shopList.innerHTML = `<p class="muted-sm">${t('game.js.shop_empty')}</p>`;
+    return;
+  }
+
+  const gold = Number(charState?.gold) || 0;
+  shopList.innerHTML = items.map(item => {
+    const price    = Number(item.buy_price);
+    const canAfford = gold >= price;
+    let meta = `🪙 ${price}g`;
+    if (item.damage > 0) meta += ` · ${item.damage} ${t('game.js.dmg_unit')}`;
+    if (item.defense > 0) meta += ` · ${item.defense} ${t('game.js.def_unit')}`;
+    return `
+      <div class="market-row">
+        <span class="market-item-icon">${item.icon}</span>
+        <div class="market-item-info">
+          <span class="market-item-name">${escHtml(item.name)}</span>
+          <span class="market-item-meta">${meta}</span>
+        </div>
+        <button type="button" class="btn btn-sm ${canAfford ? 'btn-primary' : 'btn-outline'}"
+                onclick="buyItem(${item.id},1)" ${canAfford ? '' : 'disabled'}>
+          ${t('game.js.buy_one')}
+        </button>
+      </div>`;
+  }).join('');
+}
+
 async function sellItem(invId, itemId, qty) {
   const res = await api.post(`/api/market/${charId}/sell`, { inv_id: invId, quantity: qty });
   if (!res) return;
@@ -934,6 +981,17 @@ async function sellItem(invId, itemId, qty) {
   charState = data.char;
   renderAll(data.char);
   showToast(t('game.js.sold_for', { n: data.gold }), 'success');
+}
+
+async function buyItem(itemId, qty) {
+  const res = await api.post(`/api/market/${charId}/buy`, { item_id: itemId, quantity: qty });
+  if (!res) return;
+  const data = await res.json();
+  if (!res.ok) { showToast(data.error || t('game.js.cant_buy'), 'danger'); return; }
+  charState = data.char;
+  renderAll(data.char);
+  renderShopPane();
+  showToast(t('game.js.bought_for', { n: data.spent }), 'success');
 }
 
 // ---- Avatar picker ----
