@@ -919,22 +919,43 @@ function renderMarketPanel(char) {
     return;
   }
 
-  list.innerHTML = sellable.map(item => {
+  list.innerHTML = `<div class="market-grid">${sellable.map(item => {
     const equipped = equippedIds.has(item.item_id);
     const price = Number(item.sell_price);
+    const qtyLabel = item.quantity > 1 ? `×${item.quantity}` : '';
+    const clickAttr = equipped ? '' : `onclick="sellItem(${item.id},${item.item_id},1)"`;
     return `
-      <div class="market-row">
-        <span class="market-item-icon">${item.icon}</span>
-        <div class="market-item-info">
-          <span class="market-item-name">${escHtml(item.name)}</span>
-          <span class="market-item-meta">×${item.quantity} &bull; 🪙 ${price}g each</span>
+      <div class="market-cell${equipped ? ' equipped' : ''}" ${clickAttr}>
+        ${item.icon}
+        ${qtyLabel ? `<span class="market-cell-qty">${qtyLabel}</span>` : ''}
+        <div class="market-tooltip">
+          <div class="market-tooltip-name">${escHtml(item.name)}</div>
+          <div class="market-tooltip-meta">
+            ${t('game.js.qty')}: ${item.quantity}<br>
+            <span class="market-tooltip-price">🪙 ${price}g ${t('game.js.each')}</span>
+          </div>
+          ${equipped
+            ? `<div class="market-tooltip-equipped">${t('game.js.equipped_tag')}</div>`
+            : `<span class="market-tooltip-sell">${t('game.js.click_to_sell')}</span>`}
         </div>
-        ${equipped
-          ? `<span class="market-equipped-tag">${t('game.js.equipped_tag')}</span>`
-          : `<button type="button" class="btn btn-outline btn-sm" onclick="sellItem(${item.id},${item.item_id},1)">${t('game.js.sell_one')}</button>`
-        }
       </div>`;
-  }).join('');
+  }).join('')}</div>`;
+
+  // Position tooltips on mousemove so they follow the cursor
+  list.querySelectorAll('.market-cell').forEach(cell => {
+    cell.addEventListener('mousemove', e => {
+      const tip = cell.querySelector('.market-tooltip');
+      if (!tip) return;
+      const pad = 12;
+      let x = e.clientX + pad;
+      let y = e.clientY + pad;
+      const rect = tip.getBoundingClientRect();
+      if (x + rect.width > window.innerWidth - 8) x = e.clientX - rect.width - pad;
+      if (y + rect.height > window.innerHeight - 8) y = e.clientY - rect.height - pad;
+      tip.style.left = x + 'px';
+      tip.style.top  = y + 'px';
+    });
+  });
 }
 
 async function renderShopPane() {

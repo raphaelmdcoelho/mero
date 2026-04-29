@@ -241,6 +241,9 @@
       'game.js.bought_for':         '🪙 Bought for {n}g!',
       'game.js.shop_empty':         'No items available.',
       'game.js.loading':            'Loading…',
+      'game.js.qty':                'Qty',
+      'game.js.each':               'each',
+      'game.js.click_to_sell':      'Click to sell 1',
 
       // Attributes
       'attr.strength':              'Strength',
@@ -491,6 +494,9 @@
       'game.js.bought_for':         '🪙 Comprado por {n}g!',
       'game.js.shop_empty':         'Nenhum item disponível.',
       'game.js.loading':            'Carregando…',
+      'game.js.qty':                'Qtd',
+      'game.js.each':               'cada',
+      'game.js.click_to_sell':      'Clique para vender 1',
 
       // Attributes
       'attr.strength':              'Força',
