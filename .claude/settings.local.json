@@ -23,7 +23,11 @@
       "Bash(netstat -ano)",
       "Bash(taskkill /PID 19320 /F)",
       "Bash(cmd //c \"taskkill /PID 19320 /F\")",
-      "Bash(ls -la /c/Repos/mero/public/*.svg)"
+      "Bash(ls -la /c/Repos/mero/public/*.svg)",
+      "Bash(git worktree *)",
+      "Bash(cp .env ./trees/feat_market_grid/.env)",
+      "Bash(git add *)",
+      "Bash(git commit -m ' *)"
     ]
   }
 }
