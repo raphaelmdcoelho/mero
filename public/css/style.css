@@ -1103,7 +1103,8 @@ input:focus, select:focus {
 }
 .market-cell:hover { border-color: #7c5cbf; background: #2a1f45; }
 .market-cell.equipped { border-color: var(--gold); cursor: default; opacity: 0.6; }
-.market-cell:hover:not(.equipped) { box-shadow: 0 0 0 1px #7c5cbf; }
+.market-cell.cant-afford { cursor: default; opacity: 0.45; }
+.market-cell:hover:not(.equipped):not(.cant-afford) { box-shadow: 0 0 0 1px #7c5cbf; }
 
 .market-cell-qty {
   position: absolute;
