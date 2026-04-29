@@ -232,6 +232,9 @@
       'game.js.nothing_to_sell':    'Nothing to sell.',
       'game.js.sell_one':           'Sell 1',
       'game.js.equipped_tag':       'Equipped',
+      'game.js.qty':                'Qty',
+      'game.js.each':               'each',
+      'game.js.click_to_sell':      'Click to sell 1',
 
       // Attributes
       'attr.strength':              'Strength',
@@ -473,6 +476,9 @@
       'game.js.nothing_to_sell':    'Nada para vender.',
       'game.js.sell_one':           'Vender 1',
       'game.js.equipped_tag':       'Equipado',
+      'game.js.qty':                'Qtd',
+      'game.js.each':               'cada',
+      'game.js.click_to_sell':      'Clique para vender 1',
 
       // Attributes
       'attr.strength':              'Força',

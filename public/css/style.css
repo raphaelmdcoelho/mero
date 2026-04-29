@@ -1056,26 +1056,75 @@ input:focus, select:focus {
 .market-gold-label { font-size: 0.8rem; color: var(--muted); }
 .market-gold-amount { font-size: 1rem; font-weight: 700; color: #f5c842; }
 
-.market-row {
-  display: flex;
-  align-items: center;
-  gap: 0.6rem;
-  padding: 0.5rem 0.6rem;
+.market-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(52px, 1fr));
+  gap: 4px;
+}
+
+.market-cell {
+  position: relative;
+  width: 52px;
+  height: 52px;
   background: var(--surface2);
   border: 1px solid var(--border);
-  border-radius: 8px;
-  margin-bottom: 0.4rem;
-}
-.market-item-icon { font-size: 1.3rem; flex-shrink: 0; }
-.market-item-info {
+  border-radius: 6px;
   display: flex;
-  flex-direction: column;
-  flex: 1;
-  min-width: 0;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+  font-size: 1.6rem;
+  user-select: none;
 }
-.market-item-name { font-size: 0.85rem; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.market-item-meta { font-size: 0.72rem; color: var(--muted); }
-.market-equipped-tag { font-size: 0.72rem; color: var(--gold); white-space: nowrap; }
+.market-cell:hover { border-color: #7c5cbf; background: #2a1f45; }
+.market-cell.equipped { border-color: var(--gold); cursor: default; opacity: 0.6; }
+.market-cell:hover:not(.equipped) { box-shadow: 0 0 0 1px #7c5cbf; }
+
+.market-cell-qty {
+  position: absolute;
+  bottom: 2px;
+  right: 4px;
+  font-size: 0.6rem;
+  font-weight: 700;
+  color: var(--muted);
+  line-height: 1;
+}
+
+/* Tooltip */
+.market-cell .market-tooltip {
+  display: none;
+  position: fixed;
+  z-index: 999;
+  background: #0f0a1e;
+  border: 1px solid #7c5cbf;
+  border-radius: 8px;
+  padding: 0.5rem 0.65rem;
+  min-width: 150px;
+  max-width: 200px;
+  pointer-events: none;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.6);
+}
+.market-cell:hover .market-tooltip { display: block; }
+.market-tooltip-name {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #e2d9f3;
+  margin-bottom: 0.25rem;
+}
+.market-tooltip-meta {
+  font-size: 0.7rem;
+  color: var(--muted);
+  line-height: 1.5;
+}
+.market-tooltip-price { color: #f5c842; font-weight: 600; }
+.market-tooltip-equipped { color: var(--gold); font-size: 0.68rem; margin-top: 0.2rem; }
+.market-tooltip-sell {
+  display: block;
+  margin-top: 0.35rem;
+  font-size: 0.68rem;
+  color: #a78bfa;
+}
 
 /* ---- Language switcher ---- */
 .lang-switcher {
