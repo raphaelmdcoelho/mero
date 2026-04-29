@@ -1,0 +1,390 @@
+<svg viewBox="0 0 800 1100" xmlns="http://www.w3.org/2000/svg" font-family="Georgia, 'Times New Roman', serif">
+  <defs>
+    <radialGradient id="bgGrad" cx="50%" cy="40%" r="60%">
+      <stop offset="0%" stop-color="#1a1230"/>
+      <stop offset="100%" stop-color="#05030d"/>
+    </radialGradient>
+    <radialGradient id="glowCenter" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#6b3fa0" stop-opacity="0.4"/>
+      <stop offset="100%" stop-color="#6b3fa0" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="torchGlow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#ff8c00" stop-opacity="0.5"/>
+      <stop offset="100%" stop-color="#ff8c00" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+      <feMerge><feMergeNode in="coloredBlur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <filter id="strongGlow">
+      <feGaussianBlur stdDeviation="6" result="coloredBlur"/>
+      <feMerge><feMergeNode in="coloredBlur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <linearGradient id="titleGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#f5d080"/>
+      <stop offset="50%" stop-color="#e8a820"/>
+      <stop offset="100%" stop-color="#a06010"/>
+    </linearGradient>
+    <linearGradient id="heroGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#2a1a5a"/>
+      <stop offset="100%" stop-color="#0a0818"/>
+    </linearGradient>
+    <linearGradient id="groundGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#1a0e06"/>
+      <stop offset="100%" stop-color="#0a0804"/>
+    </linearGradient>
+    <linearGradient id="xpBar" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#4040c0"/>
+      <stop offset="100%" stop-color="#8060f0"/>
+    </linearGradient>
+    <linearGradient id="hpBar" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#c02020"/>
+      <stop offset="100%" stop-color="#f05050"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Background -->
+  <rect width="800" height="1100" fill="url(#bgGrad)"/>
+
+  <!-- Stars scattered -->
+  <rect x="60" y="30" width="2" height="2" fill="#fff" opacity="0.6"/>
+  <rect x="120" y="55" width="2" height="2" fill="#fff" opacity="0.4"/>
+  <rect x="200" y="20" width="2" height="2" fill="#fff" opacity="0.7"/>
+  <rect x="300" y="45" width="2" height="2" fill="#fff" opacity="0.5"/>
+  <rect x="420" y="15" width="2" height="2" fill="#fff" opacity="0.6"/>
+  <rect x="520" y="40" width="2" height="2" fill="#fff" opacity="0.4"/>
+  <rect x="620" y="25" width="2" height="2" fill="#fff" opacity="0.7"/>
+  <rect x="700" y="60" width="2" height="2" fill="#fff" opacity="0.5"/>
+  <rect x="750" y="30" width="2" height="2" fill="#fff" opacity="0.6"/>
+  <rect x="80" y="80" width="2" height="2" fill="#fff" opacity="0.3"/>
+  <rect x="160" y="100" width="2" height="2" fill="#fff" opacity="0.5"/>
+  <rect x="680" y="90" width="2" height="2" fill="#fff" opacity="0.4"/>
+  <rect x="740" y="110" width="2" height="2" fill="#fff" opacity="0.3"/>
+
+  <!-- Moon -->
+  <circle cx="680" cy="90" r="36" fill="#f0e8c0" opacity="0.15"/>
+  <circle cx="668" cy="82" r="30" fill="#05030d" opacity="0.8"/>
+
+  <!-- Castle silhouette in background -->
+  <!-- Castle body -->
+  <rect x="240" y="340" width="320" height="260" fill="#0e0820" opacity="0.8"/>
+  <!-- Battlements top -->
+  <rect x="240" y="320" width="20" height="30" fill="#0e0820" opacity="0.8"/>
+  <rect x="270" y="330" width="20" height="20" fill="#0e0820" opacity="0.8"/>
+  <rect x="300" y="320" width="20" height="30" fill="#0e0820" opacity="0.8"/>
+  <rect x="330" y="330" width="20" height="20" fill="#0e0820" opacity="0.8"/>
+  <rect x="360" y="320" width="20" height="30" fill="#0e0820" opacity="0.8"/>
+  <rect x="390" y="330" width="20" height="20" fill="#0e0820" opacity="0.8"/>
+  <rect x="420" y="320" width="20" height="30" fill="#0e0820" opacity="0.8"/>
+  <rect x="450" y="330" width="20" height="20" fill="#0e0820" opacity="0.8"/>
+  <rect x="480" y="320" width="20" height="30" fill="#0e0820" opacity="0.8"/>
+  <rect x="510" y="330" width="20" height="20" fill="#0e0820" opacity="0.8"/>
+  <rect x="540" y="320" width="20" height="30" fill="#0e0820" opacity="0.8"/>
+  <!-- Towers -->
+  <rect x="200" y="280" width="80" height="320" fill="#0d0720" opacity="0.85"/>
+  <rect x="520" y="280" width="80" height="320" fill="#0d0720" opacity="0.85"/>
+  <!-- Tower tops -->
+  <rect x="196" y="260" width="12" height="28" fill="#0d0720" opacity="0.85"/>
+  <rect x="214" y="268" width="12" height="20" fill="#0d0720" opacity="0.85"/>
+  <rect x="232" y="260" width="12" height="28" fill="#0d0720" opacity="0.85"/>
+  <rect x="252" y="268" width="12" height="20" fill="#0d0720" opacity="0.85"/>
+  <rect x="268" y="260" width="12" height="28" fill="#0d0720" opacity="0.85"/>
+  <rect x="516" y="260" width="12" height="28" fill="#0d0720" opacity="0.85"/>
+  <rect x="534" y="268" width="12" height="20" fill="#0d0720" opacity="0.85"/>
+  <rect x="552" y="260" width="12" height="28" fill="#0d0720" opacity="0.85"/>
+  <rect x="568" y="268" width="12" height="20" fill="#0d0720" opacity="0.85"/>
+  <rect x="584" y="260" width="12" height="28" fill="#0d0720" opacity="0.85"/>
+  <!-- Castle gate arch -->
+  <rect x="346" y="460" width="108" height="140" fill="#060410" opacity="0.9"/>
+  <rect x="350" y="440" width="100" height="30" fill="#060410" opacity="0.9"/>
+  <!-- Castle windows glow -->
+  <rect x="270" y="360" width="24" height="28" fill="#ff8c00" opacity="0.25"/>
+  <rect x="270" y="360" width="24" height="28" fill="#ff8c00" opacity="0.15" filter="url(#glow)"/>
+  <rect x="506" y="360" width="24" height="28" fill="#ff8c00" opacity="0.25"/>
+  <rect x="506" y="360" width="24" height="28" fill="#ff8c00" opacity="0.15" filter="url(#glow)"/>
+  <rect x="350" y="360" width="24" height="28" fill="#4060ff" opacity="0.2"/>
+  <rect x="426" y="360" width="24" height="28" fill="#4060ff" opacity="0.2"/>
+
+  <!-- Purple aura behind hero -->
+  <ellipse cx="400" cy="580" rx="160" ry="200" fill="url(#glowCenter)" opacity="0.6"/>
+
+  <!-- Ground -->
+  <rect x="0" y="730" width="800" height="370" fill="url(#groundGrad)"/>
+  <!-- Ground stone tiles -->
+  <rect x="0" y="730" width="800" height="8" fill="#2a1a0a"/>
+  <rect x="0" y="730" width="80" height="4" fill="#1e1206"/>
+  <rect x="100" y="730" width="100" height="4" fill="#1e1206"/>
+  <rect x="240" y="730" width="80" height="4" fill="#1e1206"/>
+  <rect x="380" y="730" width="120" height="4" fill="#1e1206"/>
+  <rect x="560" y="730" width="80" height="4" fill="#1e1206"/>
+  <rect x="700" y="730" width="100" height="4" fill="#1e1206"/>
+
+  <!-- =================== PIXEL HERO (center) =================== -->
+  <!-- Shadow -->
+  <ellipse cx="400" cy="738" rx="52" ry="10" fill="#000" opacity="0.5"/>
+
+  <!-- Boots -->
+  <rect x="376" y="708" width="18" height="24" fill="#2a1a0a"/>
+  <rect x="404" y="708" width="18" height="24" fill="#2a1a0a"/>
+  <rect x="374" y="720" width="22" height="12" fill="#1a0e04"/>
+  <rect x="402" y="720" width="22" height="12" fill="#1a0e04"/>
+
+  <!-- Legs / pants -->
+  <rect x="378" y="668" width="16" height="44" fill="#2a3060"/>
+  <rect x="404" y="668" width="16" height="44" fill="#2a3060"/>
+
+  <!-- Torso / armor -->
+  <rect x="366" y="580" width="66" height="94" fill="#404880"/>
+  <!-- Armor plates -->
+  <rect x="366" y="580" width="66" height="8" fill="#5058a0"/>
+  <rect x="368" y="620" width="62" height="6" fill="#5058a0"/>
+  <rect x="366" y="660" width="66" height="8" fill="#3a4070"/>
+  <!-- Chest emblem -->
+  <rect x="392" y="596" width="14" height="14" fill="#e8a820"/>
+  <rect x="395" y="592" width="8" height="22" fill="#e8a820"/>
+  <!-- Shoulder pads -->
+  <rect x="346" y="578" width="28" height="18" fill="#5058a0"/>
+  <rect x="344" y="576" width="30" height="6" fill="#6068b0"/>
+  <rect x="424" y="578" width="28" height="18" fill="#5058a0"/>
+  <rect x="424" y="576" width="30" height="6" fill="#6068b0"/>
+
+  <!-- Cape -->
+  <rect x="348" y="590" width="16" height="120" fill="#8b0000"/>
+  <rect x="346" y="590" width="18" height="4" fill="#a00000"/>
+  <rect x="434" y="590" width="16" height="120" fill="#8b0000"/>
+  <rect x="434" y="590" width="18" height="4" fill="#a00000"/>
+
+  <!-- Arms -->
+  <rect x="344" y="596" width="18" height="60" fill="#404880"/>
+  <rect x="436" y="596" width="18" height="60" fill="#404880"/>
+  <!-- Gauntlets -->
+  <rect x="342" y="646" width="22" height="18" fill="#5058a0"/>
+  <rect x="434" y="646" width="22" height="18" fill="#5058a0"/>
+
+  <!-- SWORD (right hand) -->
+  <!-- Blade -->
+  <rect x="458" y="480" width="8" height="180" fill="#c8d4e0"/>
+  <rect x="460" y="478" width="4" height="182" fill="#e0ecf8"/>
+  <!-- Guard -->
+  <rect x="448" y="648" width="28" height="8" fill="#c8a840"/>
+  <rect x="446" y="646" width="32" height="4" fill="#e8c850"/>
+  <!-- Grip -->
+  <rect x="456" y="654" width="12" height="24" fill="#5d3a1a"/>
+  <!-- Pommel -->
+  <rect x="454" y="676" width="16" height="10" fill="#c8a840"/>
+  <!-- Sword glow -->
+  <rect x="458" y="480" width="8" height="180" fill="#a0c8ff" opacity="0.2" filter="url(#glow)"/>
+
+  <!-- SHIELD (left hand) -->
+  <rect x="322" y="600" width="34" height="42" fill="#2a3890"/>
+  <rect x="322" y="600" width="34" height="4" fill="#3a4aa0"/>
+  <rect x="322" y="638" width="34" height="4" fill="#1a2870"/>
+  <!-- Shield boss -->
+  <rect x="333" y="614" width="12" height="12" fill="#e8c840"/>
+  <rect x="331" y="616" width="16" height="8" fill="#e8c840"/>
+  <!-- Shield rim -->
+  <rect x="320" y="600" width="4" height="42" fill="#3a4aa0"/>
+  <rect x="354" y="600" width="4" height="42" fill="#3a4aa0"/>
+
+  <!-- Neck -->
+  <rect x="388" y="560" width="22" height="24" fill="#c8a070"/>
+
+  <!-- Head -->
+  <rect x="372" y="500" width="54" height="62" fill="#c8a070"/>
+  <!-- Helmet -->
+  <rect x="366" y="494" width="66" height="24" fill="#404880"/>
+  <rect x="364" y="490" width="70" height="10" fill="#5058a0"/>
+  <rect x="362" y="486" width="74" height="8" fill="#6068b0"/>
+  <!-- Helmet visor -->
+  <rect x="370" y="504" width="58" height="10" fill="#3a4070"/>
+  <rect x="376" y="506" width="46" height="6" fill="#1a2050"/>
+  <!-- Eyes glow through visor -->
+  <rect x="380" y="507" width="10" height="4" fill="#a0c0ff" opacity="0.8"/>
+  <rect x="408" y="507" width="10" height="4" fill="#a0c0ff" opacity="0.8"/>
+  <!-- Chin guard -->
+  <rect x="374" y="548" width="50" height="16" fill="#404880"/>
+
+  <!-- Helmet plume -->
+  <rect x="390" y="460" width="18" height="34" fill="#c00020"/>
+  <rect x="386" y="456" width="26" height="12" fill="#e00030"/>
+  <rect x="388" y="450" width="22" height="10" fill="#ff1040"/>
+
+  <!-- =================== TORCH LEFT =================== -->
+  <ellipse cx="160" cy="620" rx="40" ry="40" fill="url(#torchGlow)" opacity="0.7"/>
+  <rect x="155" y="634" width="8" height="60" fill="#5d3a1a"/>
+  <rect x="153" y="620" width="12" height="18" fill="#7a4a20"/>
+  <rect x="154" y="604" width="10" height="18" fill="#ff8c00"/>
+  <rect x="152" y="596" width="14" height="12" fill="#ffcc00"/>
+  <rect x="150" y="590" width="18" height="8" fill="#ffee80" opacity="0.7"/>
+
+  <!-- =================== TORCH RIGHT =================== -->
+  <ellipse cx="640" cy="620" rx="40" ry="40" fill="url(#torchGlow)" opacity="0.7"/>
+  <rect x="637" y="634" width="8" height="60" fill="#5d3a1a"/>
+  <rect x="635" y="620" width="12" height="18" fill="#7a4a20"/>
+  <rect x="636" y="604" width="10" height="18" fill="#ff8c00"/>
+  <rect x="634" y="596" width="14" height="12" fill="#ffcc00"/>
+  <rect x="632" y="590" width="18" height="8" fill="#ffee80" opacity="0.7"/>
+
+  <!-- =================== TITLE =================== -->
+  <text x="400" y="160" text-anchor="middle" font-size="130" font-weight="bold" letter-spacing="28"
+        fill="url(#titleGrad)" filter="url(#strongGlow)" font-family="Georgia, serif">MERO</text>
+  <!-- Title shadow/depth -->
+  <text x="406" y="166" text-anchor="middle" font-size="130" font-weight="bold" letter-spacing="28"
+        fill="#3a1a00" opacity="0.5" font-family="Georgia, serif">MERO</text>
+  <text x="400" y="160" text-anchor="middle" font-size="130" font-weight="bold" letter-spacing="28"
+        fill="url(#titleGrad)" font-family="Georgia, serif">MERO</text>
+
+  <!-- Decorative divider under title -->
+  <rect x="100" y="178" width="240" height="2" fill="#c8a040" opacity="0.6"/>
+  <rect x="460" y="178" width="240" height="2" fill="#c8a040" opacity="0.6"/>
+  <rect x="338" y="172" width="12" height="12" fill="#c8a040" opacity="0.8" transform="rotate(45 344 178)"/>
+  <rect x="368" y="172" width="12" height="12" fill="#c8a040" opacity="0.5" transform="rotate(45 374 178)"/>
+  <rect x="308" y="172" width="12" height="12" fill="#c8a040" opacity="0.5" transform="rotate(45 314 178)"/>
+  <rect x="408" y="172" width="12" height="12" fill="#c8a040" opacity="0.5" transform="rotate(45 414 178)"/>
+
+  <!-- Subtitle -->
+  <text x="400" y="218" text-anchor="middle" font-size="22" letter-spacing="10"
+        fill="#a08040" font-family="Georgia, serif">IDLE  FANTASY  RPG</text>
+
+  <!-- =================== ACTIVITY ICONS (bottom strip) =================== -->
+  <!-- Panel backdrop -->
+  <rect x="50" y="790" width="700" height="240" fill="#0d0820" rx="6" opacity="0.85"/>
+  <rect x="50" y="790" width="700" height="4" fill="#c8a040" opacity="0.5"/>
+  <rect x="50" y="1026" width="700" height="4" fill="#c8a040" opacity="0.3"/>
+
+  <!-- Dividers between icons -->
+  <rect x="224" y="810" width="2" height="200" fill="#2a2050" opacity="0.8"/>
+  <rect x="398" y="810" width="2" height="200" fill="#2a2050" opacity="0.8"/>
+  <rect x="572" y="810" width="2" height="200" fill="#2a2050" opacity="0.8"/>
+
+  <!-- DUNGEON icon (scaled 2.5x, centered at x=137) -->
+  <g transform="translate(73,810) scale(2.5)">
+    <rect width="64" height="64" fill="#4a4a4a" rx="2"/>
+    <rect x="0" y="0" width="16" height="16" fill="#5a5a5a"/>
+    <rect x="32" y="0" width="16" height="16" fill="#5a5a5a"/>
+    <rect x="16" y="16" width="16" height="16" fill="#5a5a5a"/>
+    <rect x="48" y="16" width="16" height="16" fill="#5a5a5a"/>
+    <rect x="0" y="32" width="16" height="16" fill="#5a5a5a"/>
+    <rect x="32" y="32" width="16" height="16" fill="#5a5a5a"/>
+    <rect x="16" y="48" width="16" height="16" fill="#5a5a5a"/>
+    <rect x="48" y="48" width="16" height="16" fill="#5a5a5a"/>
+    <rect x="12" y="16" width="40" height="40" fill="#3a3a3a" stroke="#2a2a2a" stroke-width="2"/>
+    <rect x="16" y="20" width="8" height="32" fill="#5d4e37" stroke="#3d2e17" stroke-width="1"/>
+    <rect x="28" y="20" width="8" height="32" fill="#5d4e37" stroke="#3d2e17" stroke-width="1"/>
+    <rect x="40" y="20" width="8" height="32" fill="#5d4e37" stroke="#3d2e17" stroke-width="1"/>
+    <rect x="14" y="24" width="36" height="3" fill="#c0a080"/>
+    <rect x="14" y="36" width="36" height="3" fill="#c0a080"/>
+    <rect x="14" y="48" width="36" height="3" fill="#c0a080"/>
+    <circle cx="32" cy="40" r="3" fill="#c0a080"/>
+    <rect x="6" y="28" width="3" height="3" fill="#ff8c00"/>
+    <rect x="55" y="28" width="3" height="3" fill="#ff8c00"/>
+  </g>
+  <text x="137" y="990" text-anchor="middle" font-size="18" fill="#c8a060" font-family="Georgia, serif" letter-spacing="2">DUNGEON</text>
+  <text x="137" y="1012" text-anchor="middle" font-size="12" fill="#6050a0" font-family="Georgia, serif">Battle monsters</text>
+
+  <!-- TAVERN icon (scaled 2.5x, centered at x=311) -->
+  <g transform="translate(247,810) scale(2.5)">
+    <rect width="64" height="64" fill="#1a0e05" rx="2"/>
+    <rect x="4" y="50" width="56" height="6" fill="#5d3a1a"/>
+    <rect x="4" y="48" width="56" height="4" fill="#7a4a20"/>
+    <rect x="20" y="24" width="20" height="26" fill="#c8a050"/>
+    <rect x="20" y="24" width="20" height="3" fill="#a07830"/>
+    <rect x="20" y="46" width="20" height="4" fill="#a07830"/>
+    <rect x="22" y="27" width="4" height="18" fill="#e0b860" opacity="0.5"/>
+    <rect x="40" y="28" width="6" height="3" fill="#a07830"/>
+    <rect x="44" y="31" width="4" height="10" fill="#a07830"/>
+    <rect x="40" y="41" width="6" height="3" fill="#a07830"/>
+    <rect x="18" y="18" width="24" height="8" fill="#f0ead0"/>
+    <rect x="24" y="14" width="4" height="4" fill="#fff8e8"/>
+    <rect x="36" y="14" width="4" height="4" fill="#fff8e8"/>
+    <rect x="30" y="12" width="4" height="4" fill="#fff8e8"/>
+    <rect x="7" y="30" width="2" height="6" fill="#c08820"/>
+    <rect x="7" y="28" width="2" height="3" fill="#ff8c00"/>
+    <rect x="55" y="28" width="2" height="3" fill="#ff8c00"/>
+  </g>
+  <text x="311" y="990" text-anchor="middle" font-size="18" fill="#c8a060" font-family="Georgia, serif" letter-spacing="2">TAVERN</text>
+  <text x="311" y="1012" text-anchor="middle" font-size="12" fill="#6050a0" font-family="Georgia, serif">Rest &amp; recover</text>
+
+  <!-- FARM icon (scaled 2.5x, centered at x=485) -->
+  <g transform="translate(421,810) scale(2.5)">
+    <rect width="64" height="64" fill="#1a3a1a" rx="2"/>
+    <rect x="0" y="44" width="64" height="20" fill="#3b2a1a"/>
+    <rect x="0" y="44" width="64" height="3" fill="#2a1a0a"/>
+    <rect x="6" y="28" width="3" height="16" fill="#8a7a30"/>
+    <rect x="4" y="22" width="3" height="8" fill="#a08a30"/>
+    <rect x="8" y="20" width="3" height="8" fill="#c0a840"/>
+    <rect x="5" y="18" width="5" height="4" fill="#e8c840"/>
+    <rect x="20" y="28" width="3" height="16" fill="#8a7a30"/>
+    <rect x="18" y="22" width="3" height="8" fill="#a08a30"/>
+    <rect x="22" y="20" width="3" height="8" fill="#c0a840"/>
+    <rect x="19" y="18" width="5" height="4" fill="#e8c840"/>
+    <rect x="34" y="28" width="3" height="16" fill="#8a7a30"/>
+    <rect x="32" y="22" width="3" height="8" fill="#a08a30"/>
+    <rect x="36" y="20" width="3" height="8" fill="#c0a840"/>
+    <rect x="33" y="18" width="5" height="4" fill="#e8c840"/>
+    <rect x="48" y="28" width="3" height="16" fill="#8a7a30"/>
+    <rect x="46" y="22" width="3" height="8" fill="#a08a30"/>
+    <rect x="50" y="20" width="3" height="8" fill="#c0a840"/>
+    <rect x="47" y="18" width="5" height="4" fill="#e8c840"/>
+    <rect x="52" y="4" width="4" height="4" fill="#f5c842"/>
+    <rect x="56" y="8" width="4" height="2" fill="#f5c842"/>
+    <rect x="48" y="2" width="2" height="4" fill="#f5c842"/>
+  </g>
+  <text x="485" y="990" text-anchor="middle" font-size="18" fill="#c8a060" font-family="Georgia, serif" letter-spacing="2">FARM</text>
+  <text x="485" y="1012" text-anchor="middle" font-size="12" fill="#6050a0" font-family="Georgia, serif">Grow &amp; harvest</text>
+
+  <!-- STUDY icon (scaled 2.5x, centered at x=659) -->
+  <g transform="translate(595,810) scale(2.5)">
+    <rect width="64" height="64" fill="#0d0a1a" rx="2"/>
+    <rect x="4" y="14" width="26" height="38" fill="#d4c49a"/>
+    <rect x="4" y="14" width="26" height="3" fill="#b8a880"/>
+    <rect x="34" y="14" width="26" height="38" fill="#c8b88a"/>
+    <rect x="28" y="12" width="8" height="42" fill="#5d3a1a"/>
+    <rect x="30" y="12" width="4" height="42" fill="#7a4a20"/>
+    <rect x="8" y="22" width="18" height="2" fill="#8a7a5a"/>
+    <rect x="8" y="27" width="18" height="2" fill="#8a7a5a"/>
+    <rect x="8" y="32" width="14" height="2" fill="#8a7a5a"/>
+    <rect x="8" y="37" width="18" height="2" fill="#8a7a5a"/>
+    <rect x="38" y="22" width="18" height="2" fill="#7a6a4a"/>
+    <rect x="38" y="27" width="18" height="2" fill="#7a6a4a"/>
+    <rect x="38" y="32" width="12" height="2" fill="#7a6a4a"/>
+    <rect x="38" y="37" width="18" height="2" fill="#7a6a4a"/>
+    <rect x="56" y="4" width="4" height="10" fill="#e8d090"/>
+    <rect x="57" y="0" width="2" height="4" fill="#ff8c00"/>
+    <rect x="52" y="2" width="8" height="2" fill="#ffcc00" opacity="0.4"/>
+  </g>
+  <text x="659" y="990" text-anchor="middle" font-size="18" fill="#c8a060" font-family="Georgia, serif" letter-spacing="2">STUDY</text>
+  <text x="659" y="1012" text-anchor="middle" font-size="12" fill="#6050a0" font-family="Georgia, serif">Gain attributes</text>
+
+  <!-- =================== STAT BARS (hero UI overlay) =================== -->
+  <!-- HP bar -->
+  <rect x="260" y="752" width="280" height="12" fill="#200808" rx="2"/>
+  <rect x="260" y="752" width="210" height="12" fill="url(#hpBar)" rx="2"/>
+  <text x="256" y="762" text-anchor="end" font-size="11" fill="#e05050" font-family="Georgia, serif">HP</text>
+  <!-- XP bar -->
+  <rect x="260" y="770" width="280" height="10" fill="#080820" rx="2"/>
+  <rect x="260" y="770" width="140" height="10" fill="url(#xpBar)" rx="2"/>
+  <text x="256" y="779" text-anchor="end" font-size="11" fill="#7080f0" font-family="Georgia, serif">XP</text>
+  <!-- Level badge -->
+  <rect x="543" y="748" width="36" height="36" fill="#1a1240" rx="3"/>
+  <rect x="541" y="746" width="40" height="4" fill="#e8c840" opacity="0.6" rx="1"/>
+  <text x="561" y="772" text-anchor="middle" font-size="11" fill="#a090d0" font-family="Georgia, serif">LVL</text>
+  <text x="561" y="784" text-anchor="middle" font-size="13" fill="#e8c840" font-family="Georgia, serif" font-weight="bold">12</text>
+
+  <!-- =================== TAGLINE =================== -->
+  <text x="400" y="1068" text-anchor="middle" font-size="15" letter-spacing="5"
+        fill="#6050a0" font-family="Georgia, serif">FORGE YOUR LEGEND  ·  ONE IDLE MOMENT AT A TIME</text>
+
+  <!-- Border frame -->
+  <rect x="12" y="12" width="776" height="1076" fill="none" stroke="#c8a040" stroke-width="2" opacity="0.35"/>
+  <rect x="20" y="20" width="760" height="1060" fill="none" stroke="#c8a040" stroke-width="1" opacity="0.15"/>
+  <!-- Corner ornaments -->
+  <rect x="12" y="12" width="30" height="4" fill="#c8a040" opacity="0.6"/>
+  <rect x="12" y="12" width="4" height="30" fill="#c8a040" opacity="0.6"/>
+  <rect x="758" y="12" width="30" height="4" fill="#c8a040" opacity="0.6"/>
+  <rect x="784" y="12" width="4" height="30" fill="#c8a040" opacity="0.6"/>
+  <rect x="12" y="1084" width="30" height="4" fill="#c8a040" opacity="0.6"/>
+  <rect x="12" y="1058" width="4" height="30" fill="#c8a040" opacity="0.6"/>
+  <rect x="758" y="1084" width="30" height="4" fill="#c8a040" opacity="0.6"/>
+  <rect x="784" y="1058" width="4" height="30" fill="#c8a040" opacity="0.6"/>
+</svg>

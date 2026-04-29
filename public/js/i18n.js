@@ -156,6 +156,10 @@
       // Market panel
       'game.mp.your_gold':       'Your gold',
       'game.mp.desc':            'Sell items and plants for gold. Equipped items cannot be sold.',
+      'game.mp.tab_sell':        'Sell',
+      'game.mp.tab_buy':         'Buy',
+      'game.mp.sell_desc':       'Sell items for gold. Equipped items cannot be sold.',
+      'game.mp.buy_desc':        'Browse the shop and purchase items.',
 
       // Game JS — activity badge
       'game.js.level':              'Level {n}',
@@ -232,6 +236,16 @@
       'game.js.nothing_to_sell':    'Nothing to sell.',
       'game.js.sell_one':           'Sell 1',
       'game.js.equipped_tag':       'Equipped',
+      'game.js.buy_one':            'Buy 1',
+      'game.js.cant_buy':           'Could not buy item',
+      'game.js.bought_for':         '🪙 Bought for {n}g!',
+      'game.js.shop_empty':         'No items available.',
+      'game.js.loading':            'Loading…',
+      'game.js.qty':                'Qty',
+      'game.js.each':               'each',
+      'game.js.click_to_sell':      'Click to sell 1',
+      'game.js.click_to_buy':       'Click to buy 1',
+      'game.js.cant_afford':        'Not enough gold',
 
       // Attributes
       'attr.strength':              'Strength',
@@ -397,6 +411,10 @@
       // Market panel
       'game.mp.your_gold':       'Seu ouro',
       'game.mp.desc':            'Venda itens e plantas por ouro. Itens equipados não podem ser vendidos.',
+      'game.mp.tab_sell':        'Vender',
+      'game.mp.tab_buy':         'Comprar',
+      'game.mp.sell_desc':       'Venda itens por ouro. Itens equipados não podem ser vendidos.',
+      'game.mp.buy_desc':        'Explore a loja e compre itens.',
 
       // Game JS — activity badge
       'game.js.level':              'Nível {n}',
@@ -473,6 +491,16 @@
       'game.js.nothing_to_sell':    'Nada para vender.',
       'game.js.sell_one':           'Vender 1',
       'game.js.equipped_tag':       'Equipado',
+      'game.js.buy_one':            'Comprar 1',
+      'game.js.cant_buy':           'Não foi possível comprar o item',
+      'game.js.bought_for':         '🪙 Comprado por {n}g!',
+      'game.js.shop_empty':         'Nenhum item disponível.',
+      'game.js.loading':            'Carregando…',
+      'game.js.qty':                'Qtd',
+      'game.js.each':               'cada',
+      'game.js.click_to_sell':      'Clique para vender 1',
+      'game.js.click_to_buy':       'Clique para comprar 1',
+      'game.js.cant_afford':        'Ouro insuficiente',
 
       // Attributes
       'attr.strength':              'Força',

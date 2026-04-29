@@ -548,7 +548,7 @@ function openPanel(type) {
   if (panelId) document.getElementById(panelId).classList.add('open');
   if (type === 'attributes') { pendingAttrs = {}; renderAttributes(charState); }
   if (type === 'farm')   renderFarmPanel();
-  if (type === 'market') renderMarketPanel(charState);
+  if (type === 'market') { switchMarketTab('sell'); renderMarketPanel(charState); }
   if (type === 'battle') {
     renderBattlePanel(charState);
     if (!autoBattleRunning && charState && charState.dungeonRun) {
@@ -894,6 +894,17 @@ function renderFarmPanel() {
 }
 
 // ---- Market ----
+let marketTab = 'sell';
+
+function switchMarketTab(tab) {
+  marketTab = tab;
+  document.getElementById('market-tab-sell').classList.toggle('active', tab === 'sell');
+  document.getElementById('market-tab-buy').classList.toggle('active', tab === 'buy');
+  document.getElementById('market-sell-pane').style.display = tab === 'sell' ? '' : 'none';
+  document.getElementById('market-buy-pane').style.display  = tab === 'buy'  ? '' : 'none';
+  if (tab === 'buy') renderShopPane();
+}
+
 function renderMarketPanel(char) {
   if (!char) return;
   const gold = Number(char.gold) || 0;
@@ -908,22 +919,96 @@ function renderMarketPanel(char) {
     return;
   }
 
-  list.innerHTML = sellable.map(item => {
+  list.innerHTML = `<div class="market-grid">${sellable.map(item => {
     const equipped = equippedIds.has(item.item_id);
     const price = Number(item.sell_price);
+    const qtyLabel = item.quantity > 1 ? `×${item.quantity}` : '';
+    const clickAttr = equipped ? '' : `onclick="sellItem(${item.id},${item.item_id},1)"`;
     return `
-      <div class="market-row">
-        <span class="market-item-icon">${item.icon}</span>
-        <div class="market-item-info">
-          <span class="market-item-name">${escHtml(item.name)}</span>
-          <span class="market-item-meta">×${item.quantity} &bull; 🪙 ${price}g each</span>
+      <div class="market-cell${equipped ? ' equipped' : ''}" ${clickAttr}>
+        ${item.icon}
+        ${qtyLabel ? `<span class="market-cell-qty">${qtyLabel}</span>` : ''}
+        <div class="market-tooltip">
+          <div class="market-tooltip-name">${escHtml(item.name)}</div>
+          <div class="market-tooltip-meta">
+            ${t('game.js.qty')}: ${item.quantity}<br>
+            <span class="market-tooltip-price">🪙 ${price}g ${t('game.js.each')}</span>
+          </div>
+          ${equipped
+            ? `<div class="market-tooltip-equipped">${t('game.js.equipped_tag')}</div>`
+            : `<span class="market-tooltip-sell">${t('game.js.click_to_sell')}</span>`}
         </div>
-        ${equipped
-          ? `<span class="market-equipped-tag">${t('game.js.equipped_tag')}</span>`
-          : `<button type="button" class="btn btn-outline btn-sm" onclick="sellItem(${item.id},${item.item_id},1)">${t('game.js.sell_one')}</button>`
-        }
       </div>`;
-  }).join('');
+  }).join('')}</div>`;
+
+  // Position tooltips on mousemove so they follow the cursor
+  list.querySelectorAll('.market-cell').forEach(cell => {
+    cell.addEventListener('mousemove', e => {
+      const tip = cell.querySelector('.market-tooltip');
+      if (!tip) return;
+      const pad = 12;
+      let x = e.clientX + pad;
+      let y = e.clientY + pad;
+      const rect = tip.getBoundingClientRect();
+      if (x + rect.width > window.innerWidth - 8) x = e.clientX - rect.width - pad;
+      if (y + rect.height > window.innerHeight - 8) y = e.clientY - rect.height - pad;
+      tip.style.left = x + 'px';
+      tip.style.top  = y + 'px';
+    });
+  });
+}
+
+async function renderShopPane() {
+  const shopList = document.getElementById('market-shop-list');
+  shopList.innerHTML = `<p class="muted-sm">${t('game.js.loading')}</p>`;
+  const res = await api.get(`/api/market/${charId}/shop`);
+  if (!res) return;
+  const data = await res.json();
+  if (!res.ok) { shopList.innerHTML = `<p class="muted-sm">${data.error}</p>`; return; }
+
+  const items = data.items || [];
+  if (!items.length) {
+    shopList.innerHTML = `<p class="muted-sm">${t('game.js.shop_empty')}</p>`;
+    return;
+  }
+
+  const gold = Number(charState?.gold) || 0;
+  shopList.innerHTML = `<div class="market-grid">${items.map(item => {
+    const price     = Number(item.buy_price);
+    const canAfford = gold >= price;
+    let stats = '';
+    if (item.damage > 0)  stats += `<br>${item.damage} ${t('game.js.dmg_unit')}`;
+    if (item.defense > 0) stats += `<br>${item.defense} ${t('game.js.def_unit')}`;
+    const clickAttr = canAfford ? `onclick="buyItem(${item.id},1)"` : '';
+    return `
+      <div class="market-cell${canAfford ? '' : ' cant-afford'}" ${clickAttr}>
+        ${item.icon}
+        <div class="market-tooltip">
+          <div class="market-tooltip-name">${escHtml(item.name)}</div>
+          <div class="market-tooltip-meta">
+            <span class="market-tooltip-price">🪙 ${price}g</span>${stats}
+          </div>
+          ${canAfford
+            ? `<span class="market-tooltip-sell">${t('game.js.click_to_buy')}</span>`
+            : `<div class="market-tooltip-equipped">${t('game.js.cant_afford')}</div>`}
+        </div>
+      </div>`;
+  }).join('')}</div>`;
+
+  shopList.querySelectorAll('.market-cell').forEach(cell => {
+    cell.addEventListener('mousemove', e => {
+      const tip = cell.querySelector('.market-tooltip');
+      if (!tip) return;
+      const pad = 12;
+      let x = e.clientX + pad;
+      let y = e.clientY + pad;
+      const rect = tip.getBoundingClientRect();
+      if (x + rect.width > window.innerWidth - 8)  x = e.clientX - rect.width - pad;
+      if (y + rect.height > window.innerHeight - 8) y = e.clientY - rect.height - pad;
+      tip.style.left = x + 'px';
+      tip.style.top  = y + 'px';
+    });
+  });
 }
 
 async function sellItem(invId, itemId, qty) {
@@ -934,6 +1019,17 @@ async function sellItem(invId, itemId, qty) {
   charState = data.char;
   renderAll(data.char);
   showToast(t('game.js.sold_for', { n: data.gold }), 'success');
+}
+
+async function buyItem(itemId, qty) {
+  const res = await api.post(`/api/market/${charId}/buy`, { item_id: itemId, quantity: qty });
+  if (!res) return;
+  const data = await res.json();
+  if (!res.ok) { showToast(data.error || t('game.js.cant_buy'), 'danger'); return; }
+  charState = data.char;
+  renderAll(data.char);
+  renderShopPane();
+  showToast(t('game.js.bought_for', { n: data.spent }), 'success');
 }
 
 // ---- Avatar picker ----
