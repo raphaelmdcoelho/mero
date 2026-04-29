@@ -973,25 +973,42 @@ async function renderShopPane() {
   }
 
   const gold = Number(charState?.gold) || 0;
-  shopList.innerHTML = items.map(item => {
-    const price    = Number(item.buy_price);
+  shopList.innerHTML = `<div class="market-grid">${items.map(item => {
+    const price     = Number(item.buy_price);
     const canAfford = gold >= price;
-    let meta = `🪙 ${price}g`;
-    if (item.damage > 0) meta += ` · ${item.damage} ${t('game.js.dmg_unit')}`;
-    if (item.defense > 0) meta += ` · ${item.defense} ${t('game.js.def_unit')}`;
+    let stats = '';
+    if (item.damage > 0)  stats += `<br>${item.damage} ${t('game.js.dmg_unit')}`;
+    if (item.defense > 0) stats += `<br>${item.defense} ${t('game.js.def_unit')}`;
+    const clickAttr = canAfford ? `onclick="buyItem(${item.id},1)"` : '';
     return `
-      <div class="market-row">
-        <span class="market-item-icon">${item.icon}</span>
-        <div class="market-item-info">
-          <span class="market-item-name">${escHtml(item.name)}</span>
-          <span class="market-item-meta">${meta}</span>
+      <div class="market-cell${canAfford ? '' : ' cant-afford'}" ${clickAttr}>
+        ${item.icon}
+        <div class="market-tooltip">
+          <div class="market-tooltip-name">${escHtml(item.name)}</div>
+          <div class="market-tooltip-meta">
+            <span class="market-tooltip-price">🪙 ${price}g</span>${stats}
+          </div>
+          ${canAfford
+            ? `<span class="market-tooltip-sell">${t('game.js.click_to_buy')}</span>`
+            : `<div class="market-tooltip-equipped">${t('game.js.cant_afford')}</div>`}
         </div>
-        <button type="button" class="btn btn-sm ${canAfford ? 'btn-primary' : 'btn-outline'}"
-                onclick="buyItem(${item.id},1)" ${canAfford ? '' : 'disabled'}>
-          ${t('game.js.buy_one')}
-        </button>
       </div>`;
-  }).join('');
+  }).join('')}</div>`;
+
+  shopList.querySelectorAll('.market-cell').forEach(cell => {
+    cell.addEventListener('mousemove', e => {
+      const tip = cell.querySelector('.market-tooltip');
+      if (!tip) return;
+      const pad = 12;
+      let x = e.clientX + pad;
+      let y = e.clientY + pad;
+      const rect = tip.getBoundingClientRect();
+      if (x + rect.width > window.innerWidth - 8)  x = e.clientX - rect.width - pad;
+      if (y + rect.height > window.innerHeight - 8) y = e.clientY - rect.height - pad;
+      tip.style.left = x + 'px';
+      tip.style.top  = y + 'px';
+    });
+  });
 }
 
 async function sellItem(invId, itemId, qty) {

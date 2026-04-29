@@ -244,6 +244,8 @@
       'game.js.qty':                'Qty',
       'game.js.each':               'each',
       'game.js.click_to_sell':      'Click to sell 1',
+      'game.js.click_to_buy':       'Click to buy 1',
+      'game.js.cant_afford':        'Not enough gold',
 
       // Attributes
       'attr.strength':              'Strength',
@@ -497,6 +499,8 @@
       'game.js.qty':                'Qtd',
       'game.js.each':               'cada',
       'game.js.click_to_sell':      'Clique para vender 1',
+      'game.js.click_to_buy':       'Clique para comprar 1',
+      'game.js.cant_afford':        'Ouro insuficiente',
 
       // Attributes
       'attr.strength':              'Força',
