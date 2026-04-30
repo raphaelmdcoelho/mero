@@ -467,11 +467,15 @@ input:focus, select:focus {
   filter: brightness(1.15);
 }
 #sq-attributes .sq-icon,
-#sq-castle     .sq-icon,
-#sq-equipment  .sq-icon {
+#sq-castle     .sq-icon {
   transform: none;
   object-fit: contain;
   padding: 8px;
+}
+#sq-equipment .sq-icon {
+  transform: none;
+  object-fit: contain;
+  padding: 2px;
 }
 
 
