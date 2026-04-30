@@ -432,6 +432,7 @@ input:focus, select:focus {
   font-size: unset;
   filter: brightness(1.15);
 }
+#sq-dungeon .sq-icon { object-fit: fill; }
 .action-sq:hover:not(.disabled) {
   border-color: var(--accent);
   color: var(--text);
