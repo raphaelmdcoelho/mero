@@ -132,22 +132,28 @@
         </div>
 
         <!-- Bottom-left: Inventory -->
-        <div class="action-sq" id="sq-inventory" style="grid-column:1;grid-row:3;" onclick="openPanel('inventory')">
-          <span class="sq-icon">🎒</span>
-          <span data-i18n="game.inventory">Inventory</span>
+        <div class="action-sq-wrap" style="grid-column:1;grid-row:3;">
+          <span class="sq-label" data-i18n="game.inventory">Inventory</span>
+          <div class="action-sq" id="sq-inventory" onclick="openPanel('inventory')">
+            <span class="sq-icon">🎒</span>
+          </div>
         </div>
 
         <!-- Bottom-center: Attributes -->
-        <div class="action-sq" id="sq-attributes" style="grid-column:2;grid-row:3;position:relative;" onclick="openPanel('attributes')">
-          <span class="sq-icon">⚡</span>
-          <span data-i18n="game.attributes">Attributes</span>
-          <span id="unspent-badge" class="unspent-badge" style="display:none;"></span>
+        <div class="action-sq-wrap" style="grid-column:2;grid-row:3;position:relative;">
+          <span class="sq-label" data-i18n="game.attributes">Attributes</span>
+          <div class="action-sq" id="sq-attributes" onclick="openPanel('attributes')">
+            <span class="sq-icon">⚡</span>
+            <span id="unspent-badge" class="unspent-badge" style="display:none;"></span>
+          </div>
         </div>
 
         <!-- Bottom-right: Equipment -->
-        <div class="action-sq" id="sq-equipment" style="grid-column:3;grid-row:3;" onclick="openPanel('equipment')">
-          <span class="sq-icon">🛡️</span>
-          <span data-i18n="game.equipment">Equipment</span>
+        <div class="action-sq-wrap" style="grid-column:3;grid-row:3;">
+          <span class="sq-label" data-i18n="game.equipment">Equipment</span>
+          <div class="action-sq" id="sq-equipment" onclick="openPanel('equipment')">
+            <span class="sq-icon">🛡️</span>
+          </div>
         </div>
 
         <!-- Row 3 far-right: Castle (coming soon) -->
