@@ -473,8 +473,10 @@ input:focus, select:focus {
   padding: 8px;
 }
 #sq-equipment .sq-icon {
-  transform: scale(1.28);
+  transform: scale(1.38);
+  transform-origin: center;
   object-fit: contain;
+  object-position: center;
   padding: 0;
 }
 
