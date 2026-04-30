@@ -466,7 +466,13 @@ input:focus, select:focus {
   transform: scale(1.5);
   filter: brightness(1.15);
 }
-
+#sq-attributes .sq-icon,
+#sq-castle     .sq-icon,
+#sq-equipment  .sq-icon {
+  transform: none;
+  object-fit: contain;
+  padding: 8px;
+}
 
 
 .action-sq:hover:not(.disabled) {
