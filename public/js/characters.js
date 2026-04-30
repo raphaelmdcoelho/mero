@@ -3,6 +3,13 @@ if (!api.getToken()) api.redirectToLogin();
 
 const CLASS_ICONS = { Warrior: '⚔️', Mage: '🔮', Rogue: '🗡️', Cleric: '✝️' };
 let selectedClass = 'Warrior';
+let selectedGender = 'male';
+let selectedAvatar = '/avatars/selection/male_selection_A.png';
+
+const GENDER_AVATARS = {
+  male:   ['/avatars/selection/male_selection_A.png',   '/avatars/selection/male_selection_B.png'],
+  female: ['/avatars/selection/female_selection_A.png', '/avatars/selection/female_selection_B.png'],
+};
 
 // Show username in header
 (function () {
@@ -43,9 +50,12 @@ function renderChars(chars) {
     const activity = c.activity
       ? `<span style="font-size:0.75rem;color:var(--accent);">${c.activity === 'dungeon' ? t('char.in_dungeon') : t('char.resting')}</span>`
       : '';
+    const avatarHtml = c.avatar_path
+      ? `<div class="char-avatar"><img src="${escHtml(c.avatar_path)}" alt="${escHtml(c.name)}" /></div>`
+      : `<div class="char-class-icon">${CLASS_ICONS[c.class] || '?'}</div>`;
     return `
       <div class="char-card">
-        <div class="char-class-icon">${CLASS_ICONS[c.class] || '?'}</div>
+        ${avatarHtml}
         <div class="char-name">${escHtml(c.name)}</div>
         <div style="text-align:center;">${activity}</div>
         <div style="display:flex;align-items:center;gap:0.5rem;justify-content:center;">
@@ -90,16 +100,45 @@ function closeCreateModal() {
   document.getElementById('create-modal').classList.remove('open');
   document.getElementById('create-error').textContent = '';
   document.getElementById('create-form').reset();
-  // Reset class selection
+  // Reset class
   document.querySelectorAll('.class-card').forEach(c => c.classList.remove('selected'));
   document.querySelector('[data-class="Warrior"]').classList.add('selected');
   selectedClass = 'Warrior';
+  // Reset gender + avatar
+  selectedGender = 'male';
+  selectedAvatar = GENDER_AVATARS.male[0];
+  document.querySelectorAll('.gender-tab').forEach(t => t.classList.remove('active'));
+  document.querySelector('[data-gender="male"]').classList.add('active');
+  renderAvatarGrid('male');
 }
 
 function selectClass(el) {
   document.querySelectorAll('.class-card').forEach(c => c.classList.remove('selected'));
   el.classList.add('selected');
   selectedClass = el.dataset.class;
+}
+
+function selectGender(el) {
+  document.querySelectorAll('.gender-tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  selectedGender = el.dataset.gender;
+  selectedAvatar = GENDER_AVATARS[selectedGender][0];
+  renderAvatarGrid(selectedGender);
+}
+
+function selectAvatar(el) {
+  document.querySelectorAll('.avatar-card').forEach(c => c.classList.remove('selected'));
+  el.classList.add('selected');
+  selectedAvatar = el.dataset.avatar;
+}
+
+function renderAvatarGrid(gender) {
+  const grid = document.getElementById('avatar-grid');
+  const avatars = GENDER_AVATARS[gender];
+  grid.innerHTML = avatars.map((path, i) => `
+    <div class="avatar-card${i === 0 ? ' selected' : ''}" data-avatar="${escHtml(path)}" onclick="selectAvatar(this)">
+      <img src="${escHtml(path)}" alt="${gender} ${i === 0 ? 'A' : 'B'}" />
+    </div>`).join('');
 }
 
 async function handleCreateChar(e) {
@@ -111,7 +150,12 @@ async function handleCreateChar(e) {
   btn.textContent = t('char.forging');
 
   const name = document.getElementById('char-name').value.trim();
-  const res = await api.post('/api/characters', { name, class: selectedClass });
+  const res = await api.post('/api/characters', {
+    name,
+    class: selectedClass,
+    gender: selectedGender,
+    avatar: selectedAvatar,
+  });
 
   btn.disabled = false;
   btn.textContent = t('char.create_hero');

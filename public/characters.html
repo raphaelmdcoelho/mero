@@ -38,6 +38,20 @@
           <label for="char-name" data-i18n="char.hero_name">Hero Name</label>
           <input id="char-name" type="text" maxlength="30" data-i18n-ph="char.hero_name_ph" placeholder="Name your hero…" required />
         </div>
+        <label style="font-size:0.85rem;color:var(--muted);margin-bottom:0.4rem;display:block;" data-i18n="char.choose_gender">Choose Gender &amp; Avatar</label>
+        <div class="gender-tabs">
+          <button type="button" class="gender-tab active" data-gender="male" onclick="selectGender(this)">Male</button>
+          <button type="button" class="gender-tab" data-gender="female" onclick="selectGender(this)">Female</button>
+        </div>
+        <div class="avatar-grid" id="avatar-grid">
+          <div class="avatar-card selected" data-avatar="/avatars/selection/male_selection_A.png" onclick="selectAvatar(this)">
+            <img src="/avatars/selection/male_selection_A.png" alt="Male A" />
+          </div>
+          <div class="avatar-card" data-avatar="/avatars/selection/male_selection_B.png" onclick="selectAvatar(this)">
+            <img src="/avatars/selection/male_selection_B.png" alt="Male B" />
+          </div>
+        </div>
+
         <label style="font-size:0.85rem;color:var(--muted);" data-i18n="char.choose_class">Choose Class</label>
         <div class="class-grid" id="class-grid">
           <div class="class-card selected" data-class="Warrior" onclick="selectClass(this)">
