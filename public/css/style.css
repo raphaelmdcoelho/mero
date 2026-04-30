@@ -411,7 +411,6 @@ input:focus, select:focus {
 }
 
 /* Pixel-art icon buttons — image fills the full tile */
-#sq-dungeon,
 #sq-farm,
 #sq-tavern,
 #sq-read,
@@ -419,7 +418,6 @@ input:focus, select:focus {
   overflow: hidden;
   padding: 0;
 }
-#sq-dungeon  .sq-icon,
 #sq-farm     .sq-icon,
 #sq-tavern   .sq-icon,
 #sq-read     .sq-icon,
@@ -432,7 +430,26 @@ input:focus, select:focus {
   font-size: unset;
   filter: brightness(1.15);
 }
-#sq-dungeon .sq-icon { object-fit: fill; }
+
+/* Dungeon uses outline instead of border so the image fills the full 100×100px.
+   border consumes 2px on each side (box-sizing: border-box) leaving only 96×96
+   for content; outline is painted after children so it overlays the image. */
+#sq-dungeon {
+  border: none;
+  outline: 2px solid var(--border);
+  outline-offset: -2px;
+  overflow: hidden;
+  padding: 0;
+}
+#sq-dungeon:hover:not(.disabled) { outline-color: var(--accent); }
+#sq-dungeon.active               { outline-color: var(--accent); }
+#sq-dungeon .sq-icon {
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  object-fit: fill;
+  filter: brightness(1.15);
+}
 .action-sq:hover:not(.disabled) {
   border-color: var(--accent);
   color: var(--text);
