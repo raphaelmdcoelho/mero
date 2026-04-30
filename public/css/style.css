@@ -466,11 +466,17 @@ input:focus, select:focus {
   transform: scale(1.5);
   filter: brightness(1.15);
 }
-#sq-attributes .sq-icon,
-#sq-castle     .sq-icon {
+#sq-castle .sq-icon {
   transform: none;
   object-fit: contain;
   padding: 8px;
+}
+#sq-attributes .sq-icon {
+  transform: scale(1.3);
+  transform-origin: center;
+  object-fit: contain;
+  object-position: center;
+  padding: 0;
 }
 #sq-equipment .sq-icon {
   transform: scale(1.38);
