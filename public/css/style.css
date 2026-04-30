@@ -467,9 +467,11 @@ input:focus, select:focus {
   filter: brightness(1.15);
 }
 #sq-castle .sq-icon {
-  transform: none;
+  transform: scale(1.3);
+  transform-origin: center;
   object-fit: contain;
-  padding: 8px;
+  object-position: center;
+  padding: 0;
 }
 #sq-attributes .sq-icon {
   transform: scale(1.3);
