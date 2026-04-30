@@ -410,19 +410,44 @@ input:focus, select:focus {
   line-height: 1;
 }
 
-/* Pixel-art icon buttons — image fills the full tile */
+/* Pixel-art icon buttons — image fills the full tile.
+   outline instead of border so the image gets the full 100×100; scale(1.5)
+   zooms past any transparent padding baked into the PNGs. */
 #sq-dungeon,
 #sq-farm,
 #sq-tavern,
-#sq-read,
+#sq-read {
+  border: none;
+  outline: 2px solid var(--border);
+  outline-offset: -2px;
+  overflow: hidden;
+  padding: 0;
+}
+#sq-dungeon:hover:not(.disabled),
+#sq-farm:hover:not(.disabled),
+#sq-tavern:hover:not(.disabled),
+#sq-read:hover:not(.disabled) { outline-color: var(--accent); }
+#sq-dungeon.active,
+#sq-farm.active,
+#sq-tavern.active,
+#sq-read.active { outline-color: var(--accent); }
+#sq-dungeon .sq-icon,
+#sq-farm    .sq-icon,
+#sq-tavern  .sq-icon,
+#sq-read    .sq-icon {
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  object-fit: fill;
+  transform: scale(1.5);
+  filter: brightness(1.15);
+}
+
+/* Research keeps SVG treatment (no PNG yet) */
 #sq-research {
   overflow: hidden;
   padding: 0;
 }
-#sq-dungeon  .sq-icon,
-#sq-farm     .sq-icon,
-#sq-tavern   .sq-icon,
-#sq-read     .sq-icon,
 #sq-research .sq-icon {
   position: absolute;
   top: 0; left: 0;
@@ -432,6 +457,8 @@ input:focus, select:focus {
   font-size: unset;
   filter: brightness(1.15);
 }
+
+
 .action-sq:hover:not(.disabled) {
   border-color: var(--accent);
   color: var(--text);

@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Mero — Adventure</title>
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="/css/style.css" />
 </head>
@@ -37,7 +38,7 @@
         <div class="action-sq-wrap" style="grid-column:1;grid-row:1;">
           <span id="dungeon-label" class="sq-label" data-i18n="game.dungeon">Dungeon</span>
           <div class="action-sq" id="sq-dungeon" onclick="handleDungeon()">
-            <img src="/dungeon-icon.svg" alt="Dungeon" class="sq-icon" />
+            <img src="/dungeon-icon.png" alt="Dungeon" class="sq-icon" />
           </div>
         </div>
 
@@ -45,7 +46,7 @@
         <div class="action-sq-wrap" style="grid-column:2;grid-row:1;position:relative;">
           <span id="farm-label" class="sq-label" data-i18n="game.farm">Farm</span>
           <div class="action-sq" id="sq-farm" onclick="handleFarm()">
-            <img src="/farm-icon.svg" alt="Farm" class="sq-icon" />
+            <img src="/farm-icon.png" alt="Farm" class="sq-icon" />
             <span id="farm-lock-badge" class="unspent-badge" style="display:none;font-size:0.55rem;">Lv.3</span>
             <span id="farm-stock-badge" class="unspent-badge" style="display:none;background:var(--accent);"></span>
           </div>
@@ -55,7 +56,7 @@
         <div class="action-sq-wrap" style="grid-column:3;grid-row:1;">
           <span id="tavern-label" class="sq-label" data-i18n="game.tavern">Tavern</span>
           <div class="action-sq" id="sq-tavern" onclick="handleTavern()">
-            <img src="/tavern-icon.svg" alt="Tavern" class="sq-icon" />
+            <img src="/tavern-icon.png" alt="Tavern" class="sq-icon" />
           </div>
         </div>
 
@@ -63,7 +64,7 @@
         <div class="action-sq-wrap" style="grid-column:4;grid-row:1;">
           <span id="read-label" class="sq-label" data-i18n="game.read">Read</span>
           <div class="action-sq" id="sq-read" onclick="handleRead()">
-            <img src="/read-icon.svg" alt="Read" class="sq-icon" />
+            <img src="/read-icon.png" alt="Read" class="sq-icon" />
           </div>
         </div>
 
@@ -217,7 +218,7 @@
   <!-- Battle Panel -->
   <div class="side-panel" id="battle-panel">
     <div class="side-panel-header">
-      <span class="side-panel-title" id="battle-title"><img src="/dungeon-icon.svg" alt="Dungeon" style="height:1.2rem;width:1.2rem;display:inline;margin-right:0.5rem;vertical-align:middle;filter:brightness(1.2);" /> Dungeon</span>
+      <span class="side-panel-title" id="battle-title"><img src="/dungeon-icon.png" alt="Dungeon" style="height:1.2rem;width:1.2rem;display:inline;margin-right:0.5rem;vertical-align:middle;filter:brightness(1.2);" /> Dungeon</span>
       <button class="close-btn" onclick="closePanel('battle')">✕</button>
     </div>
     <div class="side-panel-body">
