@@ -5,6 +5,23 @@ if (!charId) { window.location.href = '/characters.html'; }
 
 const CLASS_ICONS = { Warrior: '⚔️', Mage: '🔮', Rogue: '🗡️', Cleric: '✝️' };
 
+// Item image map: item_id → base path (gender suffix + .png appended at runtime)
+const ITEM_IMAGES = {
+  3: '/items/leather_armor', // Leather Armor
+};
+
+function getItemImage(itemId, gender) {
+  const base = ITEM_IMAGES[Number(itemId)];
+  if (!base) return null;
+  return `${base}_${gender || 'male'}.png`;
+}
+
+function itemIconHtml(itemId, itemIcon, itemName, gender, imgClass) {
+  const img = getItemImage(itemId, gender);
+  if (img) return `<img class="${imgClass}" src="${img}" alt="${escHtml(itemName)}" />`;
+  return itemIcon || '?';
+}
+
 const ATTRS = [
   { key: 'strength',     labelKey: 'attr.strength',     icon: '⚔️',  hintKey: 'attr.strength_hint' },
   { key: 'dexterity',    labelKey: 'attr.dexterity',    icon: '🏹',  hintKey: 'attr.dexterity_hint' },
@@ -159,6 +176,22 @@ function renderAll(char) {
   renderBattlePanel(char);
   renderMarketPanel(char);
   refreshCombatStats();
+  renderEquipOverlay(char);
+}
+
+function renderEquipOverlay(char) {
+  const overlay = document.getElementById('equip-overlay');
+  const armor = char.equippedArmor;
+  if (armor) {
+    const img = getItemImage(armor.id, char.gender);
+    if (img) {
+      overlay.src = img;
+      overlay.style.display = 'block';
+      return;
+    }
+  }
+  overlay.style.display = 'none';
+  overlay.src = '';
 }
 
 function updateActionSquares(activity) {
@@ -585,11 +618,12 @@ function renderInventory(char) {
   inv.forEach((item, i) => { if (i < 10) slots[i] = item; });
   const equippedIds = new Set([char.weapon_id, char.armor_id, char.shield_id].filter(Boolean));
 
+  const gender = char.gender || 'male';
   grid.innerHTML = slots.map((item, i) => {
     if (!item) return `<div class="inv-slot empty" title="Empty">·</div>`;
     const isEq = equippedIds.has(item.item_id);
     return `<div class="inv-slot${isEq ? ' equipped' : ''}" onclick="showItemInfo(${i})" title="${escHtml(item.name)}">
-      ${item.icon || '?'}
+      ${itemIconHtml(item.item_id, item.icon, item.name, gender, 'inv-item-img')}
       ${item.quantity > 1 ? `<span class="qty">${item.quantity}</span>` : ''}
     </div>`;
   }).join('');
@@ -916,6 +950,7 @@ function renderMarketPanel(char) {
     return;
   }
 
+  const gender = char.gender || 'male';
   list.innerHTML = `<div class="market-grid">${sellable.map(item => {
     const equipped = equippedIds.has(item.item_id);
     const price = Number(item.sell_price);
@@ -923,7 +958,7 @@ function renderMarketPanel(char) {
     const clickAttr = equipped ? '' : `onclick="sellItem(${item.id},${item.item_id},1)"`;
     return `
       <div class="market-cell${equipped ? ' equipped' : ''}" ${clickAttr}>
-        ${item.icon}
+        ${itemIconHtml(item.item_id, item.icon, item.name, gender, 'market-item-img')}
         ${qtyLabel ? `<span class="market-cell-qty">${qtyLabel}</span>` : ''}
         <div class="market-tooltip">
           <div class="market-tooltip-name">${escHtml(item.name)}</div>
@@ -970,6 +1005,7 @@ async function renderShopPane() {
   }
 
   const gold = Number(charState?.gold) || 0;
+  const gender = charState?.gender || 'male';
   shopList.innerHTML = `<div class="market-grid">${items.map(item => {
     const price     = Number(item.buy_price);
     const canAfford = gold >= price;
@@ -979,7 +1015,7 @@ async function renderShopPane() {
     const clickAttr = canAfford ? `onclick="buyItem(${item.id},1)"` : '';
     return `
       <div class="market-cell${canAfford ? '' : ' cant-afford'}" ${clickAttr}>
-        ${item.icon}
+        ${itemIconHtml(item.id, item.icon, item.name, gender, 'market-item-img')}
         <div class="market-tooltip">
           <div class="market-tooltip-name">${escHtml(item.name)}</div>
           <div class="market-tooltip-meta">
