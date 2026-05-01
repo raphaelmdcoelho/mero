@@ -11,21 +11,21 @@
 <body>
   <header class="site-header">
     <span class="game-logo">MERO</span>
-    <div style="display:flex;align-items:center;gap:1rem;">
-      <span id="header-username" style="color:var(--muted);font-size:0.9rem;"></span>
+    <div class="header-right">
+      <span id="header-username" class="header-username"></span>
       <div class="lang-switcher"></div>
       <button class="btn btn-outline btn-sm" onclick="logout()" data-i18n="char.logout">Logout</button>
     </div>
   </header>
 
   <main>
-    <div style="padding:1.5rem 1.5rem 0.5rem;display:flex;align-items:center;justify-content:space-between;max-width:1100px;margin:0 auto;">
-      <h2 style="font-family:'Cinzel',serif;font-size:1.3rem;color:var(--text);" data-i18n="char.your_heroes">Your Heroes</h2>
+    <div class="page-toolbar">
+      <h2 class="page-title" data-i18n="char.your_heroes">Your Heroes</h2>
       <button class="btn btn-primary" onclick="openCreateModal()" data-i18n="char.new_character">+ New Character</button>
     </div>
 
     <div class="char-grid" id="char-grid">
-      <div style="grid-column:1/-1;text-align:center;padding:2rem;color:var(--muted);" data-i18n="char.loading">Loading…</div>
+      <div class="char-grid-loading" data-i18n="char.loading">Loading…</div>
     </div>
   </main>
 
@@ -33,48 +33,65 @@
   <div class="modal-overlay" id="create-modal">
     <div class="modal">
       <h2 class="modal-title" data-i18n="char.modal_title">Forge a New Hero</h2>
+
+      <!-- Step indicator -->
+      <div class="wizard-steps">
+        <div class="wizard-step-dot active" id="step-dot-1">1</div>
+        <div class="wizard-connector"></div>
+        <div class="wizard-step-dot" id="step-dot-2">2</div>
+      </div>
+
       <form id="create-form" onsubmit="handleCreateChar(event)">
-        <div class="form-group">
-          <label for="char-name" data-i18n="char.hero_name">Hero Name</label>
-          <input id="char-name" type="text" maxlength="30" data-i18n-ph="char.hero_name_ph" placeholder="Name your hero…" required />
-        </div>
-        <label style="font-size:0.85rem;color:var(--muted);margin-bottom:0.4rem;display:block;" data-i18n="char.choose_gender">Choose Gender &amp; Avatar</label>
-        <div class="gender-tabs">
-          <button type="button" class="gender-tab active" data-gender="male" onclick="selectGender(this)">Male</button>
-          <button type="button" class="gender-tab" data-gender="female" onclick="selectGender(this)">Female</button>
-        </div>
-        <div class="avatar-grid" id="avatar-grid">
-          <div class="avatar-card selected" data-avatar="/avatars/selection/male_selection_A.png" onclick="selectAvatar(this)">
-            <img src="/avatars/selection/male_selection_A.png" alt="Male A" />
+        <!-- Step 1: Name + Gender + Avatar -->
+        <div id="wizard-step-1">
+          <div class="form-group">
+            <label for="char-name" data-i18n="char.hero_name">Hero Name</label>
+            <input id="char-name" type="text" maxlength="30" data-i18n-ph="char.hero_name_ph" placeholder="Name your hero…" />
           </div>
-          <div class="avatar-card" data-avatar="/avatars/selection/male_selection_B.png" onclick="selectAvatar(this)">
-            <img src="/avatars/selection/male_selection_B.png" alt="Male B" />
+          <label class="section-label" data-i18n="char.choose_gender">Choose Gender &amp; Avatar</label>
+          <div class="gender-tabs">
+            <button type="button" class="gender-tab active" data-gender="male" onclick="selectGender(this)">Male</button>
+            <button type="button" class="gender-tab" data-gender="female" onclick="selectGender(this)">Female</button>
+          </div>
+          <div class="avatar-grid" id="avatar-grid">
+            <div class="avatar-card selected" data-avatar="/avatars/selection/male_selection_A.png" onclick="selectAvatar(this)">
+              <img src="/avatars/selection/male_selection_A.png" alt="Male A" />
+            </div>
+            <div class="avatar-card" data-avatar="/avatars/selection/male_selection_B.png" onclick="selectAvatar(this)">
+              <img src="/avatars/selection/male_selection_B.png" alt="Male B" />
+            </div>
           </div>
         </div>
 
-        <label style="font-size:0.85rem;color:var(--muted);" data-i18n="char.choose_class">Choose Class</label>
-        <div class="class-grid" id="class-grid">
-          <div class="class-card selected" data-class="Warrior" onclick="selectClass(this)">
-            <div class="icon">⚔️</div>
-            <div class="class-name" data-i18n="char.class.warrior">Warrior</div>
-          </div>
-          <div class="class-card" data-class="Mage" onclick="selectClass(this)">
-            <div class="icon">🔮</div>
-            <div class="class-name" data-i18n="char.class.mage">Mage</div>
-          </div>
-          <div class="class-card" data-class="Rogue" onclick="selectClass(this)">
-            <div class="icon">🗡️</div>
-            <div class="class-name" data-i18n="char.class.rogue">Rogue</div>
-          </div>
-          <div class="class-card" data-class="Cleric" onclick="selectClass(this)">
-            <div class="icon">✝️</div>
-            <div class="class-name" data-i18n="char.class.cleric">Cleric</div>
+        <!-- Step 2: Class -->
+        <div id="wizard-step-2" class="wizard-step-hidden">
+          <label class="section-label" data-i18n="char.choose_class">Choose Class</label>
+          <div class="class-grid" id="class-grid">
+            <div class="class-card selected" data-class="Warrior" onclick="selectClass(this)">
+              <div class="icon">⚔️</div>
+              <div class="class-name" data-i18n="char.class.warrior">Warrior</div>
+            </div>
+            <div class="class-card" data-class="Mage" onclick="selectClass(this)">
+              <div class="icon">🔮</div>
+              <div class="class-name" data-i18n="char.class.mage">Mage</div>
+            </div>
+            <div class="class-card" data-class="Rogue" onclick="selectClass(this)">
+              <div class="icon">🗡️</div>
+              <div class="class-name" data-i18n="char.class.rogue">Rogue</div>
+            </div>
+            <div class="class-card" data-class="Cleric" onclick="selectClass(this)">
+              <div class="icon">✝️</div>
+              <div class="class-name" data-i18n="char.class.cleric">Cleric</div>
+            </div>
           </div>
         </div>
+
         <div class="error-msg" id="create-error"></div>
         <div class="modal-footer">
-          <button type="button" class="btn btn-outline" onclick="closeCreateModal()" data-i18n="char.cancel">Cancel</button>
-          <button type="submit" class="btn btn-primary" id="create-btn" data-i18n="char.create_hero">Create Hero</button>
+          <button type="button" class="btn btn-outline" id="wizard-cancel" onclick="closeCreateModal()" data-i18n="char.cancel">Cancel</button>
+          <button type="button" class="btn btn-outline wizard-hidden" id="wizard-back" onclick="wizardBack()">← Back</button>
+          <button type="button" class="btn btn-primary" id="wizard-next" onclick="wizardNext()">Next →</button>
+          <button type="submit" class="btn btn-primary wizard-hidden" id="create-btn" data-i18n="char.create_hero">Create Hero</button>
         </div>
       </form>
     </div>
