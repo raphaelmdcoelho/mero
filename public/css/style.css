@@ -479,8 +479,8 @@ input:focus, select:focus {
 }
 .action-grid {
   display: grid;
-  grid-template-columns: repeat(5, 100px);
-  grid-template-rows: 120px 160px 100px 100px;
+  grid-template-columns: repeat(6, 100px);
+  grid-template-rows: 120px 200px 100px;
   column-gap: 12px;
   row-gap: 24px;
   align-items: center;
@@ -634,8 +634,8 @@ input:focus, select:focus {
 .avatar-cell {
   grid-column: 2;
   grid-row: 2;
-  width: 160px;
-  height: 160px;
+  width: 200px;
+  height: 200px;
   position: relative;
 }
 .avatar-display {
@@ -1126,13 +1126,13 @@ input:focus, select:focus {
 /* ---- Mobile (375px) ---- */
 @media (max-width: 480px) {
   .action-grid {
-    grid-template-columns: repeat(5, 80px);
-    grid-template-rows: 100px 130px 80px 80px;
-    gap: 8px;
+    grid-template-columns: repeat(6, 60px);
+    grid-template-rows: 80px 150px 80px;
+    gap: 6px;
   }
-  .action-sq { width: 80px; height: 80px; font-size: 0.6rem; }
-  .action-sq .sq-icon { font-size: 1.8rem; }
-  .avatar-cell { width: 130px; height: 130px; }
+  .action-sq { width: 60px; height: 60px; font-size: 0.55rem; }
+  .action-sq .sq-icon { font-size: 1.4rem; }
+  .avatar-cell { width: 140px; height: 150px; }
   .pickaxe-wrap { right: -72px; top: 30px; width: 48px; height: 48px; transform-origin: 44px 40px; }
   .pickaxe-wrap svg { width: 48px; height: 48px; }
   .char-grid { grid-template-columns: 1fr 1fr; }

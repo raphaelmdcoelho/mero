@@ -77,8 +77,8 @@
           </div>
         </div>
 
-        <!-- Center: Avatar (spans columns 2-4 to stay centered in 5-col grid) -->
-        <div class="avatar-cell" style="grid-column:2/5;grid-row:2;justify-self:center;">
+        <!-- Center: Avatar (spans columns 2-5 to stay centered in 6-col grid) -->
+        <div class="avatar-cell" style="grid-column:2/6;grid-row:2;justify-self:center;">
           <div class="avatar-display" id="avatar-display">
             <img id="avatar-img" src="" alt="Avatar" style="display:none;" />
           </div>
@@ -125,37 +125,32 @@
           </div>
         </div>
 
-        <!-- Bottom-left: Inventory -->
+        <!-- Bottom row: all action buttons in one row (cols 1-6, row 3) -->
         <div class="action-sq" id="sq-inventory" style="grid-column:1;grid-row:3;" onclick="openPanel('inventory')">
           <img src="/inventory-icon.png" alt="Inventory" class="sq-icon" />
         </div>
 
-        <!-- Bottom-center: Attributes -->
         <div class="action-sq" id="sq-attributes" style="grid-column:2;grid-row:3;position:relative;" onclick="openPanel('attributes')">
           <img src="/attributes-icon.png" alt="Attributes" class="sq-icon" />
           <span id="unspent-badge" class="unspent-badge" style="display:none;"></span>
         </div>
 
-        <!-- Bottom-right: Equipment -->
         <div class="action-sq" id="sq-equipment" style="grid-column:3;grid-row:3;" onclick="openPanel('equipment')">
           <img src="/equipment-icon.png" alt="Equipment" class="sq-icon" />
         </div>
 
-        <!-- Row 3 far-right: Castle (coming soon) -->
-        <div class="action-sq disabled" id="sq-castle" style="grid-column:4;grid-row:3;position:relative;">
-          <img src="/castle-icon.png" alt="Castle" class="sq-icon" />
-          <span class="unspent-badge" style="font-size:0.5rem;" data-i18n="game.coming_soon">Soon</span>
-        </div>
-
-        <!-- Row 4 center: Market -->
-        <div class="action-sq" id="sq-market" style="grid-column:2;grid-row:4;" onclick="openPanel('market')">
+        <div class="action-sq" id="sq-market" style="grid-column:4;grid-row:3;" onclick="openPanel('market')">
           <img src="/market-icon.png" alt="Market" class="sq-icon" />
         </div>
 
-        <!-- Row 4 right: Combat Stats -->
-        <div class="action-sq" id="sq-stats" style="grid-column:3;grid-row:4;" onclick="openPanel('stats')">
+        <div class="action-sq" id="sq-stats" style="grid-column:5;grid-row:3;" onclick="openPanel('stats')">
           <span class="sq-icon">📊</span>
           <span data-i18n="game.stats">Stats</span>
+        </div>
+
+        <div class="action-sq disabled" id="sq-castle" style="grid-column:6;grid-row:3;position:relative;">
+          <img src="/castle-icon.png" alt="Castle" class="sq-icon" />
+          <span class="unspent-badge" style="font-size:0.5rem;" data-i18n="game.coming_soon">Soon</span>
         </div>
       </div>
     </div>
