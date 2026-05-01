@@ -138,6 +138,7 @@ async function initDb() {
     'ALTER TABLE dungeon_run ADD COLUMN dungeon_set INTEGER NOT NULL DEFAULT 1',
     'ALTER TABLE farm_queue ADD COLUMN remaining_seconds INTEGER DEFAULT NULL',
     'ALTER TABLE farm_queue ADD COLUMN last_progress_at INTEGER DEFAULT NULL',
+    "ALTER TABLE characters ADD COLUMN gender TEXT DEFAULT 'male'",
   ];
 
   for (const sql of additiveMigrations) {

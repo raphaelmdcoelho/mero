@@ -5,6 +5,23 @@ if (!charId) { window.location.href = '/characters.html'; }
 
 const CLASS_ICONS = { Warrior: '⚔️', Mage: '🔮', Rogue: '🗡️', Cleric: '✝️' };
 
+// Item image map: item_id → base path (gender suffix + .png appended at runtime)
+const ITEM_IMAGES = {
+  3: '/items/leather_armor', // Leather Armor
+};
+
+function getItemImage(itemId, gender) {
+  const base = ITEM_IMAGES[Number(itemId)];
+  if (!base) return null;
+  return `${base}_${gender || 'male'}.png`;
+}
+
+function itemIconHtml(itemId, itemIcon, itemName, gender, imgClass) {
+  const img = getItemImage(itemId, gender);
+  if (img) return `<img class="${imgClass}" src="${img}" alt="${escHtml(itemName)}" />`;
+  return itemIcon || '?';
+}
+
 const ATTRS = [
   { key: 'strength',     labelKey: 'attr.strength',     icon: '⚔️',  hintKey: 'attr.strength_hint' },
   { key: 'dexterity',    labelKey: 'attr.dexterity',    icon: '🏹',  hintKey: 'attr.dexterity_hint' },
@@ -70,11 +87,8 @@ function renderAll(char) {
 
   if (char.avatar_path) {
     const img = document.getElementById('avatar-img');
-    // Preset URLs (DiceBear) already have query params — only add cache-bust for local uploads
-    const isRemote = char.avatar_path.startsWith('https://');
-    img.src = isRemote ? char.avatar_path : char.avatar_path + '?t=' + Date.now();
+    img.src = char.avatar_path;
     img.style.display = 'block';
-    document.getElementById('avatar-svg').style.display = 'none';
   }
 
   const xpPct = char.xp_to_next > 0 ? Math.min(100, (char.xp / char.xp_to_next) * 100) : 100;
@@ -162,6 +176,22 @@ function renderAll(char) {
   renderBattlePanel(char);
   renderMarketPanel(char);
   refreshCombatStats();
+  renderEquipOverlay(char);
+}
+
+function renderEquipOverlay(char) {
+  const overlay = document.getElementById('equip-overlay');
+  const armor = char.equippedArmor;
+  if (armor) {
+    const img = getItemImage(armor.id, char.gender);
+    if (img) {
+      overlay.src = img;
+      overlay.style.display = 'block';
+      return;
+    }
+  }
+  overlay.style.display = 'none';
+  overlay.src = '';
 }
 
 function updateActionSquares(activity) {
@@ -588,11 +618,12 @@ function renderInventory(char) {
   inv.forEach((item, i) => { if (i < 10) slots[i] = item; });
   const equippedIds = new Set([char.weapon_id, char.armor_id, char.shield_id].filter(Boolean));
 
+  const gender = char.gender || 'male';
   grid.innerHTML = slots.map((item, i) => {
     if (!item) return `<div class="inv-slot empty" title="Empty">·</div>`;
     const isEq = equippedIds.has(item.item_id);
     return `<div class="inv-slot${isEq ? ' equipped' : ''}" onclick="showItemInfo(${i})" title="${escHtml(item.name)}">
-      ${item.icon || '?'}
+      ${itemIconHtml(item.item_id, item.icon, item.name, gender, 'inv-item-img')}
       ${item.quantity > 1 ? `<span class="qty">${item.quantity}</span>` : ''}
     </div>`;
   }).join('');
@@ -919,6 +950,7 @@ function renderMarketPanel(char) {
     return;
   }
 
+  const gender = char.gender || 'male';
   list.innerHTML = `<div class="market-grid">${sellable.map(item => {
     const equipped = equippedIds.has(item.item_id);
     const price = Number(item.sell_price);
@@ -926,7 +958,7 @@ function renderMarketPanel(char) {
     const clickAttr = equipped ? '' : `onclick="sellItem(${item.id},${item.item_id},1)"`;
     return `
       <div class="market-cell${equipped ? ' equipped' : ''}" ${clickAttr}>
-        ${item.icon}
+        ${itemIconHtml(item.item_id, item.icon, item.name, gender, 'market-item-img')}
         ${qtyLabel ? `<span class="market-cell-qty">${qtyLabel}</span>` : ''}
         <div class="market-tooltip">
           <div class="market-tooltip-name">${escHtml(item.name)}</div>
@@ -973,6 +1005,7 @@ async function renderShopPane() {
   }
 
   const gold = Number(charState?.gold) || 0;
+  const gender = charState?.gender || 'male';
   shopList.innerHTML = `<div class="market-grid">${items.map(item => {
     const price     = Number(item.buy_price);
     const canAfford = gold >= price;
@@ -982,7 +1015,7 @@ async function renderShopPane() {
     const clickAttr = canAfford ? `onclick="buyItem(${item.id},1)"` : '';
     return `
       <div class="market-cell${canAfford ? '' : ' cant-afford'}" ${clickAttr}>
-        ${item.icon}
+        ${itemIconHtml(item.id, item.icon, item.name, gender, 'market-item-img')}
         <div class="market-tooltip">
           <div class="market-tooltip-name">${escHtml(item.name)}</div>
           <div class="market-tooltip-meta">
@@ -1030,85 +1063,6 @@ async function buyItem(itemId, qty) {
   renderAll(data.char);
   renderShopPane();
   showToast(t('game.js.bought_for', { n: data.spent }), 'success');
-}
-
-// ---- Avatar picker ----
-const AVATAR_PRESETS = [
-  { id: 'iron_knight',    url: 'https://api.dicebear.com/9.x/pixel-art/svg?seed=iron-knight&backgroundColor=1e3a5f' },
-  { id: 'shield_maiden',  url: 'https://api.dicebear.com/9.x/pixel-art/svg?seed=shield-maiden&backgroundColor=1e3a5f' },
-  { id: 'arcane_scholar', url: 'https://api.dicebear.com/9.x/pixel-art/svg?seed=arcane-scholar&backgroundColor=3b0764' },
-  { id: 'storm_witch',    url: 'https://api.dicebear.com/9.x/pixel-art/svg?seed=storm-witch&backgroundColor=3b0764' },
-  { id: 'shadow_blade',   url: 'https://api.dicebear.com/9.x/pixel-art/svg?seed=shadow-blade&backgroundColor=1c1917' },
-  { id: 'night_hunter',   url: 'https://api.dicebear.com/9.x/pixel-art/svg?seed=night-hunter&backgroundColor=1c1917' },
-  { id: 'holy_light',     url: 'https://api.dicebear.com/9.x/pixel-art/svg?seed=holy-light&backgroundColor=78350f' },
-  { id: 'dawn_keeper',    url: 'https://api.dicebear.com/9.x/pixel-art/svg?seed=dawn-keeper&backgroundColor=713f12' },
-  { id: 'dragon_blood',   url: 'https://api.dicebear.com/9.x/pixel-art/svg?seed=dragon-blood&backgroundColor=450a0a' },
-  { id: 'forest_spirit',  url: 'https://api.dicebear.com/9.x/pixel-art/svg?seed=forest-spirit&backgroundColor=14532d' },
-];
-
-function openAvatarPicker() {
-  const grid = document.getElementById('avatar-preset-grid');
-  const labels = t('game.apm.preset_labels') || {};
-  const currentUrl = charState && charState.avatar_path;
-
-  grid.innerHTML = AVATAR_PRESETS.map(p => `
-    <div class="avatar-preset-item${currentUrl === p.url ? ' selected' : ''}"
-         onclick="selectPresetAvatar('${p.url}', this)">
-      <div class="avatar-preset-thumb">
-        <img src="${p.url}" alt="${labels[p.id] || p.id}" loading="lazy" />
-      </div>
-      <span class="avatar-preset-label">${labels[p.id] || p.id}</span>
-    </div>
-  `).join('');
-
-  document.getElementById('avatar-picker-modal').classList.add('open');
-}
-
-function closeAvatarPicker() {
-  document.getElementById('avatar-picker-modal').classList.remove('open');
-}
-
-async function selectPresetAvatar(presetUrl, el) {
-  document.querySelectorAll('.avatar-preset-item').forEach(i => i.classList.remove('selected'));
-  el.classList.add('selected');
-
-  const res = await api.post(`/api/characters/${charId}/avatar/preset`, { presetUrl });
-  if (!res) return;
-  const data = await res.json();
-  if (!res.ok) { showToast(data.error || t('game.js.failed'), 'danger'); return; }
-
-  const img = document.getElementById('avatar-img');
-  img.src = data.avatarPath;
-  img.style.display = 'block';
-  document.getElementById('avatar-svg').style.display = 'none';
-  if (charState) charState.avatar_path = data.avatarPath;
-  showToast(t('game.js.avatar_updated'), 'success');
-  closeAvatarPicker();
-}
-
-function triggerAvatarUpload() {
-  closeAvatarPicker();
-  document.getElementById('avatar-input').click();
-}
-
-async function uploadAvatar(e) {
-  const file = e.target.files[0];
-  if (!file) return;
-  if (file.type !== 'image/jpeg') { showToast(t('game.js.jpeg_only'), 'danger'); return; }
-  if (file.size > 1 * 1024 * 1024) { showToast(t('game.js.image_size'), 'danger'); return; }
-  const fd = new FormData();
-  fd.append('avatar', file);
-  const res = await api.postForm(`/api/characters/${charId}/avatar`, fd);
-  if (!res) return;
-  const data = await res.json();
-  if (!res.ok) { showToast(data.error || t('game.js.failed'), 'danger'); return; }
-  const img = document.getElementById('avatar-img');
-  img.src = data.avatarPath + '?t=' + Date.now();
-  img.style.display = 'block';
-  document.getElementById('avatar-svg').style.display = 'none';
-  if (charState) charState.avatar_path = data.avatarPath;
-  showToast(t('game.js.avatar_updated'), 'success');
-  e.target.value = '';
 }
 
 // ---- Logout ----

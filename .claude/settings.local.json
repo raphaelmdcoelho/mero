@@ -27,7 +27,16 @@
       "Bash(git worktree *)",
       "Bash(cp .env ./trees/feat_market_grid/.env)",
       "Bash(git add *)",
-      "Bash(git commit -m ' *)"
+      "Bash(git commit -m ' *)",
+      "Bash(git -C c:/Repos/mero/trees/fix_dungeon_icon log --oneline -3)",
+      "Bash(git -C c:/Repos/mero worktree list)",
+      "Bash(git -C c:/Repos/mero log --oneline -5)",
+      "Bash(cp .env ./trees/feat_new_icons/.env)",
+      "Bash(cp attributes_icon.png trees/feat_new_icons/public/attributes-icon.png)",
+      "Bash(cp castle_icon.png trees/feat_new_icons/public/castle-icon.png)",
+      "Bash(cp equipment_icon.png trees/feat_new_icons/public/equipment-icon.png)",
+      "Bash(cp inventory_icon.png trees/feat_new_icons/public/inventory-icon.png)",
+      "Bash(git ls-tree *)"
     ]
   }
 }
