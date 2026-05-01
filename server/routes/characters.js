@@ -81,8 +81,17 @@ router.get('/', async (req, res) => {
 
 // POST /api/characters
 router.post('/', async (req, res) => {
-  const { name, class: cls } = req.body;
+  const { name, class: cls, gender, avatar } = req.body;
   const VALID_CLASSES = ['Warrior', 'Mage', 'Rogue', 'Cleric'];
+  const VALID_GENDERS = ['male', 'female'];
+  const VALID_AVATARS = [
+    '/avatars/selection/male_selection_A.png',
+    '/avatars/selection/male_selection_B.png',
+    '/avatars/selection/male_selection_C.png',
+    '/avatars/selection/female_selection_A.png',
+    '/avatars/selection/female_selection_B.png',
+    '/avatars/selection/female_selection_C.png',
+  ];
 
   if (!name || typeof name !== 'string' || name.trim().length < 1 || name.trim().length > 30) {
     return res.status(400).json({ error: 'Name must be 1–30 characters' });
@@ -90,12 +99,16 @@ router.post('/', async (req, res) => {
   if (!VALID_CLASSES.includes(cls)) {
     return res.status(400).json({ error: 'Invalid class' });
   }
+  const resolvedGender = VALID_GENDERS.includes(gender) ? gender : 'male';
+  const resolvedAvatar = VALID_AVATARS.includes(avatar)
+    ? avatar
+    : `/avatars/selection/${resolvedGender}_selection_A.png`;
 
   try {
     const char = await transaction(async (tx) => {
       const result = await tx.execute({
-        sql:  'INSERT INTO characters (user_id, name, class, weapon_id, armor_id, shield_id) VALUES (?, ?, ?, 1, 3, 12)',
-        args: [req.user.userId, name.trim(), cls],
+        sql:  'INSERT INTO characters (user_id, name, class, gender, avatar_path, weapon_id, armor_id, shield_id) VALUES (?, ?, ?, ?, ?, 1, 3, 12)',
+        args: [req.user.userId, name.trim(), cls, resolvedGender, resolvedAvatar],
       });
       const charId = Number(result.lastInsertRowid);
       await tx.execute({
