@@ -157,20 +157,28 @@
         </div>
 
         <!-- Row 3 far-right: Castle (coming soon) -->
-        <div class="action-sq disabled" id="sq-castle" style="grid-column:4;grid-row:3;position:relative;">
-          <img src="/castle-icon.png" alt="Castle" class="sq-icon" />
-          <span class="unspent-badge" style="font-size:0.5rem;" data-i18n="game.coming_soon">Soon</span>
+        <div class="action-sq-wrap" style="grid-column:4;grid-row:3;">
+          <span class="sq-label" data-i18n="game.castle">Castle</span>
+          <div class="action-sq disabled" id="sq-castle" style="position:relative;">
+            <img src="/castle-icon.png" alt="Castle" class="sq-icon" />
+            <span class="unspent-badge" style="font-size:0.5rem;" data-i18n="game.coming_soon">Soon</span>
+          </div>
         </div>
 
         <!-- Row 4 center: Market -->
-        <div class="action-sq" id="sq-market" style="grid-column:2;grid-row:4;" onclick="openPanel('market')">
-          <img src="/market-icon.png" alt="Market" class="sq-icon" />
+        <div class="action-sq-wrap" style="grid-column:2;grid-row:4;">
+          <span class="sq-label" data-i18n="game.market">Market</span>
+          <div class="action-sq" id="sq-market" onclick="openPanel('market')">
+            <img src="/market-icon.png" alt="Market" class="sq-icon" />
+          </div>
         </div>
 
         <!-- Row 4 right: Combat Stats -->
-        <div class="action-sq" id="sq-stats" style="grid-column:3;grid-row:4;" onclick="openPanel('stats')">
-          <span class="sq-icon">📊</span>
-          <span data-i18n="game.stats">Stats</span>
+        <div class="action-sq-wrap" style="grid-column:3;grid-row:4;">
+          <span class="sq-label" data-i18n="game.stats">Stats</span>
+          <div class="action-sq" id="sq-stats" onclick="openPanel('stats')">
+            <span class="sq-icon">📊</span>
+          </div>
         </div>
       </div>
     </div>

@@ -35,7 +35,8 @@
       "Bash(cp attributes_icon.png trees/feat_new_icons/public/attributes-icon.png)",
       "Bash(cp castle_icon.png trees/feat_new_icons/public/castle-icon.png)",
       "Bash(cp equipment_icon.png trees/feat_new_icons/public/equipment-icon.png)",
-      "Bash(cp inventory_icon.png trees/feat_new_icons/public/inventory-icon.png)"
+      "Bash(cp inventory_icon.png trees/feat_new_icons/public/inventory-icon.png)",
+      "Bash(git ls-tree *)"
     ]
   }
 }
