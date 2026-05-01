@@ -408,7 +408,7 @@ input:focus, select:focus {
 
 .avatar-grid {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
+  grid-template-columns: repeat(3, 1fr);
   gap: 0.75rem;
   margin-bottom: 1rem;
 }
@@ -418,7 +418,7 @@ input:focus, select:focus {
   overflow: hidden;
   cursor: pointer;
   transition: all 0.2s;
-  height: 220px;
+  height: 180px;
   display: flex;
   align-items: center;
   justify-content: center;

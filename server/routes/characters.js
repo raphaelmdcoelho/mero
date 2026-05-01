@@ -87,8 +87,10 @@ router.post('/', async (req, res) => {
   const VALID_AVATARS = [
     '/avatars/selection/male_selection_A.png',
     '/avatars/selection/male_selection_B.png',
+    '/avatars/selection/male_selection_C.png',
     '/avatars/selection/female_selection_A.png',
     '/avatars/selection/female_selection_B.png',
+    '/avatars/selection/female_selection_C.png',
   ];
 
   if (!name || typeof name !== 'string' || name.trim().length < 1 || name.trim().length > 30) {

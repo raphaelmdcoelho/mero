@@ -8,8 +8,8 @@ let selectedAvatar = '/avatars/selection/male_selection_A.png';
 let wizardStep = 1;
 
 const GENDER_AVATARS = {
-  male:   ['/avatars/selection/male_selection_A.png',   '/avatars/selection/male_selection_B.png'],
-  female: ['/avatars/selection/female_selection_A.png', '/avatars/selection/female_selection_B.png'],
+  male:   ['/avatars/selection/male_selection_A.png',   '/avatars/selection/male_selection_B.png',   '/avatars/selection/male_selection_C.png'],
+  female: ['/avatars/selection/female_selection_A.png', '/avatars/selection/female_selection_B.png', '/avatars/selection/female_selection_C.png'],
 };
 
 // Show username in header
