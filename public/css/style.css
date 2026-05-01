@@ -537,7 +537,13 @@ input:focus, select:focus {
 #sq-dungeon,
 #sq-farm,
 #sq-tavern,
-#sq-read {
+#sq-read,
+#sq-research,
+#sq-inventory,
+#sq-attributes,
+#sq-equipment,
+#sq-castle,
+#sq-market {
   border: none;
   outline: 2px solid var(--border);
   outline-offset: -2px;
@@ -547,15 +553,33 @@ input:focus, select:focus {
 #sq-dungeon:hover:not(.disabled),
 #sq-farm:hover:not(.disabled),
 #sq-tavern:hover:not(.disabled),
-#sq-read:hover:not(.disabled) { outline-color: var(--accent); }
+#sq-read:hover:not(.disabled),
+#sq-research:hover:not(.disabled),
+#sq-inventory:hover:not(.disabled),
+#sq-attributes:hover:not(.disabled),
+#sq-equipment:hover:not(.disabled),
+#sq-castle:hover:not(.disabled),
+#sq-market:hover:not(.disabled) { outline-color: var(--accent); }
 #sq-dungeon.active,
 #sq-farm.active,
 #sq-tavern.active,
-#sq-read.active { outline-color: var(--accent); }
-#sq-dungeon .sq-icon,
-#sq-farm    .sq-icon,
-#sq-tavern  .sq-icon,
-#sq-read    .sq-icon {
+#sq-read.active,
+#sq-research.active,
+#sq-inventory.active,
+#sq-attributes.active,
+#sq-equipment.active,
+#sq-castle.active,
+#sq-market.active { outline-color: var(--accent); }
+#sq-dungeon    .sq-icon,
+#sq-farm       .sq-icon,
+#sq-tavern     .sq-icon,
+#sq-read       .sq-icon,
+#sq-research   .sq-icon,
+#sq-inventory  .sq-icon,
+#sq-attributes .sq-icon,
+#sq-equipment  .sq-icon,
+#sq-castle     .sq-icon,
+#sq-market     .sq-icon {
   position: absolute;
   top: 0; left: 0;
   width: 100%; height: 100%;
@@ -563,20 +587,26 @@ input:focus, select:focus {
   transform: scale(1.5);
   filter: brightness(1.15);
 }
-
-/* Research keeps SVG treatment (no PNG yet) */
-#sq-research {
-  overflow: hidden;
+#sq-castle .sq-icon {
+  transform: scale(1.3);
+  transform-origin: center;
+  object-fit: contain;
+  object-position: center;
   padding: 0;
 }
-#sq-research .sq-icon {
-  position: absolute;
-  top: 0; left: 0;
-  width: 100%; height: 100%;
-  object-fit: cover;
+#sq-attributes .sq-icon {
+  transform: scale(1.3);
+  transform-origin: center;
+  object-fit: contain;
+  object-position: center;
   padding: 0;
-  font-size: unset;
-  filter: brightness(1.15);
+}
+#sq-equipment .sq-icon {
+  transform: scale(1.38);
+  transform-origin: center;
+  object-fit: contain;
+  object-position: center;
+  padding: 0;
 }
 
 
