@@ -656,7 +656,7 @@ input:focus, select:focus {
   position: absolute;
   width: 65%;
   height: 65%;
-  top: 42%;
+  top: 40%;
   left: 50%;
   transform: translate(-50%, -50%);
   object-fit: contain;
