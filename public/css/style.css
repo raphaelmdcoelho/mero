@@ -160,6 +160,21 @@ input:focus, select:focus {
 }
 
 /* ---- Auth page ---- */
+.auth-poster-wrap {
+  width: 100%;
+  max-width: 400px;
+  overflow: hidden;
+  border-radius: 12px;
+  margin-bottom: 1.5rem;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+}
+.auth-poster {
+  width: 100%;
+  display: block;
+  margin-top: -16%;
+  margin-bottom: -11%;
+}
+
 .auth-wrap {
   display: flex;
   flex-direction: column;
