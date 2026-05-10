@@ -182,17 +182,23 @@
     </div>
   </div>
 
-  <!-- Dungeon Level Modal -->
+  <!-- Dungeon Modal -->
   <div class="modal-overlay" id="dungeon-modal">
     <div class="modal">
-      <h2 class="modal-title" data-i18n="game.dm.title">Choose Dungeon Level</h2>
-      <div class="dungeon-set-tabs" id="dungeon-set-tabs">
+      <h2 class="modal-title" data-i18n="game.dm.title">Choose Dungeon</h2>
+      <!-- Level selector -->
+      <div class="dungeon-level-selector" id="dungeon-level-selector">
         <!-- populated by JS -->
+      </div>
+      <!-- Carousel -->
+      <div class="dungeon-carousel">
+        <button class="carousel-arrow" id="carousel-prev" onclick="prevDungeon()" disabled>&#8249;</button>
+        <div class="dungeon-carousel-content" id="dungeon-carousel-content">
+          <!-- populated by JS -->
+        </div>
+        <button class="carousel-arrow" id="carousel-next" onclick="nextDungeon()">&#8250;</button>
       </div>
       <p class="dungeon-modal-note" data-i18n="game.dm.note">Defeat 100 monsters, then face the Boss to increase your mastery.</p>
-      <div class="dungeon-level-grid" id="dungeon-level-grid">
-        <!-- populated by JS -->
-      </div>
       <div class="modal-footer">
         <button class="btn btn-outline" onclick="closeDungeonModal()" data-i18n="game.dm.cancel">Cancel</button>
         <button class="btn btn-primary" id="enter-dungeon-btn" onclick="confirmEnterDungeon()" data-i18n="game.dm.enter">Enter Dungeon</button>
