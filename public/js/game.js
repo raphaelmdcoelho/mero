@@ -433,12 +433,18 @@ function updateDifficultyUI() {
     document.getElementById(`diff-${d}`).classList.toggle('selected', d === selectedDifficulty);
   });
 
-  const cost    = DIFFICULTY_COSTS[selectedDifficulty] || 2;
-  const stamina = charState ? (Number(charState.stamina) || 0) : 0;
-  const warn    = document.getElementById('stamina-warning');
-  const enterBtn = document.getElementById('enter-dungeon-btn');
+  const dungeon    = DUNGEONS[currentDungeonIndex];
+  const heroLevel  = charState ? (Number(charState.level) || 1) : 1;
+  const cost       = DIFFICULTY_COSTS[selectedDifficulty] || 2;
+  const stamina    = charState ? (Number(charState.stamina) || 0) : 0;
+  const warn       = document.getElementById('stamina-warning');
+  const enterBtn   = document.getElementById('enter-dungeon-btn');
 
-  if (stamina < cost) {
+  if (heroLevel < dungeon.unlockLevel) {
+    warn.textContent = `🔒 Requires level ${dungeon.unlockLevel} (you are level ${heroLevel})`;
+    warn.classList.remove('hidden');
+    enterBtn.disabled = true;
+  } else if (stamina < cost) {
     warn.textContent = `Not enough stamina (need ${cost}, have ${stamina})`;
     warn.classList.remove('hidden');
     enterBtn.disabled = true;
