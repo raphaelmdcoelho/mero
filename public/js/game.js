@@ -129,7 +129,7 @@ function renderAll(char) {
   const maxSt = Number(char.max_stamina) || 10;
   const stPct = maxSt > 0 ? Math.min(100, (st / maxSt) * 100) : 0;
   document.getElementById('stamina-fill').style.width = stPct + '%';
-  document.getElementById('stamina-text').textContent = `${st} / ${maxSt}`;
+  document.getElementById('stamina-text').textContent = `${Math.floor(st)} / ${maxSt}`;
 
   document.getElementById('level-display').textContent = t('game.js.level', { n: char.level });
 

@@ -359,7 +359,7 @@ router.post('/:characterId/stop', async (req, res) => {
              activity = NULL, activity_started_at = NULL,
              reading_points_awarded = 0, last_tick_at = ? WHERE id = ?`,
       args: [upd.xp, upd.xp_to_next, upd.level, upd.max_hp, upd.hp,
-             upd.unspent_points, Math.floor(upd.stamina), upd.max_stamina,
+             upd.unspent_points, upd.stamina, upd.max_stamina,
              upd.last_tick_at, char.id],
     });
   } else if (char.activity === 'reading') {
@@ -402,7 +402,7 @@ router.get('/:characterId/tick', async (req, res) => {
       sql:  `UPDATE characters SET xp = ?, xp_to_next = ?, level = ?, max_hp = ?, hp = ?,
              unspent_points = ?, stamina = ?, max_stamina = ?, last_tick_at = ? WHERE id = ?`,
       args: [upd.xp, upd.xp_to_next, upd.level, upd.max_hp, upd.hp,
-             upd.unspent_points, Math.floor(upd.stamina), upd.max_stamina,
+             upd.unspent_points, upd.stamina, upd.max_stamina,
              upd.last_tick_at, char.id],
     });
   } else if (char.activity === 'reading') {
