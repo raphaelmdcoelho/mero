@@ -36,6 +36,7 @@ const ATTRS = [
 const DUNGEONS = [
   {
     id: 1,
+    nameKey: 'dungeon.forest',
     name: 'Forest',
     icon: '/forest_icon_1.png',
     fallbackIcon: '/dungeon-icon.png',
@@ -43,14 +44,10 @@ const DUNGEONS = [
     masteryCol: 'dungeon_mastery',
     unlockLevel: 1,
     xp: { easy: 55, medium: 90, hard: 130 },
-    levels: [
-      { n: 1, label: 'Easy' },
-      { n: 2, label: 'Medium' },
-      { n: 3, label: 'Hard' },
-    ]
   },
   {
     id: 6,
+    nameKey: 'dungeon.autumn_harvest',
     name: 'Autumn Harvest',
     icon: '/autum_icon_2.png',
     fallbackIcon: '/dungeon-icon.png',
@@ -58,14 +55,10 @@ const DUNGEONS = [
     masteryCol: 'dungeon_mastery_s6',
     unlockLevel: 5,
     xp: { easy: 83, medium: 135, hard: 195 },
-    levels: [
-      { n: 1, label: 'Easy' },
-      { n: 2, label: 'Medium' },
-      { n: 3, label: 'Hard' },
-    ]
   },
   {
     id: 7,
+    nameKey: 'dungeon.murky_swamp',
     name: 'Murky Swamp',
     icon: '/swamp_icon_3.png',
     fallbackIcon: '/dungeon-icon.png',
@@ -73,11 +66,6 @@ const DUNGEONS = [
     masteryCol: 'dungeon_mastery_s7',
     unlockLevel: 10,
     xp: { easy: 138, medium: 225, hard: 325 },
-    levels: [
-      { n: 1, label: 'Easy' },
-      { n: 2, label: 'Medium' },
-      { n: 3, label: 'Hard' },
-    ]
   },
 ];
 
@@ -357,6 +345,29 @@ const POTION_BUFF_LABELS = {
   xp_multiplier:  '📚 ×2 XP gain',
 };
 
+function tItemName(item) {
+  const key = `item.name.${item.item_id || item.id}`;
+  const val = t(key);
+  return val !== key ? val : item.name;
+}
+
+function tItemDesc(item) {
+  const key = `item.desc.${item.item_id || item.id}`;
+  const val = t(key);
+  return val !== key ? val : (item.description || '');
+}
+
+function tItemType(item) {
+  const typeStr = t(`item.type.${item.type}`) || item.type;
+  const wtypeStr = item.weapon_type ? t(`item.wtype.${item.weapon_type}`) || item.weapon_type : null;
+  const slotStr  = item.armor_slot  ? t(`item.slot.${item.armor_slot}`)  || item.armor_slot  : null;
+  return typeStr + (wtypeStr ? ' · ' + wtypeStr : '') + (slotStr ? ' · ' + slotStr : '');
+}
+
+function tDungeonName(dungeon) {
+  return t(dungeon.nameKey) || dungeon.name;
+}
+
 function renderPotionSelector() {
   const section = document.getElementById('dungeon-potion-section');
   const list    = document.getElementById('potion-slot-list');
@@ -365,7 +376,7 @@ function renderPotionSelector() {
   const potions = (charState.inventory || []).filter(i => i.item_subtype === 'adventure_potion');
   section.style.display = '';
   if (!potions.length) {
-    list.innerHTML = `<p class="potion-empty-msg">No adventure potions to be used</p>`;
+    list.innerHTML = `<p class="potion-empty-msg">${t('dungeon.no_potions')}</p>`;
     return;
   }
 
@@ -373,7 +384,7 @@ function renderPotionSelector() {
   list.innerHTML = [
     `<button type="button" class="potion-slot${noneSelected ? ' selected' : ''}" onclick="selectPotion(null)">
        <span class="potion-slot-icon">✗</span>
-       <span class="potion-slot-name">None</span>
+       <span class="potion-slot-name">${t('dungeon.none')}</span>
      </button>`,
     ...potions.map(p => {
       let buffLabel = '';
@@ -384,7 +395,7 @@ function renderPotionSelector() {
       const sel = selectedPotionItemId === p.item_id;
       return `<button type="button" class="potion-slot${sel ? ' selected' : ''}" onclick="selectPotion(${p.item_id})">
         <span class="potion-slot-icon">${p.icon}</span>
-        <span class="potion-slot-name">${escHtml(p.name)}</span>
+        <span class="potion-slot-name">${escHtml(tItemName(p))}</span>
         ${p.quantity > 1 ? `<span class="potion-slot-qty">×${p.quantity}</span>` : ''}
         ${buffLabel ? `<span class="potion-slot-buff">${buffLabel}</span>` : ''}
       </button>`;
@@ -406,10 +417,11 @@ function renderDungeonCarousel() {
   selectedDungeonSet = dungeon.set;
 
   const content = document.getElementById('dungeon-carousel-content');
+  const displayName = tDungeonName(dungeon);
   content.innerHTML = `
-    <img class="dungeon-icon-img" src="${dungeon.icon}" alt="${dungeon.name}"
+    <img class="dungeon-icon-img" src="${dungeon.icon}" alt="${escHtml(displayName)}"
          onerror="this.onerror=null;this.src='${dungeon.fallbackIcon}'">
-    <div class="dungeon-carousel-name">${dungeon.name}</div>
+    <div class="dungeon-carousel-name">${escHtml(displayName)}</div>
   `;
 
   document.getElementById('carousel-prev').disabled = currentDungeonIndex === 0;
@@ -441,11 +453,11 @@ function updateDifficultyUI() {
   const enterBtn   = document.getElementById('enter-dungeon-btn');
 
   if (heroLevel < dungeon.unlockLevel) {
-    warn.textContent = `🔒 Requires level ${dungeon.unlockLevel} (you are level ${heroLevel})`;
+    warn.textContent = t('dungeon.requires_level', { n: dungeon.unlockLevel, lvl: heroLevel });
     warn.classList.remove('hidden');
     enterBtn.disabled = true;
   } else if (stamina < cost) {
-    warn.textContent = `Not enough stamina (need ${cost}, have ${stamina})`;
+    warn.textContent = t('dungeon.no_stamina', { need: cost, have: stamina });
     warn.classList.remove('hidden');
     enterBtn.disabled = true;
   } else {
@@ -510,11 +522,12 @@ function renderBattlePanel(char) {
   const run = char.dungeonRun;
 
   const dungeonInfo = DUNGEONS.find(d => d.set === (Number(run.dungeon_set) || 1)) || DUNGEONS[0];
-  document.getElementById('battle-title').textContent = `⚔️ ${dungeonInfo.name} · Lv ${run.dungeon_level}`;
-  document.getElementById('dungeon-run-label').textContent = `${dungeonInfo.name} · Level ${run.dungeon_level}`;
+  const dName = tDungeonName(dungeonInfo);
+  document.getElementById('battle-title').textContent = `⚔️ ${dName} · Lv ${run.dungeon_level}`;
+  document.getElementById('dungeon-run-label').textContent = `${dName} · Lv ${run.dungeon_level}`;
 
   const diff = run.difficulty || 'easy';
-  document.getElementById('dungeon-diff-badge').textContent = diff.charAt(0).toUpperCase() + diff.slice(1);
+  document.getElementById('dungeon-diff-badge').textContent = t(`dungeon.diff.${diff}`);
 
   // Show active potion badge
   const potionRow = document.getElementById('active-potion-row');
@@ -618,7 +631,7 @@ async function stopDungeon() {
 function showLootModal(data, forced) {
   const modal = document.getElementById('loot-modal');
   document.getElementById('loot-modal-title').textContent =
-    forced ? '🏃 Dungeon Stopped' : '🎉 Dungeon Complete!';
+    forced ? t('dungeon.stopped') : t('dungeon.complete');
 
   const xpRow = document.getElementById('loot-xp-row');
   xpRow.textContent = data.gainedXp ? `+${data.gainedXp} XP` : '';
@@ -639,12 +652,12 @@ function showLootModal(data, forced) {
   const lootList = document.getElementById('loot-list');
   const loot = data.loot || [];
   if (loot.length === 0) {
-    lootList.innerHTML = '<div class="loot-item-row"><span style="color:var(--muted);font-size:0.85rem;">No loot this run.</span></div>';
+    lootList.innerHTML = `<div class="loot-item-row"><span style="color:var(--muted);font-size:0.85rem;">${t('dungeon.no_loot')}</span></div>`;
   } else {
     lootList.innerHTML = loot.map(item =>
       `<div class="loot-item-row">
         <span class="loot-item-icon">${item.icon}</span>
-        <span class="loot-item-name">${escHtml(item.name)}</span>
+        <span class="loot-item-name">${escHtml(tItemName(item))}</span>
         <span class="loot-item-qty">×${item.quantity}</span>
       </div>`
     ).join('');
@@ -764,10 +777,11 @@ function renderInventory(char) {
 
   const gender = char.gender || 'male';
   grid.innerHTML = slots.map((item, i) => {
-    if (!item) return `<div class="inv-slot empty" title="Empty">·</div>`;
+    if (!item) return `<div class="inv-slot empty" title="${t('game.js.empty')}">·</div>`;
     const isEq = equippedIds.has(item.item_id);
-    return `<div class="inv-slot${isEq ? ' equipped' : ''}" onclick="showItemInfo(${i})" title="${escHtml(item.name)}">
-      ${itemIconHtml(item.item_id, item.icon, item.name, gender, 'inv-item-img')}
+    const displayName = tItemName(item);
+    return `<div class="inv-slot${isEq ? ' equipped' : ''}" onclick="showItemInfo(${i})" title="${escHtml(displayName)}">
+      ${itemIconHtml(item.item_id, item.icon, displayName, gender, 'inv-item-img')}
       ${item.quantity > 1 ? `<span class="qty">${item.quantity}</span>` : ''}
     </div>`;
   }).join('');
@@ -785,9 +799,9 @@ function showItemInfo(idx) {
   const statLine = item.damage ? `⚔️ ${item.damage} ${t('game.js.dmg_unit')}` : item.defense ? `🛡️ ${item.defense} ${t('game.js.def_unit')}` : '';
   tooltip.style.display = 'block';
   tooltip.innerHTML = `
-    <strong class="item-tt-name">${item.icon} ${escHtml(item.name)}</strong>
-    <span class="item-tt-type">${item.type}${item.weapon_type ? ' · ' + item.weapon_type : ''}</span>
-    <p class="item-tt-desc">${escHtml(item.description || '')}${statLine ? ' ' + statLine : ''}</p>
+    <strong class="item-tt-name">${item.icon} ${escHtml(tItemName(item))}</strong>
+    <span class="item-tt-type">${tItemType(item)}</span>
+    <p class="item-tt-desc">${escHtml(tItemDesc(item))}${statLine ? ' ' + statLine : ''}</p>
     ${canEquip && !isEq
       ? `<button type="button" class="btn btn-outline btn-sm btn-mt" onclick="equipItem('${slot}',${item.item_id})">${t('game.js.equip_btn')}</button>`
       : ''}
@@ -804,15 +818,15 @@ function renderEquipment(char) {
   const a = char.equippedArmor;
   const s = char.equippedShield;
 
-  document.getElementById('eq-weapon-name').textContent = w ? `${w.icon} ${w.name}` : '—';
+  document.getElementById('eq-weapon-name').textContent = w ? `${w.icon} ${tItemName(w)}` : '—';
   document.getElementById('eq-weapon-stat').textContent =
-    w && w.damage ? `⚔️ ${w.damage} ${t('game.js.dmg_unit')} · ${w.weapon_type}` : '';
+    w && w.damage ? `⚔️ ${w.damage} ${t('game.js.dmg_unit')} · ${t('item.wtype.' + w.weapon_type) || w.weapon_type}` : '';
 
-  document.getElementById('eq-armor-name').textContent = a ? `${a.icon} ${a.name}` : '—';
+  document.getElementById('eq-armor-name').textContent = a ? `${a.icon} ${tItemName(a)}` : '—';
   document.getElementById('eq-armor-stat').textContent =
     a && a.defense ? `🛡️ ${a.defense} ${t('game.js.def_unit')}` : '';
 
-  document.getElementById('eq-shield-name').textContent = s ? `${s.icon} ${s.name}` : '—';
+  document.getElementById('eq-shield-name').textContent = s ? `${s.icon} ${tItemName(s)}` : '—';
   document.getElementById('eq-shield-stat').textContent =
     s && s.defense ? `🛡️ ${s.defense} ${t('game.js.def_unit')}` : '';
 
@@ -835,8 +849,8 @@ function renderEquipment(char) {
     <div class="equip-list-row">
       <span class="equip-list-icon">${item.icon}</span>
       <span class="equip-list-name">
-        ${escHtml(item.name)}
-        <span class="equip-list-type">${item.type}${item.weapon_type ? ' · ' + item.weapon_type : ''}${item.armor_slot ? ' · ' + item.armor_slot : ''}</span>
+        ${escHtml(tItemName(item))}
+        <span class="equip-list-type">${tItemType(item)}</span>
         ${statLine ? `<span class="equip-list-type"> · ${statLine}</span>` : ''}
       </span>
       ${equipped
@@ -1137,7 +1151,7 @@ function renderMarketPanel(char) {
     const qtyLabel  = item.quantity > 1 ? `×${item.quantity}` : '';
     const clickAttr = equipped ? '' : `onclick="sellItem(${item.id},${item.item_id},1)"`;
     const tipHtml   = `
-      <div class="market-tooltip-name">${escHtml(item.name)}</div>
+      <div class="market-tooltip-name">${escHtml(tItemName(item))}</div>
       <div class="market-tooltip-meta">
         ${t('game.js.qty')}: ${item.quantity}<br>
         <span class="market-tooltip-price">🪙 ${price}g ${t('game.js.each')}</span>
@@ -1147,7 +1161,7 @@ function renderMarketPanel(char) {
         : `<span class="market-tooltip-sell">${t('game.js.click_to_sell')}</span>`}`;
     return `
       <div class="market-cell${equipped ? ' equipped' : ''}" ${clickAttr} data-tip="${escHtml(tipHtml)}">
-        ${itemIconHtml(item.item_id, item.icon, item.name, gender, 'market-item-img')}
+        ${itemIconHtml(item.item_id, item.icon, tItemName(item), gender, 'market-item-img')}
         ${qtyLabel ? `<span class="market-cell-qty">${qtyLabel}</span>` : ''}
       </div>`;
   }).join('')}</div>`;
@@ -1192,7 +1206,7 @@ async function renderShopPane() {
       } catch { /* ignore */ }
     }
     const tipHtml = `
-      <div class="market-tooltip-name">${escHtml(item.name)}</div>
+      <div class="market-tooltip-name">${escHtml(tItemName(item))}</div>
       <div class="market-tooltip-meta">
         <span class="market-tooltip-price">🪙 ${price}g</span>${stats}
       </div>
@@ -1203,7 +1217,7 @@ async function renderShopPane() {
     const clickAttr = canAfford ? `onclick="buyItem(${item.id},1)"` : '';
     return `
       <div class="market-cell${canAfford ? '' : ' cant-afford'}" ${clickAttr} data-tip="${escHtml(tipHtml)}">
-        ${itemIconHtml(item.id, item.icon, item.name, gender, 'market-item-img')}
+        ${itemIconHtml(item.id, item.icon, tItemName(item), gender, 'market-item-img')}
       </div>`;
   }).join('')}</div>`;
 

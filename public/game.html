@@ -191,20 +191,20 @@
       </div>
       <!-- Difficulty selector -->
       <div class="dungeon-difficulty-selector" id="dungeon-difficulty-selector">
-        <div class="difficulty-label">Choose Difficulty</div>
+        <div class="difficulty-label" data-i18n="dungeon.choose_diff">Choose Difficulty</div>
         <div class="difficulty-options">
           <button type="button" class="difficulty-btn selected" id="diff-easy" onclick="selectDifficulty('easy')">
-            <span class="diff-name">Easy</span>
+            <span class="diff-name" data-i18n="dungeon.diff.easy">Easy</span>
             <span class="diff-detail">−2 ST · 2 min</span>
             <span class="diff-xp" id="diff-xp-easy"></span>
           </button>
           <button type="button" class="difficulty-btn" id="diff-medium" onclick="selectDifficulty('medium')">
-            <span class="diff-name">Medium</span>
+            <span class="diff-name" data-i18n="dungeon.diff.medium">Medium</span>
             <span class="diff-detail">−4 ST · 3 min</span>
             <span class="diff-xp" id="diff-xp-medium"></span>
           </button>
           <button type="button" class="difficulty-btn" id="diff-hard" onclick="selectDifficulty('hard')">
-            <span class="diff-name">Hard</span>
+            <span class="diff-name" data-i18n="dungeon.diff.hard">Hard</span>
             <span class="diff-detail">−7 ST · 5 min</span>
             <span class="diff-xp" id="diff-xp-hard"></span>
           </button>
@@ -213,7 +213,7 @@
       </div>
       <!-- Adventure Potion selector -->
       <div class="dungeon-potion-section" id="dungeon-potion-section">
-        <div class="difficulty-label">Adventure Potion <span class="potion-optional">(optional)</span></div>
+        <div class="difficulty-label"><span data-i18n="dungeon.potion_label">Adventure Potion</span> <span class="potion-optional" data-i18n="dungeon.potion_optional">(optional)</span></div>
         <div class="potion-slot-list" id="potion-slot-list">
           <!-- populated by JS -->
         </div>
@@ -244,7 +244,7 @@
       <!-- Countdown timer -->
       <div class="dungeon-timer-wrap">
         <div class="dungeon-timer-display" id="dungeon-timer-display">0:00</div>
-        <div class="dungeon-timer-sub">remaining</div>
+        <div class="dungeon-timer-sub" data-i18n="dungeon.remaining">remaining</div>
         <div class="stat-track dungeon-timer-bar">
           <div class="stat-fill stamina" id="dungeon-timer-fill"></div>
         </div>
@@ -266,7 +266,7 @@
       <div class="loot-buff-row hidden" id="loot-buff-row"></div>
       <div class="loot-list" id="loot-list"></div>
       <div class="modal-footer">
-        <button type="button" class="btn btn-primary" onclick="closeLootModal()">Collect &amp; Close</button>
+        <button type="button" class="btn btn-primary" onclick="closeLootModal()" data-i18n="dungeon.collect_close">Collect &amp; Close</button>
       </div>
     </div>
   </div>
