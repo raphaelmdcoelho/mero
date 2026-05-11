@@ -20,7 +20,7 @@ router.get('/:characterId/shop', async (req, res) => {
   if (!charR.rows[0]) return res.status(404).json({ error: 'Character not found' });
 
   const itemsR = await client.execute(
-    'SELECT id, name, type, description, icon, damage, defense, weapon_type, armor_slot, sell_price, buy_price FROM items WHERE buy_price > 0 ORDER BY type, buy_price'
+    'SELECT id, name, type, description, icon, damage, defense, weapon_type, armor_slot, sell_price, buy_price, item_subtype, buff_effect FROM items WHERE buy_price > 0 ORDER BY buy_price'
   );
   res.json({ items: itemsR.rows });
 });
