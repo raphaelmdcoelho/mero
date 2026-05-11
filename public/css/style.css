@@ -1385,6 +1385,10 @@ input:focus, select:focus {
   font-size: 0.68rem;
   color: var(--muted);
 }
+.diff-xp {
+  font-size: 0.68rem;
+  color: var(--gold);
+}
 .stamina-warning {
   margin-top: 0.5rem;
   font-size: 0.78rem;

@@ -42,6 +42,7 @@ const DUNGEONS = [
     set: 1,
     masteryCol: 'dungeon_mastery',
     unlockLevel: 1,
+    xp: { easy: 55, medium: 90, hard: 130 },
     levels: [
       { n: 1, label: 'Easy' },
       { n: 2, label: 'Medium' },
@@ -56,6 +57,7 @@ const DUNGEONS = [
     set: 6,
     masteryCol: 'dungeon_mastery_s6',
     unlockLevel: 60,
+    xp: { easy: 7700, medium: 12320, hard: 18480 },
     levels: [
       { n: 1, label: 'Easy' },
       { n: 2, label: 'Medium' },
@@ -70,6 +72,7 @@ const DUNGEONS = [
     set: 7,
     masteryCol: 'dungeon_mastery_s7',
     unlockLevel: 70,
+    xp: { easy: 15400, medium: 24640, hard: 36960 },
     levels: [
       { n: 1, label: 'Easy' },
       { n: 2, label: 'Medium' },
@@ -394,6 +397,10 @@ function selectPotion(itemId) {
   renderPotionSelector();
 }
 
+function fmtXp(n) {
+  return n >= 1000 ? (n / 1000).toFixed(n % 1000 === 0 ? 0 : 1) + 'k XP' : n + ' XP';
+}
+
 function renderDungeonCarousel() {
   const dungeon = DUNGEONS[currentDungeonIndex];
   selectedDungeonSet = dungeon.set;
@@ -407,6 +414,12 @@ function renderDungeonCarousel() {
 
   document.getElementById('carousel-prev').disabled = currentDungeonIndex === 0;
   document.getElementById('carousel-next').disabled = currentDungeonIndex === DUNGEONS.length - 1;
+
+  const xp = dungeon.xp || {};
+  ['easy', 'medium', 'hard'].forEach(d => {
+    const el = document.getElementById(`diff-xp-${d}`);
+    if (el) el.textContent = xp[d] != null ? fmtXp(xp[d]) : '';
+  });
 }
 
 function selectDifficulty(diff) {
