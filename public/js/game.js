@@ -950,6 +950,38 @@ function switchMarketTab(tab) {
   if (tab === 'buy') renderShopPane();
 }
 
+// ---- Global market tooltip (escapes opacity stacking context of cant-afford cells) ----
+const mktTip = document.getElementById('market-tooltip-global');
+
+function showMarketTooltip(html, e) {
+  mktTip.innerHTML = html;
+  mktTip.style.display = 'block';
+  positionMarketTooltip(e);
+}
+
+function positionMarketTooltip(e) {
+  const pad = 12;
+  let x = e.clientX + pad;
+  let y = e.clientY + pad;
+  const rect = mktTip.getBoundingClientRect();
+  if (x + rect.width  > window.innerWidth  - 8) x = e.clientX - rect.width  - pad;
+  if (y + rect.height > window.innerHeight - 8) y = e.clientY - rect.height - pad;
+  mktTip.style.left = x + 'px';
+  mktTip.style.top  = y + 'px';
+}
+
+function hideMarketTooltip() {
+  mktTip.style.display = 'none';
+}
+
+function attachMarketTooltip(container, getHtml) {
+  container.querySelectorAll('.market-cell').forEach(cell => {
+    cell.addEventListener('mouseenter', e => showMarketTooltip(getHtml(cell), e));
+    cell.addEventListener('mousemove',  e => positionMarketTooltip(e));
+    cell.addEventListener('mouseleave', ()  => hideMarketTooltip());
+  });
+}
+
 function renderMarketPanel(char) {
   if (!char) return;
   const gold = Number(char.gold) || 0;
@@ -966,41 +998,27 @@ function renderMarketPanel(char) {
 
   const gender = char.gender || 'male';
   list.innerHTML = `<div class="market-grid">${sellable.map(item => {
-    const equipped = equippedIds.has(item.item_id);
-    const price = Number(item.sell_price);
-    const qtyLabel = item.quantity > 1 ? `×${item.quantity}` : '';
+    const equipped  = equippedIds.has(item.item_id);
+    const price     = Number(item.sell_price);
+    const qtyLabel  = item.quantity > 1 ? `×${item.quantity}` : '';
     const clickAttr = equipped ? '' : `onclick="sellItem(${item.id},${item.item_id},1)"`;
+    const tipHtml   = `
+      <div class="market-tooltip-name">${escHtml(item.name)}</div>
+      <div class="market-tooltip-meta">
+        ${t('game.js.qty')}: ${item.quantity}<br>
+        <span class="market-tooltip-price">🪙 ${price}g ${t('game.js.each')}</span>
+      </div>
+      ${equipped
+        ? `<div class="market-tooltip-equipped">${t('game.js.equipped_tag')}</div>`
+        : `<span class="market-tooltip-sell">${t('game.js.click_to_sell')}</span>`}`;
     return `
-      <div class="market-cell${equipped ? ' equipped' : ''}" ${clickAttr}>
+      <div class="market-cell${equipped ? ' equipped' : ''}" ${clickAttr} data-tip="${escHtml(tipHtml)}">
         ${itemIconHtml(item.item_id, item.icon, item.name, gender, 'market-item-img')}
         ${qtyLabel ? `<span class="market-cell-qty">${qtyLabel}</span>` : ''}
-        <div class="market-tooltip">
-          <div class="market-tooltip-name">${escHtml(item.name)}</div>
-          <div class="market-tooltip-meta">
-            ${t('game.js.qty')}: ${item.quantity}<br>
-            <span class="market-tooltip-price">🪙 ${price}g ${t('game.js.each')}</span>
-          </div>
-          ${equipped
-            ? `<div class="market-tooltip-equipped">${t('game.js.equipped_tag')}</div>`
-            : `<span class="market-tooltip-sell">${t('game.js.click_to_sell')}</span>`}
-        </div>
       </div>`;
   }).join('')}</div>`;
 
-  list.querySelectorAll('.market-cell').forEach(cell => {
-    cell.addEventListener('mousemove', e => {
-      const tip = cell.querySelector('.market-tooltip');
-      if (!tip) return;
-      const pad = 12;
-      let x = e.clientX + pad;
-      let y = e.clientY + pad;
-      const rect = tip.getBoundingClientRect();
-      if (x + rect.width > window.innerWidth - 8) x = e.clientX - rect.width - pad;
-      if (y + rect.height > window.innerHeight - 8) y = e.clientY - rect.height - pad;
-      tip.style.left = x + 'px';
-      tip.style.top  = y + 'px';
-    });
-  });
+  attachMarketTooltip(list, cell => cell.dataset.tip || '');
 }
 
 async function renderShopPane() {
@@ -1017,44 +1035,45 @@ async function renderShopPane() {
     return;
   }
 
-  const gold = Number(charState?.gold) || 0;
+  const gold   = Number(charState?.gold) || 0;
   const gender = charState?.gender || 'male';
   shopList.innerHTML = `<div class="market-grid">${items.map(item => {
     const price     = Number(item.buy_price);
     const canAfford = gold >= price;
     let stats = '';
-    if (item.damage > 0)  stats += `<br>${item.damage} ${t('game.js.dmg_unit')}`;
+    if (item.damage  > 0) stats += `<br>${item.damage} ${t('game.js.dmg_unit')}`;
     if (item.defense > 0) stats += `<br>${item.defense} ${t('game.js.def_unit')}`;
+    let buffLine = '';
+    if (item.item_subtype === 'adventure_potion' && item.buff_effect) {
+      try {
+        const b = JSON.parse(item.buff_effect);
+        const BUFF_LABELS = {
+          speed:         '⚡ −30% dungeon time',
+          loot_quality:  '🍀 Improved loot quality',
+          loot_count:    '🎁 +2 extra loot items',
+          stamina:       '💚 +1 stamina on completion',
+          xp_multiplier: '📚 ×2 XP gain',
+        };
+        if (BUFF_LABELS[b.type]) buffLine = `<span class="market-tooltip-buff">${BUFF_LABELS[b.type]}</span>`;
+      } catch { /* ignore */ }
+    }
+    const tipHtml = `
+      <div class="market-tooltip-name">${escHtml(item.name)}</div>
+      <div class="market-tooltip-meta">
+        <span class="market-tooltip-price">🪙 ${price}g</span>${stats}
+      </div>
+      ${buffLine}
+      ${canAfford
+        ? `<span class="market-tooltip-sell">${t('game.js.click_to_buy')}</span>`
+        : `<div class="market-tooltip-equipped">${t('game.js.cant_afford')}</div>`}`;
     const clickAttr = canAfford ? `onclick="buyItem(${item.id},1)"` : '';
     return `
-      <div class="market-cell${canAfford ? '' : ' cant-afford'}" ${clickAttr}>
+      <div class="market-cell${canAfford ? '' : ' cant-afford'}" ${clickAttr} data-tip="${escHtml(tipHtml)}">
         ${itemIconHtml(item.id, item.icon, item.name, gender, 'market-item-img')}
-        <div class="market-tooltip">
-          <div class="market-tooltip-name">${escHtml(item.name)}</div>
-          <div class="market-tooltip-meta">
-            <span class="market-tooltip-price">🪙 ${price}g</span>${stats}
-          </div>
-          ${canAfford
-            ? `<span class="market-tooltip-sell">${t('game.js.click_to_buy')}</span>`
-            : `<div class="market-tooltip-equipped">${t('game.js.cant_afford')}</div>`}
-        </div>
       </div>`;
   }).join('')}</div>`;
 
-  shopList.querySelectorAll('.market-cell').forEach(cell => {
-    cell.addEventListener('mousemove', e => {
-      const tip = cell.querySelector('.market-tooltip');
-      if (!tip) return;
-      const pad = 12;
-      let x = e.clientX + pad;
-      let y = e.clientY + pad;
-      const rect = tip.getBoundingClientRect();
-      if (x + rect.width > window.innerWidth - 8)  x = e.clientX - rect.width - pad;
-      if (y + rect.height > window.innerHeight - 8) y = e.clientY - rect.height - pad;
-      tip.style.left = x + 'px';
-      tip.style.top  = y + 'px';
-    });
-  });
+  attachMarketTooltip(shopList, cell => cell.dataset.tip || '');
 }
 
 async function sellItem(invId, itemId, qty) {

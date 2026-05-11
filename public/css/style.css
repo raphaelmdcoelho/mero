@@ -1267,8 +1267,8 @@ input:focus, select:focus {
   line-height: 1;
 }
 
-/* Tooltip */
-.market-cell .market-tooltip {
+/* Global market tooltip — lives at body level, unaffected by cell opacity */
+#market-tooltip-global {
   display: none;
   position: fixed;
   z-index: 999;
@@ -1281,7 +1281,6 @@ input:focus, select:focus {
   pointer-events: none;
   box-shadow: 0 4px 20px rgba(0,0,0,0.6);
 }
-.market-cell:hover .market-tooltip { display: block; }
 .market-tooltip-name {
   font-size: 0.8rem;
   font-weight: 700;
@@ -1300,6 +1299,13 @@ input:focus, select:focus {
   margin-top: 0.35rem;
   font-size: 0.68rem;
   color: #a78bfa;
+}
+.market-tooltip-buff {
+  display: block;
+  margin-top: 0.25rem;
+  font-size: 0.68rem;
+  color: #a78bfa;
+  font-style: italic;
 }
 
 /* ---- Language switcher ---- */
