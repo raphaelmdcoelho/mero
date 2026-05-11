@@ -162,11 +162,11 @@
           <span class="stat-value" id="xp-text">0 / 10</span>
         </div>
         <div class="stat-row">
-          <span class="stat-label">HP</span>
+          <span class="stat-label">ST</span>
           <div class="stat-track">
-            <div class="stat-fill hp" id="hp-fill" style="width:100%"></div>
+            <div class="stat-fill stamina" id="stamina-fill" style="width:100%"></div>
           </div>
-          <span class="stat-value" id="hp-text">10 / 10</span>
+          <span class="stat-value" id="stamina-text">10 / 10</span>
         </div>
         <div style="text-align:center;margin-top:0.25rem;display:flex;align-items:center;justify-content:center;gap:0.75rem;">
           <span id="level-display" style="font-family:'Cinzel',serif;font-size:0.85rem;color:var(--gold);">Level 1</span>
@@ -181,10 +181,6 @@
   <div class="modal-overlay" id="dungeon-modal">
     <div class="modal">
       <h2 class="modal-title" data-i18n="game.dm.title">Choose Dungeon</h2>
-      <!-- Level selector -->
-      <div class="dungeon-level-selector" id="dungeon-level-selector">
-        <!-- populated by JS -->
-      </div>
       <!-- Carousel -->
       <div class="dungeon-carousel">
         <button class="carousel-arrow" id="carousel-prev" onclick="prevDungeon()" disabled>&#8249;</button>
@@ -193,7 +189,25 @@
         </div>
         <button class="carousel-arrow" id="carousel-next" onclick="nextDungeon()">&#8250;</button>
       </div>
-      <p class="dungeon-modal-note" data-i18n="game.dm.note">Defeat 100 monsters, then face the Boss to increase your mastery.</p>
+      <!-- Difficulty selector -->
+      <div class="dungeon-difficulty-selector" id="dungeon-difficulty-selector">
+        <div class="difficulty-label">Choose Difficulty</div>
+        <div class="difficulty-options">
+          <button type="button" class="difficulty-btn selected" id="diff-easy" onclick="selectDifficulty('easy')">
+            <span class="diff-name">Easy</span>
+            <span class="diff-detail">−2 ST · 2 min</span>
+          </button>
+          <button type="button" class="difficulty-btn" id="diff-medium" onclick="selectDifficulty('medium')">
+            <span class="diff-name">Medium</span>
+            <span class="diff-detail">−4 ST · 3 min</span>
+          </button>
+          <button type="button" class="difficulty-btn" id="diff-hard" onclick="selectDifficulty('hard')">
+            <span class="diff-name">Hard</span>
+            <span class="diff-detail">−7 ST · 5 min</span>
+          </button>
+        </div>
+        <div class="stamina-warning hidden" id="stamina-warning"></div>
+      </div>
       <div class="modal-footer">
         <button class="btn btn-outline" onclick="closeDungeonModal()" data-i18n="game.dm.cancel">Cancel</button>
         <button class="btn btn-primary" id="enter-dungeon-btn" onclick="confirmEnterDungeon()" data-i18n="game.dm.enter">Enter Dungeon</button>
@@ -204,47 +218,40 @@
   <!-- Battle Panel -->
   <div class="side-panel" id="battle-panel">
     <div class="side-panel-header">
-      <span class="side-panel-title" id="battle-title"><img src="/dungeon-icon.png" alt="Dungeon" style="height:1.2rem;width:1.2rem;display:inline;margin-right:0.5rem;vertical-align:middle;filter:brightness(1.2);" /> Dungeon</span>
+      <span class="side-panel-title" id="battle-title">⚔️ Dungeon</span>
       <button class="close-btn" onclick="closePanel('battle')">✕</button>
     </div>
     <div class="side-panel-body">
-      <!-- Progress -->
-      <div class="battle-progress" id="battle-progress">
-        <span id="battle-kills-label">0 / 100 monsters</span>
-        <span id="battle-boss-label" class="boss-label" style="display:none;">⚠️ BOSS</span>
+      <!-- Dungeon info -->
+      <div class="dungeon-run-info" id="dungeon-run-info">
+        <span id="dungeon-run-label">Forest · Level 1</span>
+        <span class="dungeon-diff-badge" id="dungeon-diff-badge">Easy</span>
       </div>
 
-      <!-- Monster card -->
-      <div class="monster-card" id="monster-card">
-        <div class="monster-icon" id="monster-icon">👺</div>
-        <div class="monster-info">
-          <div class="monster-name" id="monster-name">Goblin</div>
-          <div class="monster-hp-row">
-            <div class="stat-track">
-              <div class="stat-fill hp" id="monster-hp-fill" style="width:100%;"></div>
-            </div>
-            <span class="monster-hp-text" id="monster-hp-text">12 / 12</span>
-          </div>
+      <!-- Countdown timer -->
+      <div class="dungeon-timer-wrap">
+        <div class="dungeon-timer-display" id="dungeon-timer-display">0:00</div>
+        <div class="dungeon-timer-sub">remaining</div>
+        <div class="stat-track dungeon-timer-bar">
+          <div class="stat-fill stamina" id="dungeon-timer-fill"></div>
         </div>
       </div>
 
-      <!-- Hero HP (inside battle panel) -->
-      <div class="battle-hero-hp">
-        <span class="battle-hero-label" data-i18n="game.bp.hero">🧙 Hero</span>
-        <div class="stat-track">
-          <div class="stat-fill hp" id="battle-hero-hp-fill" style="width:100%;"></div>
-        </div>
-        <span class="monster-hp-text" id="battle-hero-hp-text">— / —</span>
-      </div>
-
-      <!-- Combat log -->
-      <div class="battle-log" id="battle-log">
-        <div class="battle-log-empty" data-i18n="game.bp.press_attack">Press Attack to begin!</div>
-      </div>
-
-      <!-- Actions -->
+      <!-- Stop button -->
       <div class="battle-actions">
-        <button class="btn btn-danger battle-attack-btn" id="stop-btn" onclick="stopDungeon()" data-i18n="game.bp.stop">🚪 Stop Dungeon</button>
+        <button type="button" class="btn btn-danger battle-attack-btn" id="stop-btn" onclick="stopDungeon()">🚪 Stop Dungeon</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loot Modal -->
+  <div class="modal-overlay" id="loot-modal">
+    <div class="modal">
+      <h2 class="modal-title" id="loot-modal-title">Dungeon Complete!</h2>
+      <div class="loot-xp-row" id="loot-xp-row"></div>
+      <div class="loot-list" id="loot-list"></div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-primary" onclick="closeLootModal()">Collect &amp; Close</button>
       </div>
     </div>
   </div>

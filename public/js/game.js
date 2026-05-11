@@ -23,14 +23,14 @@ function itemIconHtml(itemId, itemIcon, itemName, gender, imgClass) {
 }
 
 const ATTRS = [
-  { key: 'strength',     labelKey: 'attr.strength',     icon: '⚔️',  hintKey: 'attr.strength_hint' },
-  { key: 'dexterity',    labelKey: 'attr.dexterity',    icon: '🏹',  hintKey: 'attr.dexterity_hint' },
-  { key: 'agility',      labelKey: 'attr.agility',      icon: '💨',  hintKey: 'attr.agility_hint' },
-  { key: 'vitality',     labelKey: 'attr.vitality',     icon: '❤️',  hintKey: 'attr.vitality_hint' },
-  { key: 'intelligence', labelKey: 'attr.intelligence', icon: '🔮',  hintKey: 'attr.intelligence_hint' },
-  { key: 'focus',        labelKey: 'attr.focus',        icon: '🎯',  hintKey: 'attr.focus_hint' },
-  { key: 'stamina',      labelKey: 'attr.stamina',      icon: '🛡️',  hintKey: 'attr.stamina_hint' },
-  { key: 'resistance',   labelKey: 'attr.resistance',   icon: '🌀',  hintKey: 'attr.resistance_hint' },
+  { key: 'strength',      labelKey: 'attr.strength',      icon: '⚔️',  hintKey: 'attr.strength_hint' },
+  { key: 'dexterity',     labelKey: 'attr.dexterity',     icon: '🏹',  hintKey: 'attr.dexterity_hint' },
+  { key: 'agility',       labelKey: 'attr.agility',       icon: '💨',  hintKey: 'attr.agility_hint' },
+  { key: 'vitality',      labelKey: 'attr.vitality',      icon: '❤️',  hintKey: 'attr.vitality_hint' },
+  { key: 'intelligence',  labelKey: 'attr.intelligence',  icon: '🔮',  hintKey: 'attr.intelligence_hint' },
+  { key: 'focus',         labelKey: 'attr.focus',         icon: '🎯',  hintKey: 'attr.focus_hint' },
+  { key: 'stamina',    labelKey: 'attr.stamina',    icon: '⚡', hintKey: 'attr.stamina_hint' },
+  { key: 'resistance', labelKey: 'attr.resistance', icon: '🌀', hintKey: 'attr.resistance_hint' },
 ];
 
 const DUNGEONS = [
@@ -50,6 +50,14 @@ const DUNGEONS = [
   }
 ];
 
+// Alias used in renderBattlePanel
+const DUNGEON_SETS = DUNGEONS;
+
+const DIFFICULTY_COSTS     = { easy: 2, medium: 4, hard: 7 };
+const DIFFICULTY_DURATIONS = { easy: 2 * 60 * 1000, medium: 3 * 60 * 1000, hard: 5 * 60 * 1000 };
+// Difficulty maps directly to dungeon level (easy=1, medium=2, hard=3)
+const DIFFICULTY_LEVEL     = { easy: 1, medium: 2, hard: 3 };
+
 let currentDungeonIndex = 0;
 
 let charState  = null;
@@ -58,6 +66,11 @@ let pendingAttrs = {};
 let lastGearStats = null;
 let selectedDungeonLevel = 1;
 let selectedDungeonSet   = 1;
+let selectedDifficulty   = 'easy';
+
+// Dungeon countdown state (client-side)
+let dungeonPollInterval = null;
+let dungeonEndsAt       = null; // ms timestamp
 
 // ---- Init ----
 async function init() {
@@ -67,9 +80,15 @@ async function init() {
   charState = data;
   renderAll(data);
   startTick();
+  // Resume dungeon polling if a run is already active
+  if (data.activity === 'dungeon' && data.dungeonRun) {
+    dungeonEndsAt = Number(data.dungeonRun.ends_at) * 1000;
+    startDungeonPoll();
+    openPanel('battle');
+  }
 }
 
-// ---- Tick (tavern HP regen + farm harvest) ----
+// ---- Tick (tavern HP regen + farm harvest + stamina regen) ----
 function startTick() {
   if (tickInterval) clearInterval(tickInterval);
   tickInterval = setInterval(tick, 5000);
@@ -105,17 +124,17 @@ function renderAll(char) {
   document.getElementById('xp-fill').style.width = xpPct + '%';
   document.getElementById('xp-text').textContent = `${Math.floor(char.xp)} / ${char.xp_to_next}`;
 
-  const hp    = Math.max(0, char.hp);
-  const hpPct = char.max_hp > 0 ? Math.min(100, (hp / char.max_hp) * 100) : 0;
-  const hpFill = document.getElementById('hp-fill');
-  hpFill.style.width = hpPct + '%';
-  hpFill.className = 'stat-fill hp' + (hpPct < 30 ? ' low' : '');
-  document.getElementById('hp-text').textContent = `${Math.round(hp * 10) / 10} / ${char.max_hp}`;
+  // Stamina bar
+  const st    = Math.max(0, Number(char.stamina) || 0);
+  const maxSt = Number(char.max_stamina) || 10;
+  const stPct = maxSt > 0 ? Math.min(100, (st / maxSt) * 100) : 0;
+  document.getElementById('stamina-fill').style.width = stPct + '%';
+  document.getElementById('stamina-text').textContent = `${Math.floor(st)} / ${maxSt}`;
 
   document.getElementById('level-display').textContent = t('game.js.level', { n: char.level });
 
   const unspent = Number(char.unspent_points) || 0;
-  const badge  = document.getElementById('unspent-badge');
+  const badge   = document.getElementById('unspent-badge');
   const headerNotice = document.getElementById('unspent-header');
   if (unspent > 0) {
     badge.textContent = unspent;
@@ -159,7 +178,6 @@ function renderAll(char) {
   if (level < 3) {
     farmLock.style.display = 'flex';
     farmStock.style.display = 'none';
-    // also disable if not already handled by updateActionSquares
     if (!char.activity) document.getElementById('sq-farm').classList.add('disabled');
   } else {
     farmLock.style.display = 'none';
@@ -175,7 +193,6 @@ function renderAll(char) {
     }
   }
 
-  // Gold display
   const gold = Number(char.gold) || 0;
   document.getElementById('gold-display').textContent = `🪙 ${gold}g`;
 
@@ -214,7 +231,6 @@ function updateActionSquares(activity) {
   const stats   = document.getElementById('sq-stats');
   const read    = document.getElementById('sq-read');
 
-  // Always start from a clean base, then apply activity-specific states.
   const resetEls = [dungeon, farm, tavern, inv, eq, attrs, stats, read].filter(Boolean);
   resetEls.forEach(el => el.classList.remove('active', 'disabled'));
 
@@ -257,7 +273,7 @@ function updateActionSquares(activity) {
 function handleDungeon() {
   if (!charState) return;
   if (charState.activity === 'dungeon') {
-    openPanel('battle'); // openPanel will call startAutoBattle if not running
+    openPanel('battle');
     return;
   }
   if (charState.activity) return;
@@ -292,28 +308,16 @@ async function stopActivity() {
 
 // ---- Dungeon carousel modal ----
 function openDungeonModal() {
-  selectedDungeonLevel = 1;
+  selectedDifficulty   = 'easy';
+  selectedDungeonLevel = DIFFICULTY_LEVEL.easy;
   renderDungeonCarousel();
+  updateDifficultyUI();
   document.getElementById('dungeon-modal').classList.add('open');
 }
 
 function renderDungeonCarousel() {
   const dungeon = DUNGEONS[currentDungeonIndex];
   selectedDungeonSet = dungeon.set;
-
-  const levelSel = document.getElementById('dungeon-level-selector');
-  levelSel.innerHTML = '';
-  dungeon.levels.forEach(lv => {
-    const btn = document.createElement('button');
-    btn.className = 'dungeon-level-btn' + (selectedDungeonLevel === lv.n ? ' selected' : '');
-    btn.innerHTML = `<span class="dlb-num">${lv.n}</span><span class="dlb-label">${lv.label}</span>`;
-    btn.onclick = () => {
-      selectedDungeonLevel = lv.n;
-      document.querySelectorAll('.dungeon-level-btn').forEach(b => b.classList.remove('selected'));
-      btn.classList.add('selected');
-    };
-    levelSel.appendChild(btn);
-  });
 
   const content = document.getElementById('dungeon-carousel-content');
   content.innerHTML = `
@@ -326,11 +330,38 @@ function renderDungeonCarousel() {
   document.getElementById('carousel-next').disabled = currentDungeonIndex === DUNGEONS.length - 1;
 }
 
+function selectDifficulty(diff) {
+  selectedDifficulty   = diff;
+  selectedDungeonLevel = DIFFICULTY_LEVEL[diff] || 1;
+  updateDifficultyUI();
+}
+
+function updateDifficultyUI() {
+  ['easy', 'medium', 'hard'].forEach(d => {
+    document.getElementById(`diff-${d}`).classList.toggle('selected', d === selectedDifficulty);
+  });
+
+  const cost    = DIFFICULTY_COSTS[selectedDifficulty] || 2;
+  const stamina = charState ? (Number(charState.stamina) || 0) : 0;
+  const warn    = document.getElementById('stamina-warning');
+  const enterBtn = document.getElementById('enter-dungeon-btn');
+
+  if (stamina < cost) {
+    warn.textContent = `Not enough stamina (need ${cost}, have ${stamina})`;
+    warn.classList.remove('hidden');
+    enterBtn.disabled = true;
+  } else {
+    warn.classList.add('hidden');
+    enterBtn.disabled = false;
+  }
+}
+
 function prevDungeon() {
   if (currentDungeonIndex > 0) {
     currentDungeonIndex--;
     selectedDungeonLevel = 1;
     renderDungeonCarousel();
+    updateDifficultyUI();
   }
 }
 
@@ -339,6 +370,7 @@ function nextDungeon() {
     currentDungeonIndex++;
     selectedDungeonLevel = 1;
     renderDungeonCarousel();
+    updateDifficultyUI();
   }
 }
 
@@ -348,194 +380,156 @@ function closeDungeonModal() {
 
 async function confirmEnterDungeon() {
   closeDungeonModal();
-  const res = await api.post(`/api/game/${charId}/dungeon/enter`, { level: selectedDungeonLevel, set: selectedDungeonSet });
+  const res = await api.post(`/api/game/${charId}/dungeon/enter`, {
+    level: selectedDungeonLevel,
+    set: selectedDungeonSet,
+    difficulty: selectedDifficulty,
+  });
   if (!res) return;
   const data = await res.json();
   if (!res.ok) { showToast(data.error || t('game.js.failed_dungeon'), 'danger'); return; }
   charState = data;
   renderAll(data);
   showToast(t('game.js.entered_dungeon', { n: selectedDungeonLevel }), 'success');
+
+  if (data.dungeonRun) {
+    dungeonEndsAt = Number(data.dungeonRun.ends_at) * 1000;
+    startDungeonPoll();
+  }
   openPanel('battle');
-  startAutoBattle();
 }
 
 document.getElementById('dungeon-modal').addEventListener('click', function(e) {
   if (e.target === this) closeDungeonModal();
 });
 
-// ---- Battle panel ----
+// ---- Battle panel (timer-based) ----
 function renderBattlePanel(char) {
   if (!char || !char.dungeonRun) return;
-  const run     = char.dungeonRun;
-  const monster = run.monster;
-  if (!monster) return;
+  const run = char.dungeonRun;
 
-  const dungeonSetInfo = DUNGEON_SETS.find(s => s.set === (Number(run.dungeon_set) || 1)) || DUNGEON_SETS[0];
-  document.getElementById('battle-title').textContent =
-    t('game.js.bl.mastery', { level: run.dungeon_level, mastery: char[dungeonSetInfo.masteryCol] || 0 });
+  const dungeonInfo = DUNGEONS.find(d => d.set === (Number(run.dungeon_set) || 1)) || DUNGEONS[0];
+  document.getElementById('battle-title').textContent = `⚔️ ${dungeonInfo.name} · Lv ${run.dungeon_level}`;
+  document.getElementById('dungeon-run-label').textContent = `${dungeonInfo.name} · Level ${run.dungeon_level}`;
 
-  const isBoss = monster.is_boss === 1;
-  document.getElementById('battle-kills-label').textContent = t('game.js.bl.monsters', { kills: run.kills });
-  document.getElementById('battle-boss-label').style.display = isBoss ? 'inline' : 'none';
+  const diff = run.difficulty || 'easy';
+  document.getElementById('dungeon-diff-badge').textContent = diff.charAt(0).toUpperCase() + diff.slice(1);
 
-  document.getElementById('monster-icon').textContent = monster.icon;
-  document.getElementById('monster-name').textContent = (isBoss ? t('game.js.bl.boss_prefix') : '') + monster.name;
-
-  setMonsterHpBar(run.monster_hp, monster.hp);
-  setHeroHpBar(char.hp, char.max_hp);
+  // Update countdown display immediately from local state
+  if (dungeonEndsAt) updateTimerDisplay();
 }
 
-function setMonsterHpBar(current, max) {
-  const pct = max > 0 ? Math.min(100, Math.max(0, (current / max) * 100)) : 0;
-  document.getElementById('monster-hp-fill').style.width = pct + '%';
-  document.getElementById('monster-hp-text').textContent = `${Math.max(0, Math.round(current))} / ${max}`;
+function updateTimerDisplay() {
+  const nowMs       = Date.now();
+  const remainingMs = Math.max(0, (dungeonEndsAt || nowMs) - nowMs);
+  const totalMs     = DIFFICULTY_DURATIONS[charState?.dungeonRun?.difficulty] || DIFFICULTY_DURATIONS.easy;
+
+  const mins = Math.floor(remainingMs / 60000);
+  const secs = Math.floor((remainingMs % 60000) / 1000);
+  document.getElementById('dungeon-timer-display').textContent =
+    `${mins}:${String(secs).padStart(2, '0')}`;
+
+  const pct = totalMs > 0 ? Math.min(100, (remainingMs / totalMs) * 100) : 0;
+  document.getElementById('dungeon-timer-fill').style.width = pct + '%';
 }
 
-function setHeroHpBar(current, max) {
-  const pct = max > 0 ? Math.min(100, Math.max(0, (current / max) * 100)) : 0;
-  const fill = document.getElementById('battle-hero-hp-fill');
-  fill.style.width = pct + '%';
-  fill.className   = 'stat-fill hp' + (pct < 30 ? ' low' : '');
-  document.getElementById('battle-hero-hp-text').textContent =
-    `${Math.max(0, Math.round(current * 10) / 10)} / ${max}`;
+// Local 1-second timer update (purely cosmetic — server is authoritative)
+let localTimerInterval = null;
+
+function startLocalTimer() {
+  if (localTimerInterval) clearInterval(localTimerInterval);
+  localTimerInterval = setInterval(() => {
+    if (!dungeonEndsAt) return;
+    updateTimerDisplay();
+  }, 1000);
 }
 
-// ---- Auto-battle loop ----
-let autoBattleRunning = false;
-let autoBattleStop    = false;
+function stopLocalTimer() {
+  if (localTimerInterval) clearInterval(localTimerInterval);
+  localTimerInterval = null;
+}
 
-async function startAutoBattle() {
-  if (autoBattleRunning) return;
-  autoBattleRunning = true;
-  autoBattleStop    = false;
+// Poll the server every 5 s; complete the run when timer hits 0
+function startDungeonPoll() {
+  if (dungeonPollInterval) clearInterval(dungeonPollInterval);
+  startLocalTimer();
+  dungeonPollInterval = setInterval(pollDungeonStatus, 5000);
+}
 
-  // Clear log for new run
-  const container = document.getElementById('battle-log');
-  container.innerHTML = '';
+function stopDungeonPoll() {
+  if (dungeonPollInterval) clearInterval(dungeonPollInterval);
+  dungeonPollInterval = null;
+  stopLocalTimer();
+  dungeonEndsAt = null;
+}
 
-  while (!autoBattleStop) {
-    // --- call the server for one monster fight ---
-    const res = await api.post(`/api/game/${charId}/dungeon/attack`);
-    if (!res || autoBattleStop) break;
+async function pollDungeonStatus() {
+  const res = await api.get(`/api/game/${charId}/dungeon/status`);
+  if (!res) return;
+  const data = await res.json();
+  if (!res.ok) return;
 
-    const data = await res.json();
-    if (!res.ok) { showToast(data.error || t('game.js.battle_error'), 'danger'); break; }
-
-    // Snapshot pre-fight state for animation
-    const prevMonsterHp  = charState.dungeonRun ? Number(charState.dungeonRun.monster_hp) : 0;
-    const prevMonsterMax = charState.dungeonRun ? charState.dungeonRun.monster.hp : 1;
-    const monsterName    = charState.dungeonRun ? charState.dungeonRun.monster.name : 'Monster';
-    const prevHeroHp     = Number(charState.hp);
-    const heroMax        = Number(charState.max_hp);
-
-    await animateCombatLog(
-      data.combatLog, monsterName,
-      prevMonsterHp, prevMonsterMax,
-      prevHeroHp, heroMax,
-      data.char.dungeonRun ? Number(data.char.dungeonRun.monster_hp) : 0,
-      Number(data.char.hp)
-    );
-
+  if (!data.active && data.done) {
+    stopDungeonPoll();
     charState = data.char;
     renderAll(data.char);
-
-    if (data.result === 'defeat') {
-      showToast(t('game.js.hero_fallen_msg'), 'danger');
-      closePanel('battle');
-      break;
-    }
-
-    if (data.result === 'run_complete') {
-      showToast(t('game.js.boss_defeated', { n: data.newMastery }), 'success');
-      if (data.droppedItem) showToast(t('game.js.item_dropped', { icon: data.droppedItem.icon, name: data.droppedItem.name }), 'success');
-      closePanel('battle');
-      break;
-    }
-
-    if (data.result === 'monster_killed') {
-      if (data.droppedItem) showToast(t('game.js.item_dropped', { icon: data.droppedItem.icon, name: data.droppedItem.name }), 'success');
-      if (data.bossSpawned) showToast(t('game.js.boss_spawned'), 'warn');
-    }
-
-    // Pause between fights so the log stays readable (extra 1s after each kill)
-    if (!autoBattleStop) await sleep(2500);
+    closePanel('battle');
+    showLootModal(data, false);
+    return;
   }
 
-  autoBattleRunning = false;
+  if (data.active) {
+    dungeonEndsAt = Number(data.endsAt) * 1000;
+    updateTimerDisplay();
+  }
 }
 
 async function stopDungeon() {
-  autoBattleStop = true;
-  const res = await api.post(`/api/game/${charId}/dungeon/flee`);
+  stopDungeonPoll();
+  const res = await api.post(`/api/game/${charId}/dungeon/stop`);
   if (!res) return;
   const data = await res.json();
   if (!res.ok) { showToast(data.error || 'Failed', 'danger'); return; }
-  charState = data;
-  renderAll(data);
+  charState = data.char;
+  renderAll(data.char);
   closePanel('battle');
-  showToast(t('game.js.left_dungeon'), 'warn');
+  showLootModal(data, true);
 }
 
-// Replay each round with a delay, updating HP bars live
-async function animateCombatLog(
-  log, monsterName,
-  monsterHp, monsterMax,
-  heroHp, heroMax,
-  finalMonsterHp, finalHeroHp
-) {
-  const container = document.getElementById('battle-log');
+// ---- Loot Modal ----
+function showLootModal(data, forced) {
+  const modal = document.getElementById('loot-modal');
+  document.getElementById('loot-modal-title').textContent =
+    forced ? '🏃 Dungeon Stopped' : '🎉 Dungeon Complete!';
 
-  // Fight separator
-  const sep = document.createElement('div');
-  sep.className = 'log-fight-sep';
-  sep.textContent = t('game.js.bl.vs', { monster: monsterName });
-  container.appendChild(sep);
+  const xpRow = document.getElementById('loot-xp-row');
+  xpRow.textContent = data.gainedXp ? `+${data.gainedXp} XP` : '';
 
-  for (const round of log) {
-    if (autoBattleStop) break;
-    for (const entry of round) {
-      const div = document.createElement('div');
-
-      if (entry.by === 'player') {
-        if (entry.type === 'hit') {
-          monsterHp = Math.max(0, monsterHp - entry.damage);
-          div.className = 'log-hit-player';
-          div.textContent = t('game.js.bl.hit_player', {
-            monster: monsterName, damage: entry.damage,
-            hp: Math.round(monsterHp), max: monsterMax,
-          });
-          setMonsterHpBar(monsterHp, monsterMax);
-        } else {
-          div.className = 'log-miss-player';
-          div.textContent = t('game.js.bl.miss_player', { monster: monsterName });
-        }
-      } else {
-        if (entry.type === 'dodge') {
-          div.className = 'log-dodge';
-          div.textContent = t('game.js.bl.dodge', { monster: monsterName });
-        } else {
-          heroHp = Math.max(0, heroHp - entry.damage);
-          div.className = 'log-hit-monster';
-          div.textContent = t('game.js.bl.hit_monster', {
-            monster: monsterName, damage: entry.damage,
-            hp: Math.round(heroHp * 10) / 10, max: heroMax,
-          });
-          setHeroHpBar(heroHp, heroMax);
-        }
-      }
-
-      container.appendChild(div);
-      container.scrollTop = container.scrollHeight;
-    }
-    await sleep(350);
+  const lootList = document.getElementById('loot-list');
+  const loot = data.loot || [];
+  if (loot.length === 0) {
+    lootList.innerHTML = '<div class="loot-item-row"><span style="color:var(--muted);font-size:0.85rem;">No loot this run.</span></div>';
+  } else {
+    lootList.innerHTML = loot.map(item =>
+      `<div class="loot-item-row">
+        <span class="loot-item-icon">${item.icon}</span>
+        <span class="loot-item-name">${escHtml(item.name)}</span>
+        <span class="loot-item-qty">×${item.quantity}</span>
+      </div>`
+    ).join('');
   }
 
-  // Settle on server truth
-  setMonsterHpBar(finalMonsterHp, monsterMax);
-  setHeroHpBar(finalHeroHp, heroMax);
+  modal.classList.add('open');
 }
 
-function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+function closeLootModal() {
+  document.getElementById('loot-modal').classList.remove('open');
+  renderAll(charState);
+}
+
+document.getElementById('loot-modal').addEventListener('click', function(e) {
+  if (e.target === this) closeLootModal();
+});
 
 // ---- Combat Stats ----
 async function refreshCombatStats() {
@@ -601,10 +595,7 @@ function openPanel(type) {
   if (type === 'market') { switchMarketTab('sell'); renderMarketPanel(charState); }
   if (type === 'battle') {
     renderBattlePanel(charState);
-    if (!autoBattleRunning && charState && charState.dungeonRun) {
-      document.getElementById('battle-log').innerHTML = '';
-      startAutoBattle();
-    }
+    if (dungeonEndsAt) updateTimerDisplay();
   }
 }
 
@@ -767,8 +758,8 @@ function renderAttributes(char) {
   list.innerHTML = ATTRS.map(({ key, labelKey, icon, hintKey }) => {
     const base  = Number(char[`attr_${key}`]) || 5;
     const delta = pendingAttrs[key] || 0;
-    const label = t(labelKey);
-    const hint  = t(hintKey);
+    const label = t(labelKey) || key;
+    const hint  = t(hintKey)  || '';
     return `
       <div class="attr-row">
         <span class="attr-icon">${icon}</span>
@@ -996,7 +987,6 @@ function renderMarketPanel(char) {
       </div>`;
   }).join('')}</div>`;
 
-  // Position tooltips on mousemove so they follow the cursor
   list.querySelectorAll('.market-cell').forEach(cell => {
     cell.addEventListener('mousemove', e => {
       const tip = cell.querySelector('.market-tooltip');

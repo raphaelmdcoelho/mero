@@ -304,7 +304,7 @@ router.put('/:id/attributes', async (req, res) => {
     args: [...vals, total, char.id],
   });
 
-  // Recalculate max_hp if vitality was changed (max_hp = 10 + (level-1)*5 + vitality*2)
+  // Recalculate max_hp if vitality was changed
   if (allocations.vitality) {
     await client.execute({
       sql: `UPDATE characters
@@ -312,6 +312,17 @@ router.put('/:id/attributes', async (req, res) => {
                 hp     = MIN(hp + ?, 10 + (level - 1) * 5 + attr_vitality * 2)
             WHERE id = ?`,
       args: [allocations.vitality * 2, char.id],
+    });
+  }
+
+  // Recalculate max_stamina if stamina was changed
+  if (allocations.stamina) {
+    await client.execute({
+      sql: `UPDATE characters
+            SET max_stamina = 5 + attr_stamina + ((level - 1) / 5),
+                stamina     = MIN(stamina + ?, 5 + attr_stamina + ((level - 1) / 5))
+            WHERE id = ?`,
+      args: [allocations.stamina, char.id],
     });
   }
 
