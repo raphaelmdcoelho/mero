@@ -712,9 +712,11 @@ input:focus, select:focus {
   border-radius: 5px;
   transition: width 0.5s ease;
 }
-.stat-fill.xp  { background: var(--gold); }
-.stat-fill.hp  { background: var(--success); }
-.stat-fill.hp.low { background: var(--danger); }
+.stat-fill.xp      { background: var(--gold); }
+.stat-fill.hp      { background: var(--success); }
+.stat-fill.hp.low  { background: var(--danger); }
+.stat-fill.stamina { background: #4fc3f7; }
+#dungeon-timer-fill { width: 100%; }
 .stat-value {
   font-size: 0.8rem;
   color: var(--text);
@@ -1327,5 +1329,206 @@ input:focus, select:focus {
   background: var(--border);
   border-color: var(--accent);
   color: var(--text);
+}
+
+/* ---- Stamina / Dungeon difficulty ---- */
+.hidden { display: none !important; }
+
+.dungeon-difficulty-selector {
+  margin: 0.75rem 0 0.5rem;
+}
+.difficulty-label {
+  font-size: 0.75rem;
+  color: var(--muted);
+  margin-bottom: 0.4rem;
+  text-align: center;
+}
+.difficulty-options {
+  display: flex;
+  gap: 0.4rem;
+}
+.difficulty-btn {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.2rem;
+  padding: 0.55rem 0.4rem;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--surface2);
+  color: var(--muted);
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s, background 0.15s;
+}
+.difficulty-btn:hover {
+  border-color: var(--accent);
+  color: var(--text);
+}
+.difficulty-btn.selected {
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 12%, var(--surface2));
+  color: var(--accent);
+}
+.diff-name {
+  font-size: 0.82rem;
+  font-weight: 700;
+  font-family: 'Cinzel', serif;
+}
+.diff-detail {
+  font-size: 0.68rem;
+  color: var(--muted);
+}
+.stamina-warning {
+  margin-top: 0.5rem;
+  font-size: 0.78rem;
+  color: var(--danger);
+  text-align: center;
+}
+
+/* ---- Dungeon timer (battle panel) ---- */
+.dungeon-run-info {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.82rem;
+  color: var(--muted);
+  margin-bottom: 1rem;
+}
+.dungeon-diff-badge {
+  font-size: 0.72rem;
+  font-weight: 700;
+  font-family: 'Cinzel', serif;
+  padding: 0.15rem 0.55rem;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  color: var(--accent);
+  text-transform: capitalize;
+}
+.dungeon-timer-wrap {
+  text-align: center;
+  margin: 1.5rem 0 1.25rem;
+}
+.dungeon-timer-display {
+  font-size: 2.8rem;
+  font-family: 'Cinzel', serif;
+  font-weight: 700;
+  color: var(--text);
+  letter-spacing: 0.05em;
+  line-height: 1;
+}
+.dungeon-timer-sub {
+  font-size: 0.72rem;
+  color: var(--muted);
+  margin-top: 0.25rem;
+  margin-bottom: 0.75rem;
+}
+.dungeon-timer-bar {
+  height: 8px;
+  margin: 0 auto;
+  max-width: 220px;
+}
+
+/* ---- Loot modal ---- */
+.loot-xp-row {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--gold);
+  text-align: center;
+  margin-bottom: 0.75rem;
+}
+.loot-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  margin-bottom: 0.5rem;
+  max-height: 260px;
+  overflow-y: auto;
+}
+.loot-item-row {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 0.45rem 0.75rem;
+  font-size: 0.88rem;
+}
+.loot-item-icon { font-size: 1.2rem; }
+.loot-item-name { flex: 1; }
+.loot-item-qty  { color: var(--muted); font-size: 0.8rem; }
+
+/* ---- Loot buff row (potion applied) ---- */
+.loot-buff-row {
+  font-size: 0.82rem;
+  color: var(--accent);
+  text-align: center;
+  margin-bottom: 0.6rem;
+  padding: 0.3rem 0.6rem;
+  background: color-mix(in srgb, var(--accent) 10%, var(--surface2));
+  border-radius: 8px;
+  border: 1px solid var(--border);
+}
+
+/* ---- Dungeon potion selector ---- */
+.dungeon-potion-section {
+  margin-top: 0.75rem;
+}
+.potion-optional {
+  font-size: 0.7rem;
+  color: var(--muted);
+  font-weight: 400;
+}
+.potion-slot-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-top: 0.4rem;
+}
+.potion-slot {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.15rem;
+  padding: 0.45rem 0.6rem;
+  min-width: 72px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--surface2);
+  color: var(--muted);
+  cursor: pointer;
+  font-size: 0.78rem;
+  text-align: center;
+  transition: border-color 0.15s, color 0.15s, background 0.15s;
+}
+.potion-slot:hover {
+  border-color: var(--accent);
+  color: var(--text);
+}
+.potion-slot.selected {
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 12%, var(--surface2));
+  color: var(--accent);
+}
+.potion-slot-icon { font-size: 1.2rem; line-height: 1; }
+.potion-slot-name { font-size: 0.72rem; font-weight: 600; }
+.potion-slot-qty  { font-size: 0.65rem; color: var(--muted); }
+.potion-slot-buff { font-size: 0.65rem; color: var(--muted); }
+.potion-slot.selected .potion-slot-buff { color: var(--accent); }
+
+/* ---- Active potion badge (battle panel) ---- */
+.active-potion-row {
+  margin-bottom: 0.75rem;
+  text-align: center;
+}
+.active-potion-badge {
+  display: inline-block;
+  font-size: 0.78rem;
+  padding: 0.25rem 0.7rem;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: color-mix(in srgb, var(--accent) 10%, var(--surface2));
+  color: var(--accent);
 }
 

@@ -139,6 +139,14 @@ async function initDb() {
     'ALTER TABLE farm_queue ADD COLUMN remaining_seconds INTEGER DEFAULT NULL',
     'ALTER TABLE farm_queue ADD COLUMN last_progress_at INTEGER DEFAULT NULL',
     "ALTER TABLE characters ADD COLUMN gender TEXT DEFAULT 'male'",
+    'ALTER TABLE characters ADD COLUMN attr_stamina_points INTEGER DEFAULT 0',
+    'ALTER TABLE characters ADD COLUMN stamina             INTEGER DEFAULT 10',
+    'ALTER TABLE characters ADD COLUMN max_stamina         INTEGER DEFAULT 10',
+    'ALTER TABLE dungeon_run ADD COLUMN difficulty TEXT',
+    'ALTER TABLE dungeon_run ADD COLUMN ends_at    INTEGER',
+    'ALTER TABLE items ADD COLUMN item_subtype TEXT DEFAULT NULL',
+    'ALTER TABLE items ADD COLUMN buff_effect  TEXT DEFAULT NULL',
+    'ALTER TABLE dungeon_run ADD COLUMN potion_item_id INTEGER DEFAULT NULL',
   ];
 
   for (const sql of additiveMigrations) {
@@ -158,6 +166,16 @@ async function initDb() {
     UPDATE characters
     SET max_hp = 10 + (level - 1) * 5 + COALESCE(attr_vitality, 5) * 2,
         hp     = MIN(hp, 10 + (level - 1) * 5 + COALESCE(attr_vitality, 5) * 2)
+    WHERE 1=1
+  `);
+
+  // Recalculate max_stamina: 5 + attr_stamina + floor((level-1)/5)
+  // Seed stamina = max_stamina for existing characters that still hold the old default of 10
+  await client.execute(`
+    UPDATE characters
+    SET max_stamina = 5 + COALESCE(attr_stamina, 5) + ((level - 1) / 5),
+        stamina     = CASE WHEN stamina = 10 THEN 5 + COALESCE(attr_stamina, 5) + ((level - 1) / 5)
+                          ELSE MIN(stamina, 5 + COALESCE(attr_stamina, 5) + ((level - 1) / 5)) END
     WHERE 1=1
   `);
 
@@ -183,7 +201,21 @@ async function initDb() {
     [17, 'Longbow',        'weapon',     'High-tension bow with strong pull.', '🏹', 6,  0, 'ranged', null,   38,  75],
     [18, 'Guardian Armor', 'armor',      'Layered plates for elite guards.',  '🦾', 0,  8, null,    'body',   60, 120],
     [19, 'Tower Shield',   'armor',      'Massive shield with near-wall cover.','🧱',0,10, null,    'shield', 75, 150],
+    [20, 'Swift Elixir',     'consumable', 'Reduces dungeon time by 30%.',               '⚡', 0, 0, null, null, 15, 30],
+    [21, 'Fortune Brew',     'consumable', 'Greatly improves dungeon loot quality.',      '🍀', 0, 0, null, null, 20, 40],
+    [22, 'Abundance Tonic',  'consumable', 'Gain 2 extra loot items from the dungeon.',   '🎁', 0, 0, null, null, 15, 30],
+    [23, 'Vitality Draught', 'consumable', 'Restores 1 stamina upon dungeon completion.', '💚', 0, 0, null, null, 10, 20],
+    [24, 'Wisdom Potion',    'consumable', 'Doubles XP gained in the dungeon.',           '📚', 0, 0, null, null, 25, 50],
   ];
+
+  // item_subtype and buff_effect for adventure potions
+  const POTION_META = {
+    20: { subtype: 'adventure_potion', buff: '{"type":"speed","value":0.7}' },
+    21: { subtype: 'adventure_potion', buff: '{"type":"loot_quality","value":2}' },
+    22: { subtype: 'adventure_potion', buff: '{"type":"loot_count","value":2}' },
+    23: { subtype: 'adventure_potion', buff: '{"type":"stamina","value":1}' },
+    24: { subtype: 'adventure_potion', buff: '{"type":"xp_multiplier","value":2}' },
+  };
 
   await client.batch([
     ...itemData.map(([id, name, type, desc, icon]) => ({
@@ -193,6 +225,10 @@ async function initDb() {
     ...itemData.map(([id, , , , , dmg, def, wt, as, sp, bp]) => ({
       sql:  'UPDATE items SET damage = ?, defense = ?, weapon_type = ?, armor_slot = ?, sell_price = ?, buy_price = ? WHERE id = ?',
       args: [dmg, def, wt, as, sp, bp, id],
+    })),
+    ...itemData.filter(([id]) => POTION_META[id]).map(([id]) => ({
+      sql:  'UPDATE items SET item_subtype = ?, buff_effect = ? WHERE id = ?',
+      args: [POTION_META[id].subtype, POTION_META[id].buff, id],
     })),
   ], 'write');
 
