@@ -139,6 +139,11 @@ async function initDb() {
     'ALTER TABLE farm_queue ADD COLUMN remaining_seconds INTEGER DEFAULT NULL',
     'ALTER TABLE farm_queue ADD COLUMN last_progress_at INTEGER DEFAULT NULL',
     "ALTER TABLE characters ADD COLUMN gender TEXT DEFAULT 'male'",
+    'ALTER TABLE characters ADD COLUMN attr_stamina_points INTEGER DEFAULT 0',
+    'ALTER TABLE characters ADD COLUMN stamina             INTEGER DEFAULT 10',
+    'ALTER TABLE characters ADD COLUMN max_stamina         INTEGER DEFAULT 10',
+    'ALTER TABLE dungeon_run ADD COLUMN difficulty TEXT',
+    'ALTER TABLE dungeon_run ADD COLUMN ends_at    INTEGER',
   ];
 
   for (const sql of additiveMigrations) {
@@ -158,6 +163,16 @@ async function initDb() {
     UPDATE characters
     SET max_hp = 10 + (level - 1) * 5 + COALESCE(attr_vitality, 5) * 2,
         hp     = MIN(hp, 10 + (level - 1) * 5 + COALESCE(attr_vitality, 5) * 2)
+    WHERE 1=1
+  `);
+
+  // Recalculate max_stamina: 10 + floor((level-1)/5) + attr_stamina_points*2
+  // Seed stamina = max_stamina for existing characters that have the default 10
+  await client.execute(`
+    UPDATE characters
+    SET max_stamina = 10 + ((level - 1) / 5) + COALESCE(attr_stamina_points, 0) * 2,
+        stamina     = CASE WHEN stamina = 10 THEN 10 + ((level - 1) / 5) + COALESCE(attr_stamina_points, 0) * 2
+                          ELSE MIN(stamina, 10 + ((level - 1) / 5) + COALESCE(attr_stamina_points, 0) * 2) END
     WHERE 1=1
   `);
 
