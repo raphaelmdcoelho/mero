@@ -67,6 +67,7 @@ let lastGearStats = null;
 let selectedDungeonLevel = 1;
 let selectedDungeonSet   = 1;
 let selectedDifficulty   = 'easy';
+let selectedPotionItemId = null;
 
 // Dungeon countdown state (client-side)
 let dungeonPollInterval = null;
@@ -310,9 +311,59 @@ async function stopActivity() {
 function openDungeonModal() {
   selectedDifficulty   = 'easy';
   selectedDungeonLevel = DIFFICULTY_LEVEL.easy;
+  selectedPotionItemId = null;
   renderDungeonCarousel();
   updateDifficultyUI();
+  renderPotionSelector();
   document.getElementById('dungeon-modal').classList.add('open');
+}
+
+const POTION_BUFF_LABELS = {
+  speed:          '⚡ −30% dungeon time',
+  loot_quality:   '🍀 Improved loot quality',
+  loot_count:     '🎁 +2 extra loot items',
+  stamina:        '💚 +1 stamina on completion',
+  xp_multiplier:  '📚 ×2 XP gain',
+};
+
+function renderPotionSelector() {
+  const section = document.getElementById('dungeon-potion-section');
+  const list    = document.getElementById('potion-slot-list');
+  if (!charState) { section.style.display = 'none'; return; }
+
+  const potions = (charState.inventory || []).filter(i => i.item_subtype === 'adventure_potion');
+  if (!potions.length) {
+    section.style.display = 'none';
+    return;
+  }
+  section.style.display = '';
+
+  const noneSelected = selectedPotionItemId === null;
+  list.innerHTML = [
+    `<button type="button" class="potion-slot${noneSelected ? ' selected' : ''}" onclick="selectPotion(null)">
+       <span class="potion-slot-icon">✗</span>
+       <span class="potion-slot-name">None</span>
+     </button>`,
+    ...potions.map(p => {
+      let buffLabel = '';
+      try {
+        const b = JSON.parse(p.buff_effect || '{}');
+        buffLabel = POTION_BUFF_LABELS[b.type] || '';
+      } catch {}
+      const sel = selectedPotionItemId === p.item_id;
+      return `<button type="button" class="potion-slot${sel ? ' selected' : ''}" onclick="selectPotion(${p.item_id})">
+        <span class="potion-slot-icon">${p.icon}</span>
+        <span class="potion-slot-name">${escHtml(p.name)}</span>
+        ${p.quantity > 1 ? `<span class="potion-slot-qty">×${p.quantity}</span>` : ''}
+        ${buffLabel ? `<span class="potion-slot-buff">${buffLabel}</span>` : ''}
+      </button>`;
+    }),
+  ].join('');
+}
+
+function selectPotion(itemId) {
+  selectedPotionItemId = itemId;
+  renderPotionSelector();
 }
 
 function renderDungeonCarousel() {
@@ -375,16 +426,19 @@ function nextDungeon() {
 }
 
 function closeDungeonModal() {
+  selectedPotionItemId = null;
   document.getElementById('dungeon-modal').classList.remove('open');
 }
 
 async function confirmEnterDungeon() {
   closeDungeonModal();
-  const res = await api.post(`/api/game/${charId}/dungeon/enter`, {
+  const body = {
     level: selectedDungeonLevel,
     set: selectedDungeonSet,
     difficulty: selectedDifficulty,
-  });
+  };
+  if (selectedPotionItemId) body.potion_item_id = selectedPotionItemId;
+  const res = await api.post(`/api/game/${charId}/dungeon/enter`, body);
   if (!res) return;
   const data = await res.json();
   if (!res.ok) { showToast(data.error || t('game.js.failed_dungeon'), 'danger'); return; }
@@ -414,6 +468,22 @@ function renderBattlePanel(char) {
 
   const diff = run.difficulty || 'easy';
   document.getElementById('dungeon-diff-badge').textContent = diff.charAt(0).toUpperCase() + diff.slice(1);
+
+  // Show active potion badge
+  const potionRow = document.getElementById('active-potion-row');
+  const activePotionId = run.potion_item_id ? Number(run.potion_item_id) : null;
+  if (activePotionId) {
+    const potionItem = (char.inventory || []).find(i => i.item_id === activePotionId);
+    let buffLabel = '';
+    try {
+      const b = JSON.parse(potionItem?.buff_effect || '{}');
+      buffLabel = POTION_BUFF_LABELS[b.type] || '';
+    } catch {}
+    potionRow.innerHTML = `<span class="active-potion-badge">${potionItem?.icon || '🧪'} ${escHtml(potionItem?.name || 'Potion')} · ${buffLabel}</span>`;
+    potionRow.classList.remove('hidden');
+  } else {
+    potionRow.classList.add('hidden');
+  }
 
   // Update countdown display immediately from local state
   if (dungeonEndsAt) updateTimerDisplay();
@@ -478,6 +548,7 @@ async function pollDungeonStatus() {
     return;
   }
 
+
   if (data.active) {
     dungeonEndsAt = Number(data.endsAt) * 1000;
     updateTimerDisplay();
@@ -505,6 +576,16 @@ function showLootModal(data, forced) {
   const xpRow = document.getElementById('loot-xp-row');
   xpRow.textContent = data.gainedXp ? `+${data.gainedXp} XP` : '';
 
+  // Show potion buff that was applied
+  const buffRow = document.getElementById('loot-buff-row');
+  if (data.buff && data.buff.type) {
+    const label = POTION_BUFF_LABELS[data.buff.type] || '';
+    buffRow.textContent = label ? `✨ ${label} applied` : '';
+    buffRow.classList.toggle('hidden', !label);
+  } else {
+    buffRow.classList.add('hidden');
+  }
+
   const lootList = document.getElementById('loot-list');
   const loot = data.loot || [];
   if (loot.length === 0) {
@@ -518,6 +599,7 @@ function showLootModal(data, forced) {
       </div>`
     ).join('');
   }
+
 
   modal.classList.add('open');
 }
@@ -619,13 +701,15 @@ function equippedSlotMap(char) {
   };
 }
 
+const MAX_INVENTORY_SLOTS = 25;
+
 // ---- Inventory ----
 function renderInventory(char) {
   if (!char) return;
   const grid = document.getElementById('inv-grid');
   const inv  = char.inventory || [];
-  const slots = Array(10).fill(null);
-  inv.forEach((item, i) => { if (i < 10) slots[i] = item; });
+  const slots = Array(MAX_INVENTORY_SLOTS).fill(null);
+  inv.forEach((item, i) => { if (i < MAX_INVENTORY_SLOTS) slots[i] = item; });
   const equippedIds = new Set([char.weapon_id, char.armor_id, char.shield_id].filter(Boolean));
 
   const gender = char.gender || 'male';

@@ -139,20 +139,26 @@ async function combatStats(char) {
 }
 
 // Generate loot for a completed dungeon run
-async function generateLoot(run, bossXp, difficulty, actualDurationMs, totalDurationMs) {
+// buff: parsed buff_effect object from the adventure potion, or null
+async function generateLoot(run, bossXp, difficulty, actualDurationMs, totalDurationMs, buff = null) {
   const dungeonLevel = Number(run.dungeon_level) || 1;
 
   // XP proportional to time spent
   const timeFraction = Math.min(1, actualDurationMs / totalDurationMs);
   const diffXpMult   = { easy: 0.3, medium: 0.6, hard: 1.0 }[difficulty] || 0.3;
-  const gainedXp     = Math.max(1, Math.round(bossXp * diffXpMult * timeFraction));
+  let gainedXp       = Math.max(1, Math.round(bossXp * diffXpMult * timeFraction));
+  if (buff?.type === 'xp_multiplier') gainedXp = Math.round(gainedXp * (buff.value || 2));
 
-  // Loot count based on difficulty
+  // Loot count based on difficulty (+ abundance buff)
   const lootCountRange = { easy: [1, 2], medium: [1, 3], hard: [2, 4] }[difficulty] || [1, 2];
-  const lootCount = lootCountRange[0] + Math.floor(Math.random() * (lootCountRange[1] - lootCountRange[0] + 1));
+  let lootCount = lootCountRange[0] + Math.floor(Math.random() * (lootCountRange[1] - lootCountRange[0] + 1));
+  if (buff?.type === 'loot_count') lootCount += Number(buff.value) || 0;
+
+  // Gear quality ceiling (fortune brew doubles the stat cap)
+  let maxStat = Math.max(3, dungeonLevel * 2);
+  if (buff?.type === 'loot_quality') maxStat = Math.max(3, dungeonLevel * 2 * (buff.value || 2));
 
   const loot = [];
-  const maxStat = Math.max(3, dungeonLevel * 2);
 
   const gearR = await client.execute({
     sql: `SELECT * FROM items
@@ -162,16 +168,25 @@ async function generateLoot(run, bossXp, difficulty, actualDurationMs, totalDura
   });
   const gearPool = gearR.rows.map(r => Object.assign({}, r));
 
-  const consumables = [
+  const regularConsumables = [
     { type: 'consumable', name: 'Health Potion', icon: '🧪', item_id: 5 },
     { type: 'consumable', name: 'Carrot',         icon: '🥕', item_id: 6 },
     { type: 'consumable', name: 'Apple',           icon: '🍎', item_id: 7 },
+  ];
+  const adventurePotions = [
+    { type: 'consumable', name: 'Swift Elixir',     icon: '⚡', item_id: 20 },
+    { type: 'consumable', name: 'Fortune Brew',     icon: '🍀', item_id: 21 },
+    { type: 'consumable', name: 'Abundance Tonic',  icon: '🎁', item_id: 22 },
+    { type: 'consumable', name: 'Vitality Draught', icon: '💚', item_id: 23 },
+    { type: 'consumable', name: 'Wisdom Potion',    icon: '📚', item_id: 24 },
   ];
 
   for (let i = 0; i < lootCount; i++) {
     const isConsumable = Math.random() < 0.5 || !gearPool.length;
     if (isConsumable) {
-      const c = consumables[Math.floor(Math.random() * consumables.length)];
+      // 25% chance for an adventure potion drop, 75% regular consumable
+      const pool = Math.random() < 0.25 ? adventurePotions : regularConsumables;
+      const c = pool[Math.floor(Math.random() * pool.length)];
       const qty = 1 + Math.floor(Math.random() * 2);
       loot.push({ type: c.type, name: c.name, icon: c.icon, item_id: c.item_id, quantity: qty });
     } else {
@@ -215,6 +230,33 @@ async function completeDungeonRun(char, run, forced) {
     ? Math.max(0, nowMs - startedAt * 1000)
     : totalDuration;
 
+  // Load potion buff if one was equipped for this run
+  let buff = null;
+  let potionItemId = run.potion_item_id ? Number(run.potion_item_id) : null;
+  if (potionItemId) {
+    const potionR = await client.execute({
+      sql:  'SELECT buff_effect FROM items WHERE id = ?',
+      args: [potionItemId],
+    });
+    const rawBuff = potionR.rows[0]?.buff_effect;
+    if (rawBuff) {
+      try { buff = JSON.parse(rawBuff); } catch { /* ignore malformed */ }
+    }
+    // Consume the potion from inventory
+    const invR = await client.execute({
+      sql:  'SELECT id, quantity FROM inventory WHERE character_id = ? AND item_id = ?',
+      args: [char.id, potionItemId],
+    });
+    const invRow = invR.rows[0] ?? null;
+    if (invRow) {
+      if (Number(invRow.quantity) <= 1) {
+        await client.execute({ sql: 'DELETE FROM inventory WHERE id = ?', args: [invRow.id] });
+      } else {
+        await client.execute({ sql: 'UPDATE inventory SET quantity = quantity - 1 WHERE id = ?', args: [invRow.id] });
+      }
+    }
+  }
+
   const dungeonSet   = Number(run.dungeon_set) || 1;
   const dungeonLevel = Number(run.dungeon_level) || 1;
   const bossR = await client.execute({
@@ -223,7 +265,7 @@ async function completeDungeonRun(char, run, forced) {
   });
   const bossXp = bossR.rows[0] ? Number(bossR.rows[0].xp_reward) : 100;
 
-  const { gainedXp, loot } = await generateLoot(run, bossXp, difficulty, actualMs, totalDuration);
+  const { gainedXp, loot } = await generateLoot(run, bossXp, difficulty, actualMs, totalDuration, buff);
 
   const afterXp = levelUp({
     xp: Number(char.xp) + gainedXp,
@@ -235,8 +277,11 @@ async function completeDungeonRun(char, run, forced) {
     attr_stamina:  Number(char.attr_stamina)  || 5,
   });
 
-  // Restore stamina to full on level-up; keep current otherwise
-  const newStamina = afterXp.leveled ? afterXp.max_stamina : (Number(char.stamina) || 0);
+  // Restore stamina to full on level-up; apply stamina buff; keep current otherwise
+  let newStamina = afterXp.leveled ? afterXp.max_stamina : (Number(char.stamina) || 0);
+  if (!afterXp.leveled && buff?.type === 'stamina') {
+    newStamina = Math.min(afterXp.max_stamina, newStamina + (Number(buff.value) || 0));
+  }
 
   await awardLoot(char.id, loot);
 
@@ -264,7 +309,7 @@ async function completeDungeonRun(char, run, forced) {
     },
   ], 'write');
 
-  return { gainedXp, loot, newMastery, forced };
+  return { gainedXp, loot, newMastery, forced, buff, potionItemId };
 }
 
 function applyReadingTick(char) {
@@ -525,16 +570,50 @@ router.post('/:characterId/dungeon/enter', async (req, res) => {
     return res.status(500).json({ error: 'Monster data missing' });
   }
 
+  // Validate optional adventure potion
+  let potionItemId = null;
+  if (req.body.potion_item_id) {
+    const pid = Number(req.body.potion_item_id);
+    if (pid) {
+      const potionItemR = await client.execute({
+        sql:  `SELECT i.id, i.item_subtype, i.buff_effect
+               FROM inventory inv
+               JOIN items i ON i.id = inv.item_id
+               WHERE inv.character_id = ? AND inv.item_id = ? AND inv.quantity > 0`,
+        args: [char.id, pid],
+      });
+      const potionItem = potionItemR.rows[0] ?? null;
+      if (!potionItem) return res.status(400).json({ error: 'Potion not in inventory' });
+      if (potionItem.item_subtype !== 'adventure_potion') {
+        return res.status(400).json({ error: 'Only adventure potions can be used in dungeons' });
+      }
+      potionItemId = pid;
+    }
+  }
+
+  // Parse speed buff to shorten dungeon duration
+  let durationMs = diffConfig.durationMs;
+  if (potionItemId) {
+    const potR = await client.execute({ sql: 'SELECT buff_effect FROM items WHERE id = ?', args: [potionItemId] });
+    const rawBuff = potR.rows[0]?.buff_effect;
+    if (rawBuff) {
+      try {
+        const b = JSON.parse(rawBuff);
+        if (b.type === 'speed') durationMs = Math.floor(durationMs * b.value);
+      } catch { /* ignore */ }
+    }
+  }
+
   const now     = Math.floor(Date.now() / 1000);
-  const endsAt  = now + Math.floor(diffConfig.durationMs / 1000);
+  const endsAt  = now + Math.floor(durationMs / 1000);
   const newStamina = currentStamina - diffConfig.staminaCost;
 
   await client.batch([
     {
       sql:  `INSERT INTO dungeon_run
-               (character_id, dungeon_level, dungeon_set, kills, monster_id, monster_hp, started_at, difficulty, ends_at)
-             VALUES (?, ?, ?, 0, ?, ?, ?, ?, ?)`,
-      args: [char.id, requestedLevel, requestedSet, monster.id, monster.hp, now, difficulty, endsAt],
+               (character_id, dungeon_level, dungeon_set, kills, monster_id, monster_hp, started_at, difficulty, ends_at, potion_item_id)
+             VALUES (?, ?, ?, 0, ?, ?, ?, ?, ?, ?)`,
+      args: [char.id, requestedLevel, requestedSet, monster.id, monster.hp, now, difficulty, endsAt, potionItemId],
     },
     {
       sql:  `UPDATE characters
@@ -574,6 +653,7 @@ router.get('/:characterId/dungeon/status', async (req, res) => {
       difficulty: run.difficulty,
       dungeon_level: run.dungeon_level,
       dungeon_set: run.dungeon_set,
+      potion_item_id: run.potion_item_id ?? null,
     });
   }
 

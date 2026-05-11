@@ -1465,3 +1465,76 @@ input:focus, select:focus {
 .loot-item-name { flex: 1; }
 .loot-item-qty  { color: var(--muted); font-size: 0.8rem; }
 
+/* ---- Loot buff row (potion applied) ---- */
+.loot-buff-row {
+  font-size: 0.82rem;
+  color: var(--accent);
+  text-align: center;
+  margin-bottom: 0.6rem;
+  padding: 0.3rem 0.6rem;
+  background: color-mix(in srgb, var(--accent) 10%, var(--surface2));
+  border-radius: 8px;
+  border: 1px solid var(--border);
+}
+
+/* ---- Dungeon potion selector ---- */
+.dungeon-potion-section {
+  margin-top: 0.75rem;
+}
+.potion-optional {
+  font-size: 0.7rem;
+  color: var(--muted);
+  font-weight: 400;
+}
+.potion-slot-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-top: 0.4rem;
+}
+.potion-slot {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.15rem;
+  padding: 0.45rem 0.6rem;
+  min-width: 72px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--surface2);
+  color: var(--muted);
+  cursor: pointer;
+  font-size: 0.78rem;
+  text-align: center;
+  transition: border-color 0.15s, color 0.15s, background 0.15s;
+}
+.potion-slot:hover {
+  border-color: var(--accent);
+  color: var(--text);
+}
+.potion-slot.selected {
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 12%, var(--surface2));
+  color: var(--accent);
+}
+.potion-slot-icon { font-size: 1.2rem; line-height: 1; }
+.potion-slot-name { font-size: 0.72rem; font-weight: 600; }
+.potion-slot-qty  { font-size: 0.65rem; color: var(--muted); }
+.potion-slot-buff { font-size: 0.65rem; color: var(--muted); }
+.potion-slot.selected .potion-slot-buff { color: var(--accent); }
+
+/* ---- Active potion badge (battle panel) ---- */
+.active-potion-row {
+  margin-bottom: 0.75rem;
+  text-align: center;
+}
+.active-potion-badge {
+  display: inline-block;
+  font-size: 0.78rem;
+  padding: 0.25rem 0.7rem;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: color-mix(in srgb, var(--accent) 10%, var(--surface2));
+  color: var(--accent);
+}
+
