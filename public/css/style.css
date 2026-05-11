@@ -1064,6 +1064,7 @@ input:focus, select:focus {
   letter-spacing: 0.05em;
 }
 .dungeon-modal-note { text-align: center; font-size: 0.8rem; color: var(--muted); margin-bottom: 0.75rem; }
+#dungeon-modal .modal { min-height: 540px; }
 
 /* ---- Battle panel ---- */
 .battle-progress {
