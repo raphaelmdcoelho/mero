@@ -129,6 +129,7 @@
       'game.eq.equip_from':      'Equip from inventory:',
 
       // Stats panel
+      'game.sp.title':           '📊 Combat Stats',
       'game.sp.max_hp':          '❤️ Max HP',
       'game.sp.damage':          '⚔️ Damage',
       'game.sp.hit_chance':      '🎯 Hit Chance',
@@ -384,6 +385,7 @@
       'game.eq.equip_from':      'Equipar do inventário:',
 
       // Stats panel
+      'game.sp.title':           '📊 Status de Combate',
       'game.sp.max_hp':          '❤️ HP Máximo',
       'game.sp.damage':          '⚔️ Dano',
       'game.sp.hit_chance':      '🎯 Chance de Acerto',
