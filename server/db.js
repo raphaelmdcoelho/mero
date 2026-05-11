@@ -144,6 +144,9 @@ async function initDb() {
     'ALTER TABLE characters ADD COLUMN max_stamina         INTEGER DEFAULT 10',
     'ALTER TABLE dungeon_run ADD COLUMN difficulty TEXT',
     'ALTER TABLE dungeon_run ADD COLUMN ends_at    INTEGER',
+    'ALTER TABLE items ADD COLUMN item_subtype TEXT DEFAULT NULL',
+    'ALTER TABLE items ADD COLUMN buff_effect  TEXT DEFAULT NULL',
+    'ALTER TABLE dungeon_run ADD COLUMN potion_item_id INTEGER DEFAULT NULL',
   ];
 
   for (const sql of additiveMigrations) {
@@ -198,8 +201,14 @@ async function initDb() {
     [17, 'Longbow',        'weapon',     'High-tension bow with strong pull.', '🏹', 6,  0, 'ranged', null,   38,  75],
     [18, 'Guardian Armor', 'armor',      'Layered plates for elite guards.',  '🦾', 0,  8, null,    'body',   60, 120],
     [19, 'Tower Shield',   'armor',      'Massive shield with near-wall cover.','🧱',0,10, null,    'shield', 75, 150],
+    [20, 'Swift Elixir',     'consumable', 'Reduces dungeon time by 30%.',               '⚡', 0, 0, null, null, 15, 30],
+    [21, 'Fortune Brew',     'consumable', 'Greatly improves dungeon loot quality.',      '🍀', 0, 0, null, null, 20, 40],
+    [22, 'Abundance Tonic',  'consumable', 'Gain 2 extra loot items from the dungeon.',   '🎁', 0, 0, null, null, 15, 30],
+    [23, 'Vitality Draught', 'consumable', 'Restores 1 stamina upon dungeon completion.', '💚', 0, 0, null, null, 10, 20],
+    [24, 'Wisdom Potion',    'consumable', 'Doubles XP gained in the dungeon.',           '📚', 0, 0, null, null, 25, 50],
   ];
 
+  // Main item seed: insert + set combat/price stats
   await client.batch([
     ...itemData.map(([id, name, type, desc, icon]) => ({
       sql:  'INSERT OR IGNORE INTO items (id, name, type, description, icon) VALUES (?, ?, ?, ?, ?)',
@@ -210,6 +219,23 @@ async function initDb() {
       args: [dmg, def, wt, as, sp, bp, id],
     })),
   ], 'write');
+
+  // Adventure potion metadata — separate call so a missing column never rolls back the item INSERTs
+  const potionMeta = [
+    [20, 'adventure_potion', '{"type":"speed","value":0.7}'],
+    [21, 'adventure_potion', '{"type":"loot_quality","value":2}'],
+    [22, 'adventure_potion', '{"type":"loot_count","value":2}'],
+    [23, 'adventure_potion', '{"type":"stamina","value":1}'],
+    [24, 'adventure_potion', '{"type":"xp_multiplier","value":2}'],
+  ];
+  for (const [id, subtype, buff] of potionMeta) {
+    try {
+      await client.execute({
+        sql:  'UPDATE items SET item_subtype = ?, buff_effect = ? WHERE id = ?',
+        args: [subtype, buff, id],
+      });
+    } catch { /* item_subtype column not yet available — skipped */ }
+  }
 
   // Safety migration for older saves where a shield was equipped in armor slot.
   await client.execute(`
