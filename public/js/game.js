@@ -360,11 +360,11 @@ function renderPotionSelector() {
   if (!charState) { section.style.display = 'none'; return; }
 
   const potions = (charState.inventory || []).filter(i => i.item_subtype === 'adventure_potion');
+  section.style.display = '';
   if (!potions.length) {
-    section.style.display = 'none';
+    list.innerHTML = `<p class="potion-empty-msg">No adventure potions to be used</p>`;
     return;
   }
-  section.style.display = '';
 
   const noneSelected = selectedPotionItemId === null;
   list.innerHTML = [

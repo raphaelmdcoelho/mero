@@ -1040,7 +1040,7 @@ input:focus, select:focus {
   transition: all 0.2s;
   flex-shrink: 0;
   line-height: 1;
-  padding: 0;
+  padding: 0 0 3px 0;
 }
 .carousel-arrow:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); }
 .carousel-arrow:disabled { opacity: 0.25; cursor: not-allowed; }
@@ -1498,6 +1498,12 @@ input:focus, select:focus {
   flex-wrap: wrap;
   gap: 0.4rem;
   margin-top: 0.4rem;
+}
+.potion-empty-msg {
+  font-size: 0.8rem;
+  color: var(--muted);
+  margin: 0.3rem 0 0;
+  font-style: italic;
 }
 .potion-slot {
   display: flex;
