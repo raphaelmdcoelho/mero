@@ -56,8 +56,8 @@ const DUNGEONS = [
     fallbackIcon: '/dungeon-icon.png',
     set: 6,
     masteryCol: 'dungeon_mastery_s6',
-    unlockLevel: 60,
-    xp: { easy: 7700, medium: 12320, hard: 18480 },
+    unlockLevel: 5,
+    xp: { easy: 83, medium: 135, hard: 195 },
     levels: [
       { n: 1, label: 'Easy' },
       { n: 2, label: 'Medium' },
@@ -71,8 +71,8 @@ const DUNGEONS = [
     fallbackIcon: '/dungeon-icon.png',
     set: 7,
     masteryCol: 'dungeon_mastery_s7',
-    unlockLevel: 70,
-    xp: { easy: 15400, medium: 24640, hard: 36960 },
+    unlockLevel: 10,
+    xp: { easy: 138, medium: 225, hard: 325 },
     levels: [
       { n: 1, label: 'Easy' },
       { n: 2, label: 'Medium' },

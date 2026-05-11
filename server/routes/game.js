@@ -9,7 +9,7 @@ const PLANT_ITEM_HP = { 6: 2, 7: 1 };
 const TAVERN_STAMINA_RATE = 1; // ST/min (faster than idle regen)
 const POINTS_PER_LEVEL = 5;
 
-const SET_UNLOCK_LEVEL = { 1: 1, 2: 20, 3: 30, 4: 40, 5: 50, 6: 60, 7: 70 };
+const SET_UNLOCK_LEVEL = { 1: 1, 2: 20, 3: 30, 4: 40, 5: 50, 6: 5, 7: 10 };
 const MASTERY_COL = {
   1: 'dungeon_mastery',
   2: 'dungeon_mastery_s2',

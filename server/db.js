@@ -403,60 +403,60 @@ async function initDb() {
     }
   }
 
-  // Set 6 — Autumn Harvest (unlocks at level 60, ~2x Set 5 stats)
+  // Set 6 — Autumn Harvest (unlocks at level 5, ~1.5x Set 1 stats)
   {
     const r = await client.execute("SELECT COUNT(*) as cnt FROM monsters WHERE dungeon_set = 6");
     if (Number(r.rows[0].cnt) === 0) {
       await client.batch([
-        { sql: monsterSql, args: [6,  1,'Scarecrow',           '🎃',   1680,   270, 65, 17,  8,    700,  0, 25,  8] },
-        { sql: monsterSql, args: [6,  2,'Harvest Shade',       '🍂',   2520,   360, 68, 14, 16,   1120,  0, 25,  8] },
-        { sql: monsterSql, args: [6,  3,'Wither Wight',        '💀',   3080,   450, 70, 15, 26,   1680,  0, 25,  8] },
-        { sql: monsterSql, args: [6,  4,'Autumn Elf',          '🧝',   3920,   630, 75, 21, 32,   2520,  0, 25,  8] },
-        { sql: monsterSql, args: [6,  5,'Hollow Wolf',         '🐺',   5320,   810, 77, 23, 38,   3640,  0, 25,  8] },
-        { sql: monsterSql, args: [6,  6,'Dusk Vampire',        '🧛',   7000,  1080, 78, 25, 50,   5320,  0, 26,  8] },
-        { sql: monsterSql, args: [6,  7,'Blight Golem',        '🪨',   9100,  1350, 75, 15, 62,   7700,  0, 26,  8] },
-        { sql: monsterSql, args: [6,  8,'Harvest Demon',       '😈',  11200,  1620, 80, 21, 74,  10500,  0, 26,  8] },
-        { sql: monsterSql, args: [6,  9,'Crimson Beast',       '🍁',  14000,  2070, 82, 25, 86,  14000,  0, 26,  8] },
-        { sql: monsterSql, args: [6, 10,'Autumn Drake',        '🐉',  18200,  2700, 85, 27,104,  18900,  0, 26, 10] },
-        { sql: monsterSql, args: [6,  1,'Scarecrow King',      '🎃',   8400,   540, 68, 14, 18,   7700,  1, 25, 40] },
-        { sql: monsterSql, args: [6,  2,'Harvest Warlord',     '💪',  14000,   720, 71, 13, 38,  12320,  1, 25, 38] },
-        { sql: monsterSql, args: [6,  3,'Skeletal Reaper',     '⚔️',  21000,   900, 73, 14, 58,  18480,  1, 25, 35] },
-        { sql: monsterSql, args: [6,  4,'Shadow Leaf Assassin','🗡️',  27440,  1260, 78, 24, 76,  27720,  1, 26, 35] },
-        { sql: monsterSql, args: [6,  5,'Ancient Hollow Wolf', '🌕',  37240,  1620, 80, 21, 96,  40040,  1, 26, 30] },
-        { sql: monsterSql, args: [6,  6,'Twilight Lord',       '🍂',  49000,  2160, 81, 23,116,  58520,  1, 26, 30] },
-        { sql: monsterSql, args: [6,  7,'Amber Titan',         '⛰️',  63700,  2700, 78, 14,144,  84700,  1, 26, 30] },
-        { sql: monsterSql, args: [6,  8,'Arch Harvest Demon',  '👿',  78400,  3240, 83, 19,162, 115500,  1, 26, 25] },
-        { sql: monsterSql, args: [6,  9,'Crimson Emperor',     '👁️',  98000,  4140, 85, 23,184, 154000,  1, 26, 25] },
-        { sql: monsterSql, args: [6, 10,'Ancient Autumn Dragon','🐉',127400,  5400, 88, 25,228, 189000,  1, 26, 40] },
+        { sql: monsterSql, args: [6,  1,'Scarecrow',           '🎃',    18,   5, 56,  9,  0,    8,  0, 25,  8] },
+        { sql: monsterSql, args: [6,  2,'Harvest Shade',       '🍂',    27,   6, 59,  6,  1,   12,  0, 25,  8] },
+        { sql: monsterSql, args: [6,  3,'Wither Wight',        '💀',    33,   8, 61,  7,  2,   18,  0, 25,  8] },
+        { sql: monsterSql, args: [6,  4,'Autumn Elf',          '🧝',    42,  11, 66, 13,  3,   27,  0, 25,  8] },
+        { sql: monsterSql, args: [6,  5,'Hollow Wolf',         '🐺',    57,  14, 68, 15,  4,   39,  0, 25,  8] },
+        { sql: monsterSql, args: [6,  6,'Dusk Vampire',        '🧛',    75,  18, 69, 17,  5,   57,  0, 26,  8] },
+        { sql: monsterSql, args: [6,  7,'Blight Golem',        '🪨',    98,  23, 66,  7,  7,   83,  0, 26,  8] },
+        { sql: monsterSql, args: [6,  8,'Harvest Demon',       '😈',   120,  27, 71, 13,  8,  113,  0, 26,  8] },
+        { sql: monsterSql, args: [6,  9,'Crimson Beast',       '🍁',   150,  35, 73, 17,  9,  150,  0, 26,  8] },
+        { sql: monsterSql, args: [6, 10,'Autumn Drake',        '🐉',   195,  45, 76, 19, 11,  203,  0, 26, 10] },
+        { sql: monsterSql, args: [6,  1,'Scarecrow King',      '🎃',    90,   8, 61,  6,  1,   83,  1, 25, 40] },
+        { sql: monsterSql, args: [6,  2,'Harvest Warlord',     '💪',   150,  12, 63,  5,  2,  135,  1, 25, 38] },
+        { sql: monsterSql, args: [6,  3,'Skeletal Reaper',     '⚔️',   225,  15, 66,  7,  3,  195,  1, 25, 35] },
+        { sql: monsterSql, args: [6,  4,'Shadow Leaf Assassin','🗡️',   300,  20, 69, 16,  5,  270,  1, 26, 35] },
+        { sql: monsterSql, args: [6,  5,'Ancient Hollow Wolf', '🌕',   420,  26, 71, 13,  6,  375,  1, 26, 30] },
+        { sql: monsterSql, args: [6,  6,'Twilight Lord',       '🍂',   570,  33, 73, 15,  7,  540,  1, 26, 30] },
+        { sql: monsterSql, args: [6,  7,'Amber Titan',         '⛰️',   750,  42, 69,  6,  9,  720,  1, 26, 30] },
+        { sql: monsterSql, args: [6,  8,'Arch Harvest Demon',  '👿',   960,  51, 74, 11, 10,  960,  1, 26, 25] },
+        { sql: monsterSql, args: [6,  9,'Crimson Emperor',     '👁️',  1200,  63, 76, 15, 12, 1230,  1, 26, 25] },
+        { sql: monsterSql, args: [6, 10,'Ancient Autumn Dragon','🐉',  1500,  78, 79, 17, 14, 1500,  1, 26, 40] },
       ], 'write');
     }
   }
 
-  // Set 7 — Murky Swamp (unlocks at level 70, ~4x Set 5 stats)
+  // Set 7 — Murky Swamp (unlocks at level 10, ~2.5x Set 1 stats)
   {
     const r = await client.execute("SELECT COUNT(*) as cnt FROM monsters WHERE dungeon_set = 7");
     if (Number(r.rows[0].cnt) === 0) {
       await client.batch([
-        { sql: monsterSql, args: [7,  1,'Bog Wisp',            '🌿',   3360,   540, 67, 19, 12,   1400,  0, 27,  8] },
-        { sql: monsterSql, args: [7,  2,'Swamp Troll',         '🧌',   5040,   720, 70, 16, 24,   2240,  0, 27,  8] },
-        { sql: monsterSql, args: [7,  3,'Muck Bones',          '💀',   6160,   900, 72, 17, 40,   3360,  0, 27,  8] },
-        { sql: monsterSql, args: [7,  4,'Marsh Elf',           '🧝',   7840,  1260, 77, 23, 50,   5040,  0, 27,  8] },
-        { sql: monsterSql, args: [7,  5,'Swamp Hound',         '🐺',  10640,  1620, 79, 25, 60,   7280,  0, 27,  8] },
-        { sql: monsterSql, args: [7,  6,'Bog Wraith',          '👻',  14000,  2160, 80, 27, 80,  10640,  0, 28,  8] },
-        { sql: monsterSql, args: [7,  7,'Mud Golem',           '🪨',  18200,  2700, 77, 17,100,  15400,  0, 28,  8] },
-        { sql: monsterSql, args: [7,  8,'Swamp Demon',         '😈',  22400,  3240, 82, 23,120,  21000,  0, 28,  8] },
-        { sql: monsterSql, args: [7,  9,'Mire Beast',          '🐊',  28000,  4140, 84, 27,140,  28000,  0, 28,  8] },
-        { sql: monsterSql, args: [7, 10,'Serpent Drake',       '🐍',  36400,  5400, 87, 29,172,  37800,  0, 28, 10] },
-        { sql: monsterSql, args: [7,  1,'Bog Titan',           '🌿',  16800,  1080, 70, 16, 30,  15400,  1, 27, 40] },
-        { sql: monsterSql, args: [7,  2,'Swamp Warchief',      '💪',  28000,  1440, 73, 15, 60,  24640,  1, 27, 38] },
-        { sql: monsterSql, args: [7,  3,'Muck Warlord',        '⚔️',  42000,  1800, 75, 16, 90,  36960,  1, 27, 35] },
-        { sql: monsterSql, args: [7,  4,'Poison Assassin',     '🗡️',  54880,  2520, 80, 26,116,  55440,  1, 28, 35] },
-        { sql: monsterSql, args: [7,  5,'Alpha Swamp Hound',   '🌕',  74480,  3240, 82, 23,140,  80080,  1, 28, 30] },
-        { sql: monsterSql, args: [7,  6,'Swamp Lord',          '🌿',  98000,  4320, 83, 25,168, 117040,  1, 28, 30] },
-        { sql: monsterSql, args: [7,  7,'Mire Titan',          '⛰️', 127400,  5400, 80, 16,208, 169400,  1, 28, 30] },
-        { sql: monsterSql, args: [7,  8,'Arch Bog Demon',      '👿', 156800,  6480, 85, 21,236, 231000,  1, 28, 25] },
-        { sql: monsterSql, args: [7,  9,'Swamp Emperor',       '👁️', 196000,  8280, 87, 25,268, 308000,  1, 28, 25] },
-        { sql: monsterSql, args: [7, 10,'Ancient Serpent',     '🐊', 254800, 10800, 90, 27,344, 378000,  1, 28, 40] },
+        { sql: monsterSql, args: [7,  1,'Bog Wisp',            '🌿',    30,   8, 57, 10,  1,   13,  0, 27,  8] },
+        { sql: monsterSql, args: [7,  2,'Swamp Troll',         '🧌',    45,  10, 60,  6,  2,   20,  0, 27,  8] },
+        { sql: monsterSql, args: [7,  3,'Muck Bones',          '💀',    55,  13, 62,  8,  3,   30,  0, 27,  8] },
+        { sql: monsterSql, args: [7,  4,'Marsh Elf',           '🧝',    70,  18, 67, 14,  4,   45,  0, 27,  8] },
+        { sql: monsterSql, args: [7,  5,'Swamp Hound',         '🐺',    95,  23, 69, 16,  5,   65,  0, 27,  8] },
+        { sql: monsterSql, args: [7,  6,'Bog Wraith',          '👻',   125,  30, 70, 18,  6,   95,  0, 28,  8] },
+        { sql: monsterSql, args: [7,  7,'Mud Golem',           '🪨',   163,  38, 67,  8,  8,  138,  0, 28,  8] },
+        { sql: monsterSql, args: [7,  8,'Swamp Demon',         '😈',   200,  45, 72, 14, 10,  188,  0, 28,  8] },
+        { sql: monsterSql, args: [7,  9,'Mire Beast',          '🐊',   250,  58, 74, 18, 12,  250,  0, 28,  8] },
+        { sql: monsterSql, args: [7, 10,'Serpent Drake',       '🐍',   325,  75, 77, 20, 14,  338,  0, 28, 10] },
+        { sql: monsterSql, args: [7,  1,'Bog Titan',           '🌿',   150,  13, 62,  7,  2,  138,  1, 27, 40] },
+        { sql: monsterSql, args: [7,  2,'Swamp Warchief',      '💪',   250,  20, 64,  6,  4,  225,  1, 27, 38] },
+        { sql: monsterSql, args: [7,  3,'Muck Warlord',        '⚔️',   375,  25, 67,  8,  5,  325,  1, 27, 35] },
+        { sql: monsterSql, args: [7,  4,'Poison Assassin',     '🗡️',   500,  33, 70, 17,  7,  450,  1, 28, 35] },
+        { sql: monsterSql, args: [7,  5,'Alpha Swamp Hound',   '🌕',   700,  43, 72, 14,  9,  625,  1, 28, 30] },
+        { sql: monsterSql, args: [7,  6,'Swamp Lord',          '🌿',   950,  55, 74, 16, 11,  900,  1, 28, 30] },
+        { sql: monsterSql, args: [7,  7,'Mire Titan',          '⛰️',  1250,  70, 70,  7, 13, 1200,  1, 28, 30] },
+        { sql: monsterSql, args: [7,  8,'Arch Bog Demon',      '👿',  1600,  85, 75, 12, 15, 1600,  1, 28, 25] },
+        { sql: monsterSql, args: [7,  9,'Swamp Emperor',       '👁️',  2000, 105, 77, 16, 17, 2050,  1, 28, 25] },
+        { sql: monsterSql, args: [7, 10,'Ancient Serpent',     '🐊',  2500, 130, 80, 18, 20, 2500,  1, 28, 40] },
       ], 'write');
     }
   }
