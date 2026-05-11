@@ -1395,6 +1395,10 @@ input:focus, select:focus {
   color: var(--danger);
   text-align: center;
 }
+.stamina-warning.hidden {
+  display: block !important;
+  visibility: hidden;
+}
 
 /* ---- Dungeon timer (battle panel) ---- */
 .dungeon-run-info {
