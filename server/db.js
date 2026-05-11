@@ -147,6 +147,8 @@ async function initDb() {
     'ALTER TABLE items ADD COLUMN item_subtype TEXT DEFAULT NULL',
     'ALTER TABLE items ADD COLUMN buff_effect  TEXT DEFAULT NULL',
     'ALTER TABLE dungeon_run ADD COLUMN potion_item_id INTEGER DEFAULT NULL',
+    'ALTER TABLE characters ADD COLUMN dungeon_mastery_s6 INTEGER DEFAULT 0',
+    'ALTER TABLE characters ADD COLUMN dungeon_mastery_s7 INTEGER DEFAULT 0',
   ];
 
   for (const sql of additiveMigrations) {
@@ -393,6 +395,64 @@ async function initDb() {
         { sql: monsterSql, args: [5,  8,'Arch Void Demon',    '👿',  39200,  1620, 81, 17,114,  57750,  1, 11, 25] },
         { sql: monsterSql, args: [5,  9,'Void Emperor',       '👁️',  49000,  2070, 83, 21,130,  77000,  1, 11, 25] },
         { sql: monsterSql, args: [5, 10,'Void Leviathan',     '🌑',  63700,  2700, 86, 23,162,  94500,  1, 11, 40] },
+      ], 'write');
+    }
+  }
+
+  // Set 6 — Autumn Harvest (unlocks at level 60, ~2x Set 5 stats)
+  {
+    const r = await client.execute("SELECT COUNT(*) as cnt FROM monsters WHERE dungeon_set = 6");
+    if (Number(r.rows[0].cnt) === 0) {
+      await client.batch([
+        { sql: monsterSql, args: [6,  1,'Scarecrow',           '🎃',   1680,   270, 65, 17,  8,    700,  0,  2,  8] },
+        { sql: monsterSql, args: [6,  2,'Harvest Shade',       '🍂',   2520,   360, 68, 14, 16,   1120,  0,  3,  8] },
+        { sql: monsterSql, args: [6,  3,'Wither Wight',        '💀',   3080,   450, 70, 15, 26,   1680,  0,  2,  8] },
+        { sql: monsterSql, args: [6,  4,'Autumn Elf',          '🧝',   3920,   630, 75, 21, 32,   2520,  0,  8,  8] },
+        { sql: monsterSql, args: [6,  5,'Hollow Wolf',         '🐺',   5320,   810, 77, 23, 38,   3640,  0,  4,  8] },
+        { sql: monsterSql, args: [6,  6,'Dusk Vampire',        '🧛',   7000,  1080, 78, 25, 50,   5320,  0,  9,  8] },
+        { sql: monsterSql, args: [6,  7,'Blight Golem',        '🪨',   9100,  1350, 75, 15, 62,   7700,  0, 10,  8] },
+        { sql: monsterSql, args: [6,  8,'Harvest Demon',       '😈',  11200,  1620, 80, 21, 74,  10500,  0, 11,  8] },
+        { sql: monsterSql, args: [6,  9,'Crimson Beast',       '🍁',  14000,  2070, 82, 25, 86,  14000,  0, 11,  8] },
+        { sql: monsterSql, args: [6, 10,'Autumn Drake',        '🐉',  18200,  2700, 85, 27,104,  18900,  0, 11, 10] },
+        { sql: monsterSql, args: [6,  1,'Scarecrow King',      '🎃',   8400,   540, 68, 14, 18,   7700,  1,  3, 40] },
+        { sql: monsterSql, args: [6,  2,'Harvest Warlord',     '💪',  14000,   720, 71, 13, 38,  12320,  1,  4, 38] },
+        { sql: monsterSql, args: [6,  3,'Skeletal Reaper',     '⚔️',  21000,   900, 73, 14, 58,  18480,  1,  2, 35] },
+        { sql: monsterSql, args: [6,  4,'Shadow Leaf Assassin','🗡️',  27440,  1260, 78, 24, 76,  27720,  1,  8, 35] },
+        { sql: monsterSql, args: [6,  5,'Ancient Hollow Wolf', '🌕',  37240,  1620, 80, 21, 96,  40040,  1,  9, 30] },
+        { sql: monsterSql, args: [6,  6,'Twilight Lord',       '🍂',  49000,  2160, 81, 23,116,  58520,  1, 10, 30] },
+        { sql: monsterSql, args: [6,  7,'Amber Titan',         '⛰️',  63700,  2700, 78, 14,144,  84700,  1, 10, 30] },
+        { sql: monsterSql, args: [6,  8,'Arch Harvest Demon',  '👿',  78400,  3240, 83, 19,162, 115500,  1, 11, 25] },
+        { sql: monsterSql, args: [6,  9,'Crimson Emperor',     '👁️',  98000,  4140, 85, 23,184, 154000,  1, 11, 25] },
+        { sql: monsterSql, args: [6, 10,'Ancient Autumn Dragon','🐉',127400,  5400, 88, 25,228, 189000,  1, 11, 40] },
+      ], 'write');
+    }
+  }
+
+  // Set 7 — Murky Swamp (unlocks at level 70, ~4x Set 5 stats)
+  {
+    const r = await client.execute("SELECT COUNT(*) as cnt FROM monsters WHERE dungeon_set = 7");
+    if (Number(r.rows[0].cnt) === 0) {
+      await client.batch([
+        { sql: monsterSql, args: [7,  1,'Bog Wisp',            '🌿',   3360,   540, 67, 19, 12,   1400,  0,  2,  8] },
+        { sql: monsterSql, args: [7,  2,'Swamp Troll',         '🧌',   5040,   720, 70, 16, 24,   2240,  0,  3,  8] },
+        { sql: monsterSql, args: [7,  3,'Muck Bones',          '💀',   6160,   900, 72, 17, 40,   3360,  0,  2,  8] },
+        { sql: monsterSql, args: [7,  4,'Marsh Elf',           '🧝',   7840,  1260, 77, 23, 50,   5040,  0,  8,  8] },
+        { sql: monsterSql, args: [7,  5,'Swamp Hound',         '🐺',  10640,  1620, 79, 25, 60,   7280,  0,  4,  8] },
+        { sql: monsterSql, args: [7,  6,'Bog Wraith',          '👻',  14000,  2160, 80, 27, 80,  10640,  0,  9,  8] },
+        { sql: monsterSql, args: [7,  7,'Mud Golem',           '🪨',  18200,  2700, 77, 17,100,  15400,  0, 10,  8] },
+        { sql: monsterSql, args: [7,  8,'Swamp Demon',         '😈',  22400,  3240, 82, 23,120,  21000,  0, 11,  8] },
+        { sql: monsterSql, args: [7,  9,'Mire Beast',          '🐊',  28000,  4140, 84, 27,140,  28000,  0, 11,  8] },
+        { sql: monsterSql, args: [7, 10,'Serpent Drake',       '🐍',  36400,  5400, 87, 29,172,  37800,  0, 11, 10] },
+        { sql: monsterSql, args: [7,  1,'Bog Titan',           '🌿',  16800,  1080, 70, 16, 30,  15400,  1,  3, 40] },
+        { sql: monsterSql, args: [7,  2,'Swamp Warchief',      '💪',  28000,  1440, 73, 15, 60,  24640,  1,  4, 38] },
+        { sql: monsterSql, args: [7,  3,'Muck Warlord',        '⚔️',  42000,  1800, 75, 16, 90,  36960,  1,  2, 35] },
+        { sql: monsterSql, args: [7,  4,'Poison Assassin',     '🗡️',  54880,  2520, 80, 26,116,  55440,  1,  8, 35] },
+        { sql: monsterSql, args: [7,  5,'Alpha Swamp Hound',   '🌕',  74480,  3240, 82, 23,140,  80080,  1,  9, 30] },
+        { sql: monsterSql, args: [7,  6,'Swamp Lord',          '🌿',  98000,  4320, 83, 25,168, 117040,  1, 10, 30] },
+        { sql: monsterSql, args: [7,  7,'Mire Titan',          '⛰️', 127400,  5400, 80, 16,208, 169400,  1, 10, 30] },
+        { sql: monsterSql, args: [7,  8,'Arch Bog Demon',      '👿', 156800,  6480, 85, 21,236, 231000,  1, 11, 25] },
+        { sql: monsterSql, args: [7,  9,'Swamp Emperor',       '👁️', 196000,  8280, 87, 25,268, 308000,  1, 11, 25] },
+        { sql: monsterSql, args: [7, 10,'Ancient Serpent',     '🐊', 254800, 10800, 90, 27,344, 378000,  1, 11, 40] },
       ], 'write');
     }
   }

@@ -47,7 +47,35 @@ const DUNGEONS = [
       { n: 2, label: 'Medium' },
       { n: 3, label: 'Hard' },
     ]
-  }
+  },
+  {
+    id: 6,
+    name: 'Autumn Harvest',
+    icon: '/autum_icon_2.png',
+    fallbackIcon: '/dungeon-icon.png',
+    set: 6,
+    masteryCol: 'dungeon_mastery_s6',
+    unlockLevel: 60,
+    levels: [
+      { n: 1, label: 'Easy' },
+      { n: 2, label: 'Medium' },
+      { n: 3, label: 'Hard' },
+    ]
+  },
+  {
+    id: 7,
+    name: 'Murky Swamp',
+    icon: '/swamp_icon_3.png',
+    fallbackIcon: '/dungeon-icon.png',
+    set: 7,
+    masteryCol: 'dungeon_mastery_s7',
+    unlockLevel: 70,
+    levels: [
+      { n: 1, label: 'Easy' },
+      { n: 2, label: 'Medium' },
+      { n: 3, label: 'Hard' },
+    ]
+  },
 ];
 
 // Alias used in renderBattlePanel
