@@ -166,13 +166,13 @@ async function initDb() {
     WHERE 1=1
   `);
 
-  // Recalculate max_stamina: 10 + floor((level-1)/5) + attr_stamina_points*2
-  // Seed stamina = max_stamina for existing characters that have the default 10
+  // Recalculate max_stamina: 5 + attr_stamina + floor((level-1)/5)
+  // Seed stamina = max_stamina for existing characters that still hold the old default of 10
   await client.execute(`
     UPDATE characters
-    SET max_stamina = 10 + ((level - 1) / 5) + COALESCE(attr_stamina_points, 0) * 2,
-        stamina     = CASE WHEN stamina = 10 THEN 10 + ((level - 1) / 5) + COALESCE(attr_stamina_points, 0) * 2
-                          ELSE MIN(stamina, 10 + ((level - 1) / 5) + COALESCE(attr_stamina_points, 0) * 2) END
+    SET max_stamina = 5 + COALESCE(attr_stamina, 5) + ((level - 1) / 5),
+        stamina     = CASE WHEN stamina = 10 THEN 5 + COALESCE(attr_stamina, 5) + ((level - 1) / 5)
+                          ELSE MIN(stamina, 5 + COALESCE(attr_stamina, 5) + ((level - 1) / 5)) END
     WHERE 1=1
   `);
 

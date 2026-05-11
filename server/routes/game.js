@@ -81,13 +81,14 @@ function calcMaxHp(level, vitality) {
   return 10 + (level - 1) * 5 + vitality * 2;
 }
 
-function calcMaxStamina(level, staminaPoints) {
-  return 10 + Math.floor((level - 1) / 5) + (staminaPoints || 0) * 2;
+function calcMaxStamina(level, attrStamina) {
+  return 5 + (attrStamina || 5) + Math.floor((level - 1) / 5);
 }
 
 function levelUp(char) {
   let { xp, xp_to_next, level, hp, unspent_points } = char;
-  const vitality = Number(char.attr_vitality) || 5;
+  const vitality    = Number(char.attr_vitality) || 5;
+  const attrStamina = Number(char.attr_stamina)  || 5;
   unspent_points = Number(unspent_points) || 0;
   let leveled = false;
   while (xp >= xp_to_next) {
@@ -97,9 +98,10 @@ function levelUp(char) {
     unspent_points += POINTS_PER_LEVEL;
     leveled = true;
   }
-  const max_hp = calcMaxHp(level, vitality);
+  const max_hp      = calcMaxHp(level, vitality);
+  const max_stamina = calcMaxStamina(level, attrStamina);
   if (leveled) hp = max_hp;
-  return { xp, xp_to_next, level, max_hp, hp: Math.min(hp, max_hp), unspent_points };
+  return { xp, xp_to_next, level, max_hp, hp: Math.min(hp, max_hp), unspent_points, max_stamina, leveled };
 }
 
 const READING_POINT_INTERVAL = 30 * 60;
@@ -230,7 +232,11 @@ async function completeDungeonRun(char, run, forced) {
     hp: Number(char.hp),
     unspent_points: Number(char.unspent_points) || 0,
     attr_vitality: Number(char.attr_vitality) || 5,
+    attr_stamina:  Number(char.attr_stamina)  || 5,
   });
+
+  // Restore stamina to full on level-up; keep current otherwise
+  const newStamina = afterXp.leveled ? afterXp.max_stamina : (Number(char.stamina) || 0);
 
   await awardLoot(char.id, loot);
 
@@ -246,11 +252,14 @@ async function completeDungeonRun(char, run, forced) {
       sql: `UPDATE characters SET
               xp = ?, xp_to_next = ?, level = ?, max_hp = ?, hp = ?,
               unspent_points = ?, ${masteryCol} = ?,
+              stamina = ?, max_stamina = ?,
               activity = NULL, activity_started_at = NULL, last_tick_at = ?
             WHERE id = ?`,
       args: [
         afterXp.xp, afterXp.xp_to_next, afterXp.level, afterXp.max_hp, afterXp.hp,
-        afterXp.unspent_points, newMastery, nowSec, char.id,
+        afterXp.unspent_points, newMastery,
+        newStamina, afterXp.max_stamina,
+        nowSec, char.id,
       ],
     },
   ], 'write');
@@ -276,7 +285,7 @@ function applyReadingTick(char) {
     readingFinished = true;
   }
 
-  const leveled = levelUp({ xp, xp_to_next, level, hp, unspent_points, attr_vitality: vitality });
+  const leveled = levelUp({ xp, xp_to_next, level, hp, unspent_points, attr_vitality: vitality, attr_stamina: Number(char.attr_stamina) || 5 });
   return { ...leveled, last_tick_at: now, reading_points_awarded, readingFinished };
 }
 
@@ -298,25 +307,27 @@ function applyTavernTick(char) {
   const elapsed = Math.max(0, now - lastTick);
 
   let { xp, xp_to_next, level, hp, unspent_points } = char;
-  const vitality      = Number(char.attr_vitality)       || 5;
-  const staminaPoints = Number(char.attr_stamina_points) || 0;
+  const vitality    = Number(char.attr_vitality) || 5;
+  const attrStamina = Number(char.attr_stamina)  || 5;
   xp = Number(xp); level = Number(level);
 
-  const max_stamina = calcMaxStamina(level, staminaPoints);
-  const stamina     = Math.min(max_stamina, (Number(char.stamina) || 0) + (TAVERN_STAMINA_RATE * elapsed) / 60);
-
-  const leveled = levelUp({ xp, xp_to_next, level, hp, unspent_points, attr_vitality: vitality });
-  return { ...leveled, stamina, max_stamina, last_tick_at: now };
+  const upd         = levelUp({ xp, xp_to_next, level, hp, unspent_points, attr_vitality: vitality, attr_stamina: attrStamina });
+  const max_stamina = upd.max_stamina;
+  // Restore to full on level-up; otherwise accumulate regen
+  const stamina     = upd.leveled
+    ? max_stamina
+    : Math.min(max_stamina, (Number(char.stamina) || 0) + (TAVERN_STAMINA_RATE * elapsed) / 60);
+  return { ...upd, stamina, max_stamina, last_tick_at: now };
 }
 
 // Compute stamina regen based on elapsed time since last tick
 function applyStaminaRegen(char, nowSec) {
-  const lastTick     = Number(char.last_tick_at) || nowSec;
-  const elapsed      = Math.max(0, nowSec - lastTick);
-  const staminaPoints = Number(char.attr_stamina_points) || 0;
-  const maxSt        = calcMaxStamina(Number(char.level) || 1, staminaPoints);
-  const regenPoints  = Math.floor(elapsed / STAMINA_REGEN_INTERVAL);
-  const newStamina   = Math.min(maxSt, (Number(char.stamina) || 0) + regenPoints);
+  const lastTick    = Number(char.last_tick_at) || nowSec;
+  const elapsed     = Math.max(0, nowSec - lastTick);
+  const attrStamina = Number(char.attr_stamina) || 5;
+  const maxSt       = calcMaxStamina(Number(char.level) || 1, attrStamina);
+  const regenPoints = Math.floor(elapsed / STAMINA_REGEN_INTERVAL);
+  const newStamina  = Math.min(maxSt, (Number(char.stamina) || 0) + regenPoints);
   return { stamina: newStamina, max_stamina: maxSt };
 }
 
@@ -364,12 +375,15 @@ router.post('/:characterId/stop', async (req, res) => {
     });
   } else if (char.activity === 'reading') {
     const upd = applyReadingTick(char);
+    const stAfterRead = upd.leveled ? upd.max_stamina : (Number(char.stamina) || 0);
     await client.execute({
       sql:  `UPDATE characters SET xp = ?, xp_to_next = ?, level = ?, max_hp = ?, hp = ?,
-             unspent_points = ?, activity = NULL, activity_started_at = NULL,
+             unspent_points = ?, stamina = ?, max_stamina = ?,
+             activity = NULL, activity_started_at = NULL,
              reading_points_awarded = 0, last_tick_at = ? WHERE id = ?`,
       args: [upd.xp, upd.xp_to_next, upd.level, upd.max_hp, upd.hp,
-             upd.unspent_points, upd.last_tick_at, char.id],
+             upd.unspent_points, stAfterRead, upd.max_stamina,
+             upd.last_tick_at, char.id],
     });
   } else {
     await client.execute({
@@ -407,6 +421,9 @@ router.get('/:characterId/tick', async (req, res) => {
     });
   } else if (char.activity === 'reading') {
     const upd = applyReadingTick(char);
+    const stBase   = stRegen ? stRegen.stamina : (Number(char.stamina) || 0);
+    const newSt    = upd.leveled ? upd.max_stamina : stBase;
+    const newMaxSt = upd.max_stamina;
     await client.execute({
       sql:  `UPDATE characters SET xp = ?, xp_to_next = ?, level = ?, max_hp = ?, hp = ?,
              unspent_points = ?, reading_points_awarded = ?, last_tick_at = ?,
@@ -415,8 +432,7 @@ router.get('/:characterId/tick', async (req, res) => {
              WHERE id = ?`,
       args: [upd.xp, upd.xp_to_next, upd.level, upd.max_hp, upd.hp,
              upd.unspent_points, upd.reading_points_awarded, upd.last_tick_at,
-             stRegen ? stRegen.stamina : char.stamina,
-             stRegen ? stRegen.max_stamina : char.max_stamina,
+             newSt, newMaxSt,
              char.id],
     });
     return res.json({ ...await fullChar(char.id), readingFinished: upd.readingFinished });

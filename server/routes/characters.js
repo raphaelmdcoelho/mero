@@ -260,7 +260,7 @@ router.put('/:id/equip', async (req, res) => {
 
 // PUT /api/characters/:id/attributes
 // body: { allocations: { strength: 2, vitality: 3, ... } }
-const VALID_ATTRS = ['strength','dexterity','agility','vitality','intelligence','focus','stamina','resistance','stamina_points'];
+const VALID_ATTRS = ['strength','dexterity','agility','vitality','intelligence','focus','stamina','resistance'];
 
 router.put('/:id/attributes', async (req, res) => {
   const char = await ownedCharacter(req, res);
@@ -315,14 +315,14 @@ router.put('/:id/attributes', async (req, res) => {
     });
   }
 
-  // Recalculate max_stamina if stamina_points was changed
-  if (allocations.stamina_points) {
+  // Recalculate max_stamina if stamina was changed
+  if (allocations.stamina) {
     await client.execute({
       sql: `UPDATE characters
-            SET max_stamina = 10 + ((level - 1) / 5) + attr_stamina_points * 2,
-                stamina     = MIN(stamina + ?, 10 + ((level - 1) / 5) + attr_stamina_points * 2)
+            SET max_stamina = 5 + attr_stamina + ((level - 1) / 5),
+                stamina     = MIN(stamina + ?, 5 + attr_stamina + ((level - 1) / 5))
             WHERE id = ?`,
-      args: [allocations.stamina_points * 2, char.id],
+      args: [allocations.stamina, char.id],
     });
   }
 

@@ -29,9 +29,8 @@ const ATTRS = [
   { key: 'vitality',      labelKey: 'attr.vitality',      icon: '❤️',  hintKey: 'attr.vitality_hint' },
   { key: 'intelligence',  labelKey: 'attr.intelligence',  icon: '🔮',  hintKey: 'attr.intelligence_hint' },
   { key: 'focus',         labelKey: 'attr.focus',         icon: '🎯',  hintKey: 'attr.focus_hint' },
-  { key: 'stamina',       labelKey: 'attr.stamina',       icon: '🛡️',  hintKey: 'attr.stamina_hint' },
-  { key: 'resistance',    labelKey: 'attr.resistance',    icon: '🌀',  hintKey: 'attr.resistance_hint' },
-  { key: 'stamina_points', labelKey: 'attr.stamina_points', icon: '⚡', hintKey: 'attr.stamina_points_hint' },
+  { key: 'stamina',    labelKey: 'attr.stamina',    icon: '⚡', hintKey: 'attr.stamina_hint' },
+  { key: 'resistance', labelKey: 'attr.resistance', icon: '🌀', hintKey: 'attr.resistance_hint' },
 ];
 
 const DUNGEONS = [
@@ -729,7 +728,7 @@ function renderAttributes(char) {
 
   const list = document.getElementById('attr-list');
   list.innerHTML = ATTRS.map(({ key, labelKey, icon, hintKey }) => {
-    const base  = Number(char[`attr_${key}`]) || (key === 'stamina_points' ? 0 : 5);
+    const base  = Number(char[`attr_${key}`]) || 5;
     const delta = pendingAttrs[key] || 0;
     const label = t(labelKey) || key;
     const hint  = t(hintKey)  || '';
