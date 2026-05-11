@@ -144,11 +144,6 @@
           <img src="/market-icon.png" alt="Market" class="sq-icon" />
         </div>
 
-        <div class="action-sq" id="sq-stats" style="grid-column:5;grid-row:3;" onclick="openPanel('stats')">
-          <span class="sq-icon">📊</span>
-          <span data-i18n="game.stats">Stats</span>
-        </div>
-
         <div class="action-sq disabled" id="sq-castle" style="grid-column:6;grid-row:3;position:relative;">
           <img src="/castle-icon.png" alt="Castle" class="sq-icon" />
           <span class="unspent-badge" style="font-size:0.5rem;" data-i18n="game.coming_soon">Soon</span>
@@ -309,23 +304,6 @@
     </div>
   </div>
 
-  <!-- Combat Stats Panel -->
-  <div class="side-panel" id="stats-panel">
-    <div class="side-panel-header">
-      <span class="side-panel-title">📊 Combat Stats</span>
-      <button class="close-btn" onclick="closePanel('stats')">✕</button>
-    </div>
-    <div class="side-panel-body">
-      <div class="combat-stat-row"><span class="cstat-label" data-i18n="game.sp.max_hp">❤️ Max HP</span><span class="cstat-value" id="cstat-hp">—</span></div>
-      <div class="combat-stat-row"><span class="cstat-label" data-i18n="game.sp.damage">⚔️ Damage</span><span class="cstat-value" id="cstat-dmg">—</span></div>
-      <div class="combat-stat-row"><span class="cstat-label" data-i18n="game.sp.hit_chance">🎯 Hit Chance</span><span class="cstat-value" id="cstat-hit">—</span></div>
-      <div class="combat-stat-row"><span class="cstat-label" data-i18n="game.sp.dodge_chance">💨 Dodge Chance</span><span class="cstat-value" id="cstat-dodge">—</span></div>
-      <div class="combat-stat-row"><span class="cstat-label" data-i18n="game.sp.defense">🛡️ Defense</span><span class="cstat-value" id="cstat-def">—</span></div>
-      <hr class="panel-divider" />
-      <p class="cstat-note" data-i18n="game.sp.note">Stats include equipped gear and attribute bonuses.</p>
-    </div>
-  </div>
-
   <!-- Attributes Panel -->
   <div class="side-panel" id="attr-panel">
     <div class="side-panel-header">
@@ -340,6 +318,15 @@
       <div id="attr-list"></div>
       <div id="attr-confirm-row" class="attr-confirm-row">
         <button type="button" class="btn btn-primary btn-full" onclick="confirmAttributes()" data-i18n="game.ap.confirm">Confirm Allocation</button>
+      </div>
+      <hr class="panel-divider" />
+      <div id="attr-combat-stats">
+        <div class="combat-stat-row"><span class="cstat-label" data-i18n="game.sp.max_hp">❤️ Max HP</span><span class="cstat-value" id="cstat-hp">—</span></div>
+        <div class="combat-stat-row"><span class="cstat-label" data-i18n="game.sp.damage">⚔️ Damage</span><span class="cstat-value" id="cstat-dmg">—</span></div>
+        <div class="combat-stat-row"><span class="cstat-label" data-i18n="game.sp.hit_chance">🎯 Hit Chance</span><span class="cstat-value" id="cstat-hit">—</span></div>
+        <div class="combat-stat-row"><span class="cstat-label" data-i18n="game.sp.dodge_chance">💨 Dodge Chance</span><span class="cstat-value" id="cstat-dodge">—</span></div>
+        <div class="combat-stat-row"><span class="cstat-label" data-i18n="game.sp.defense">🛡️ Defense</span><span class="cstat-value" id="cstat-def">—</span></div>
+        <p class="cstat-note" data-i18n="game.sp.note">Stats include equipped gear and attribute bonuses.</p>
       </div>
     </div>
   </div>

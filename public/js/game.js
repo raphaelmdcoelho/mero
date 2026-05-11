@@ -55,6 +55,7 @@ let currentDungeonIndex = 0;
 let charState  = null;
 let tickInterval = null;
 let pendingAttrs = {};
+let lastGearStats = null;
 let selectedDungeonLevel = 1;
 let selectedDungeonSet   = 1;
 
@@ -538,18 +539,47 @@ function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
 
 // ---- Combat Stats ----
 async function refreshCombatStats() {
-  const panel = document.getElementById('stats-panel');
+  const panel = document.getElementById('attr-panel');
   if (!panel.classList.contains('open')) return;
 
   const res = await api.get(`/api/game/${charId}/stats`);
   if (!res || !res.ok) return;
   const s = await res.json();
+  lastGearStats = s;
+  renderCombatStats(s, null);
+}
 
-  document.getElementById('cstat-hp').textContent    = s.maxHp;
-  document.getElementById('cstat-dmg').textContent   = s.damage + (s.isRanged ? ' ' + t('game.js.ranged') : ' ' + t('game.js.melee'));
-  document.getElementById('cstat-hit').textContent   = s.hitChance + '%';
-  document.getElementById('cstat-dodge').textContent = s.dodgeChance + '%';
-  document.getElementById('cstat-def').textContent   = s.defense;
+function calcLocalStats(char, pending, gear) {
+  const level = Number(char.level) || 1;
+  const str = (Number(char.attr_strength)     || 5) + (pending.strength     || 0);
+  const dex = (Number(char.attr_dexterity)    || 5) + (pending.dexterity    || 0);
+  const agi = (Number(char.attr_agility)      || 5) + (pending.agility      || 0);
+  const vit = (Number(char.attr_vitality)     || 5) + (pending.vitality     || 0);
+  const res = (Number(char.attr_resistance)   || 5) + (pending.resistance   || 0);
+  return {
+    maxHp:       10 + (level - 1) * 5 + vit * 2,
+    damage:      Math.max(1, 1 + Math.floor((gear.isRanged ? dex : str) / 3) + (gear.weaponDmg || 0)),
+    hitChance:   Math.min(95, 60 + Math.floor(dex / 2)),
+    dodgeChance: Math.min(50, Math.floor(agi / 2)),
+    defense:     Math.floor(res / 3) + (gear.armorDef || 0) + (gear.shieldDef || 0),
+    isRanged:    gear.isRanged,
+  };
+}
+
+function renderCombatStats(current, projected) {
+  function fmtStat(cur, proj, suffix = '') {
+    if (proj === null || proj === undefined || proj === cur) return cur + suffix;
+    const diff = proj - cur;
+    const cls  = diff > 0 ? 'pos' : 'neg';
+    const sign = diff > 0 ? '+' : '';
+    return `${cur}${suffix} <span class="cstat-diff ${cls}">${sign}${diff}</span>`;
+  }
+  const typeLabel = (s) => s.isRanged ? t('game.js.ranged') : t('game.js.melee');
+  document.getElementById('cstat-hp').innerHTML    = fmtStat(current.maxHp,       projected?.maxHp);
+  document.getElementById('cstat-dmg').innerHTML   = fmtStat(current.damage,      projected?.damage, ' ' + typeLabel(current));
+  document.getElementById('cstat-hit').innerHTML   = fmtStat(current.hitChance,   projected?.hitChance, '%');
+  document.getElementById('cstat-dodge').innerHTML = fmtStat(current.dodgeChance, projected?.dodgeChance, '%');
+  document.getElementById('cstat-def').innerHTML   = fmtStat(current.defense,     projected?.defense);
 }
 
 // ---- Side panels ----
@@ -559,7 +589,6 @@ const PANEL_MAP = {
   attributes: 'attr-panel',
   farm:       'farm-panel',
   battle:     'battle-panel',
-  stats:      'stats-panel',
   market:     'market-panel',
 };
 
@@ -567,7 +596,7 @@ function openPanel(type) {
   Object.values(PANEL_MAP).forEach(id => document.getElementById(id).classList.remove('open'));
   const panelId = PANEL_MAP[type];
   if (panelId) document.getElementById(panelId).classList.add('open');
-  if (type === 'attributes') { pendingAttrs = {}; renderAttributes(charState); }
+  if (type === 'attributes') { pendingAttrs = {}; renderAttributes(charState); refreshCombatStats(); }
   if (type === 'farm')   renderFarmPanel();
   if (type === 'market') { switchMarketTab('sell'); renderMarketPanel(charState); }
   if (type === 'battle') {
@@ -577,7 +606,6 @@ function openPanel(type) {
       startAutoBattle();
     }
   }
-  if (type === 'stats') refreshCombatStats();
 }
 
 function closePanel(type) {
@@ -765,6 +793,10 @@ function adjustAttr(key, delta) {
   pendingAttrs[key] = current + delta;
   if (pendingAttrs[key] === 0) delete pendingAttrs[key];
   renderAttributes(charState);
+  if (lastGearStats && charState) {
+    const hasPending = Object.keys(pendingAttrs).length > 0;
+    renderCombatStats(lastGearStats, hasPending ? calcLocalStats(charState, pendingAttrs, lastGearStats) : null);
+  }
 }
 
 async function confirmAttributes() {

@@ -1141,6 +1141,9 @@ input:focus, select:focus {
 .cstat-label { font-family: 'Cinzel', serif; font-size: 0.82rem; color: var(--muted); }
 .cstat-value { font-size: 1rem; font-weight: 700; color: var(--gold); }
 .cstat-note  { font-size: 0.75rem; color: var(--muted); text-align: center; margin-top: 0.5rem; }
+.cstat-diff  { font-size: 0.8rem; font-weight: 600; }
+.cstat-diff.pos { color: #4caf50; }
+.cstat-diff.neg { color: #f44336; }
 
 /* Pickaxe animation */
 .pickaxe-wrap {
