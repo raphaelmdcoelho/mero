@@ -6,7 +6,7 @@ const { fullChar } = require('../helpers');
 
 // item_id -> HP restored (farm plants)
 const PLANT_ITEM_HP = { 6: 2, 7: 1 };
-const TAVERN_HP_RATE = 2; // HP/min
+const TAVERN_STAMINA_RATE = 1; // ST/min (faster than idle regen)
 const POINTS_PER_LEVEL = 5;
 
 const SET_UNLOCK_LEVEL = { 1: 1, 2: 20, 3: 30, 4: 40, 5: 50 };
@@ -290,7 +290,7 @@ async function ownedChar(req, res) {
   return char ? Object.assign({}, char) : null;
 }
 
-// ── Tavern: time-based HP regen ─────────────────────────────────────────────
+// ── Tavern: time-based stamina regen ────────────────────────────────────────
 
 function applyTavernTick(char) {
   const now = Math.floor(Date.now() / 1000);
@@ -298,16 +298,15 @@ function applyTavernTick(char) {
   const elapsed = Math.max(0, now - lastTick);
 
   let { xp, xp_to_next, level, hp, unspent_points } = char;
-  const vitality = Number(char.attr_vitality) || 5;
-  xp = Number(xp); level = Number(level); hp = Number(hp);
+  const vitality      = Number(char.attr_vitality)       || 5;
+  const staminaPoints = Number(char.attr_stamina_points) || 0;
+  xp = Number(xp); level = Number(level);
 
-  const max_hp = calcMaxHp(level, vitality);
-  if (char.activity === 'tavern') {
-    hp = Math.min(max_hp, hp + (TAVERN_HP_RATE * elapsed) / 60);
-  }
+  const max_stamina = calcMaxStamina(level, staminaPoints);
+  const stamina     = Math.min(max_stamina, (Number(char.stamina) || 0) + (TAVERN_STAMINA_RATE * elapsed) / 60);
 
   const leveled = levelUp({ xp, xp_to_next, level, hp, unspent_points, attr_vitality: vitality });
-  return { ...leveled, last_tick_at: now };
+  return { ...leveled, stamina, max_stamina, last_tick_at: now };
 }
 
 // Compute stamina regen based on elapsed time since last tick
@@ -356,10 +355,12 @@ router.post('/:characterId/stop', async (req, res) => {
     const upd = applyTavernTick(char);
     await client.execute({
       sql:  `UPDATE characters SET xp = ?, xp_to_next = ?, level = ?, max_hp = ?, hp = ?,
-             unspent_points = ?, activity = NULL, activity_started_at = NULL,
+             unspent_points = ?, stamina = ?, max_stamina = ?,
+             activity = NULL, activity_started_at = NULL,
              reading_points_awarded = 0, last_tick_at = ? WHERE id = ?`,
       args: [upd.xp, upd.xp_to_next, upd.level, upd.max_hp, upd.hp,
-             upd.unspent_points, upd.last_tick_at, char.id],
+             upd.unspent_points, Math.floor(upd.stamina), upd.max_stamina,
+             upd.last_tick_at, char.id],
     });
   } else if (char.activity === 'reading') {
     const upd = applyReadingTick(char);
@@ -390,20 +391,19 @@ router.get('/:characterId/tick', async (req, res) => {
   await progressFarmCountdown(char, now);
   await harvestFarm(char.id);
 
-  // Stamina regens when not in a dungeon (stamina was already deducted on enter)
-  const stRegen = char.activity !== 'dungeon' ? applyStaminaRegen(char, now) : null;
+  // Tavern handles its own stamina regen; idle/farm/reading use the generic slower regen
+  const stRegen = (char.activity !== 'dungeon' && char.activity !== 'tavern')
+    ? applyStaminaRegen(char, now)
+    : null;
 
   if (char.activity === 'tavern') {
     const upd = applyTavernTick(char);
     await client.execute({
       sql:  `UPDATE characters SET xp = ?, xp_to_next = ?, level = ?, max_hp = ?, hp = ?,
-             unspent_points = ?, last_tick_at = ?,
-             stamina = ?, max_stamina = ? WHERE id = ?`,
+             unspent_points = ?, stamina = ?, max_stamina = ?, last_tick_at = ? WHERE id = ?`,
       args: [upd.xp, upd.xp_to_next, upd.level, upd.max_hp, upd.hp,
-             upd.unspent_points, upd.last_tick_at,
-             stRegen ? stRegen.stamina : char.stamina,
-             stRegen ? stRegen.max_stamina : char.max_stamina,
-             char.id],
+             upd.unspent_points, Math.floor(upd.stamina), upd.max_stamina,
+             upd.last_tick_at, char.id],
     });
   } else if (char.activity === 'reading') {
     const upd = applyReadingTick(char);

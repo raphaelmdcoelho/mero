@@ -54,8 +54,10 @@ const DUNGEONS = [
 // Alias used in renderBattlePanel
 const DUNGEON_SETS = DUNGEONS;
 
-const DIFFICULTY_COSTS = { easy: 2, medium: 4, hard: 7 };
+const DIFFICULTY_COSTS     = { easy: 2, medium: 4, hard: 7 };
 const DIFFICULTY_DURATIONS = { easy: 2 * 60 * 1000, medium: 3 * 60 * 1000, hard: 5 * 60 * 1000 };
+// Difficulty maps directly to dungeon level (easy=1, medium=2, hard=3)
+const DIFFICULTY_LEVEL     = { easy: 1, medium: 2, hard: 3 };
 
 let currentDungeonIndex = 0;
 
@@ -121,13 +123,6 @@ function renderAll(char) {
   const xpPct = char.xp_to_next > 0 ? Math.min(100, (char.xp / char.xp_to_next) * 100) : 100;
   document.getElementById('xp-fill').style.width = xpPct + '%';
   document.getElementById('xp-text').textContent = `${Math.floor(char.xp)} / ${char.xp_to_next}`;
-
-  const hp    = Math.max(0, char.hp);
-  const hpPct = char.max_hp > 0 ? Math.min(100, (hp / char.max_hp) * 100) : 0;
-  const hpFill = document.getElementById('hp-fill');
-  hpFill.style.width = hpPct + '%';
-  hpFill.className = 'stat-fill hp' + (hpPct < 30 ? ' low' : '');
-  document.getElementById('hp-text').textContent = `${Math.round(hp * 10) / 10} / ${char.max_hp}`;
 
   // Stamina bar
   const st    = Math.max(0, Number(char.stamina) || 0);
@@ -313,8 +308,8 @@ async function stopActivity() {
 
 // ---- Dungeon carousel modal ----
 function openDungeonModal() {
-  selectedDungeonLevel = 1;
   selectedDifficulty   = 'easy';
+  selectedDungeonLevel = DIFFICULTY_LEVEL.easy;
   renderDungeonCarousel();
   updateDifficultyUI();
   document.getElementById('dungeon-modal').classList.add('open');
@@ -323,22 +318,6 @@ function openDungeonModal() {
 function renderDungeonCarousel() {
   const dungeon = DUNGEONS[currentDungeonIndex];
   selectedDungeonSet = dungeon.set;
-
-  const levelSel = document.getElementById('dungeon-level-selector');
-  levelSel.innerHTML = '';
-  dungeon.levels.forEach(lv => {
-    const btn = document.createElement('button');
-    btn.type = 'button';
-    btn.className = 'dungeon-level-btn' + (selectedDungeonLevel === lv.n ? ' selected' : '');
-    btn.innerHTML = `<span class="dlb-num">${lv.n}</span><span class="dlb-label">${lv.label}</span>`;
-    btn.onclick = () => {
-      selectedDungeonLevel = lv.n;
-      document.querySelectorAll('.dungeon-level-btn').forEach(b => b.classList.remove('selected'));
-      btn.classList.add('selected');
-      updateDifficultyUI();
-    };
-    levelSel.appendChild(btn);
-  });
 
   const content = document.getElementById('dungeon-carousel-content');
   content.innerHTML = `
@@ -352,7 +331,8 @@ function renderDungeonCarousel() {
 }
 
 function selectDifficulty(diff) {
-  selectedDifficulty = diff;
+  selectedDifficulty   = diff;
+  selectedDungeonLevel = DIFFICULTY_LEVEL[diff] || 1;
   updateDifficultyUI();
 }
 
