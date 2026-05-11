@@ -156,6 +156,7 @@ input:focus, select:focus {
   color: var(--accent);
   text-shadow: 0 0 20px #c084fc99, 0 0 60px #c084fc44;
   letter-spacing: 0.2em;
+  -webkit-user-select: none;
   user-select: none;
 }
 
@@ -521,6 +522,7 @@ input:focus, select:focus {
   letter-spacing: 0.05em;
   color: var(--muted);
   transition: all 0.2s;
+  -webkit-user-select: none;
   user-select: none;
   position: relative;
 }
@@ -1141,6 +1143,7 @@ input:focus, select:focus {
 .cstat-label { font-family: 'Cinzel', serif; font-size: 0.82rem; color: var(--muted); }
 .cstat-value { font-size: 1rem; font-weight: 700; color: var(--gold); }
 .cstat-note  { font-size: 0.75rem; color: var(--muted); text-align: center; margin-top: 0.5rem; }
+.attr-section-title { font-family: 'Cinzel', serif; font-size: 0.8rem; color: var(--accent); margin-bottom: 0.4rem; }
 .cstat-diff  { font-size: 0.8rem; font-weight: 600; }
 .cstat-diff.pos { color: #4caf50; }
 .cstat-diff.neg { color: #f44336; }
@@ -1243,6 +1246,7 @@ input:focus, select:focus {
   cursor: pointer;
   transition: border-color 0.15s, background 0.15s;
   font-size: 1.6rem;
+  -webkit-user-select: none;
   user-select: none;
 }
 .market-item-img { width: 75%; height: 75%; object-fit: contain; display: block; }
