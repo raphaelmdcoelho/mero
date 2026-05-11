@@ -267,6 +267,10 @@ async function completeDungeonRun(char, run, forced) {
 
   const { gainedXp, loot } = await generateLoot(run, bossXp, difficulty, actualMs, totalDuration, buff);
 
+  const timeFraction   = totalDuration > 0 ? Math.min(1, actualMs / totalDuration) : 1;
+  const diffGoldMult   = { easy: 5, medium: 10, hard: 18 }[difficulty] || 5;
+  const gainedGold     = Math.max(1, Math.round(dungeonLevel * dungeonSet * timeFraction * diffGoldMult));
+
   const afterXp = levelUp({
     xp: Number(char.xp) + gainedXp,
     xp_to_next: Number(char.xp_to_next),
@@ -298,18 +302,20 @@ async function completeDungeonRun(char, run, forced) {
               xp = ?, xp_to_next = ?, level = ?, max_hp = ?, hp = ?,
               unspent_points = ?, ${masteryCol} = ?,
               stamina = ?, max_stamina = ?,
+              gold = gold + ?,
               activity = NULL, activity_started_at = NULL, last_tick_at = ?
             WHERE id = ?`,
       args: [
         afterXp.xp, afterXp.xp_to_next, afterXp.level, afterXp.max_hp, afterXp.hp,
         afterXp.unspent_points, newMastery,
         newStamina, afterXp.max_stamina,
+        gainedGold,
         nowSec, char.id,
       ],
     },
   ], 'write');
 
-  return { gainedXp, loot, newMastery, forced, buff, potionItemId };
+  return { gainedXp, loot, newMastery, forced, buff, potionItemId, gainedGold };
 }
 
 function applyReadingTick(char) {

@@ -576,6 +576,9 @@ function showLootModal(data, forced) {
   const xpRow = document.getElementById('loot-xp-row');
   xpRow.textContent = data.gainedXp ? `+${data.gainedXp} XP` : '';
 
+  const goldRow = document.getElementById('loot-gold-row');
+  goldRow.textContent = data.gainedGold ? `🪙 +${data.gainedGold}g` : '';
+
   // Show potion buff that was applied
   const buffRow = document.getElementById('loot-buff-row');
   if (data.buff && data.buff.type) {
