@@ -1500,10 +1500,15 @@ input:focus, select:focus {
   margin-top: 0.4rem;
 }
 .potion-empty-msg {
-  font-size: 0.8rem;
+  font-size: 0.95rem;
   color: var(--muted);
-  margin: 0.3rem 0 0;
+  margin: 0.4rem 0 0;
   font-style: italic;
+  text-align: center;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 0.6rem 1rem;
+  width: 100%;
 }
 .potion-slot {
   display: flex;
