@@ -208,7 +208,15 @@ async function initDb() {
     [24, 'Wisdom Potion',    'consumable', 'Doubles XP gained in the dungeon.',           '📚', 0, 0, null, null, 25, 50],
   ];
 
-  // Main item seed: insert + set combat/price stats
+  // item_subtype and buff_effect for adventure potions
+  const POTION_META = {
+    20: { subtype: 'adventure_potion', buff: '{"type":"speed","value":0.7}' },
+    21: { subtype: 'adventure_potion', buff: '{"type":"loot_quality","value":2}' },
+    22: { subtype: 'adventure_potion', buff: '{"type":"loot_count","value":2}' },
+    23: { subtype: 'adventure_potion', buff: '{"type":"stamina","value":1}' },
+    24: { subtype: 'adventure_potion', buff: '{"type":"xp_multiplier","value":2}' },
+  };
+
   await client.batch([
     ...itemData.map(([id, name, type, desc, icon]) => ({
       sql:  'INSERT OR IGNORE INTO items (id, name, type, description, icon) VALUES (?, ?, ?, ?, ?)',
@@ -218,24 +226,11 @@ async function initDb() {
       sql:  'UPDATE items SET damage = ?, defense = ?, weapon_type = ?, armor_slot = ?, sell_price = ?, buy_price = ? WHERE id = ?',
       args: [dmg, def, wt, as, sp, bp, id],
     })),
+    ...itemData.filter(([id]) => POTION_META[id]).map(([id]) => ({
+      sql:  'UPDATE items SET item_subtype = ?, buff_effect = ? WHERE id = ?',
+      args: [POTION_META[id].subtype, POTION_META[id].buff, id],
+    })),
   ], 'write');
-
-  // Adventure potion metadata — separate call so a missing column never rolls back the item INSERTs
-  const potionMeta = [
-    [20, 'adventure_potion', '{"type":"speed","value":0.7}'],
-    [21, 'adventure_potion', '{"type":"loot_quality","value":2}'],
-    [22, 'adventure_potion', '{"type":"loot_count","value":2}'],
-    [23, 'adventure_potion', '{"type":"stamina","value":1}'],
-    [24, 'adventure_potion', '{"type":"xp_multiplier","value":2}'],
-  ];
-  for (const [id, subtype, buff] of potionMeta) {
-    try {
-      await client.execute({
-        sql:  'UPDATE items SET item_subtype = ?, buff_effect = ? WHERE id = ?',
-        args: [subtype, buff, id],
-      });
-    } catch { /* item_subtype column not yet available — skipped */ }
-  }
 
   // Safety migration for older saves where a shield was equipped in armor slot.
   await client.execute(`

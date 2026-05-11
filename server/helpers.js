@@ -8,7 +8,8 @@ async function fullChar(charId) {
     client.execute({ sql: 'SELECT * FROM characters WHERE id = ?', args: [charId] }),
     client.execute({
       sql: `SELECT inv.id, inv.quantity, i.id as item_id, i.name, i.type, i.description, i.icon,
-                   i.damage, i.defense, i.weapon_type, i.armor_slot, i.sell_price
+                   i.damage, i.defense, i.weapon_type, i.armor_slot, i.sell_price, i.buy_price,
+                   i.item_subtype, i.buff_effect
             FROM inventory inv JOIN items i ON i.id = inv.item_id
             WHERE inv.character_id = ?`,
       args: [charId],

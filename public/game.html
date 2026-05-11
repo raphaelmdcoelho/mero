@@ -208,6 +208,13 @@
         </div>
         <div class="stamina-warning hidden" id="stamina-warning"></div>
       </div>
+      <!-- Adventure Potion selector -->
+      <div class="dungeon-potion-section" id="dungeon-potion-section">
+        <div class="difficulty-label">Adventure Potion <span class="potion-optional">(optional)</span></div>
+        <div class="potion-slot-list" id="potion-slot-list">
+          <!-- populated by JS -->
+        </div>
+      </div>
       <div class="modal-footer">
         <button class="btn btn-outline" onclick="closeDungeonModal()" data-i18n="game.dm.cancel">Cancel</button>
         <button class="btn btn-primary" id="enter-dungeon-btn" onclick="confirmEnterDungeon()" data-i18n="game.dm.enter">Enter Dungeon</button>
@@ -227,6 +234,9 @@
         <span id="dungeon-run-label">Forest · Level 1</span>
         <span class="dungeon-diff-badge" id="dungeon-diff-badge">Easy</span>
       </div>
+
+      <!-- Active potion badge -->
+      <div class="active-potion-row hidden" id="active-potion-row"></div>
 
       <!-- Countdown timer -->
       <div class="dungeon-timer-wrap">
@@ -249,6 +259,7 @@
     <div class="modal">
       <h2 class="modal-title" id="loot-modal-title">Dungeon Complete!</h2>
       <div class="loot-xp-row" id="loot-xp-row"></div>
+      <div class="loot-buff-row hidden" id="loot-buff-row"></div>
       <div class="loot-list" id="loot-list"></div>
       <div class="modal-footer">
         <button type="button" class="btn btn-primary" onclick="closeLootModal()">Collect &amp; Close</button>
@@ -264,7 +275,7 @@
     </div>
     <div class="side-panel-body">
       <p style="font-size:0.8rem;color:var(--muted);margin-bottom:0.75rem;" data-i18n="game.inv.hint">
-        Max 10 slots · Gold border = equipped
+        Max 25 slots · Gold border = equipped
       </p>
       <div class="inv-grid" id="inv-grid"></div>
       <div id="item-tooltip" style="display:none;margin-top:1rem;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:0.75rem;font-size:0.85rem;"></div>
