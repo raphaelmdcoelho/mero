@@ -237,6 +237,23 @@ input:focus, select:focus {
 .header-right { display: flex; align-items: center; gap: 1rem; }
 .header-username { color: var(--muted); font-size: 0.9rem; }
 
+/* ---- Site footer ---- */
+.site-footer {
+  text-align: center;
+  padding: 1rem;
+  border-top: 1px solid var(--border);
+  margin-top: 2rem;
+}
+.version-badge {
+  font-size: 0.75rem;
+  color: var(--muted);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 0.2rem 0.7rem;
+  letter-spacing: 0.05em;
+}
+
 /* ---- Page toolbar ---- */
 .page-toolbar {
   padding: 1.5rem 1.5rem 0.5rem;
