@@ -103,6 +103,9 @@ let selectedPotionItemId = null;
 let dungeonPollInterval = null;
 let dungeonEndsAt       = null; // ms timestamp
 
+// Tavern rest progress state (client-side)
+let tavernStartedAt = null; // ms timestamp
+
 // ---- Init ----
 async function init() {
   const res = await api.get(`/api/game/${charId}/tick`);
@@ -116,6 +119,11 @@ async function init() {
     dungeonEndsAt = Number(data.dungeonRun.ends_at) * 1000;
     startDungeonPoll();
     openPanel('battle');
+  }
+  // Resume tavern progress bar if resting
+  if (data.activity === 'tavern' && data.activity_started_at) {
+    tavernStartedAt = Number(data.activity_started_at) * 1000;
+    startLocalTimer();
   }
   // Resume farm timer if plants are growing
   if (data.farmQueue && data.farmQueue.length > 0) {
@@ -290,6 +298,7 @@ function updateActionSquares(activity, isFarming = false) {
     tavern.classList.add('active');
     document.getElementById('tavern-label').textContent = t('game.js.stop_lbl');
     dungeon.classList.add('disabled');
+    farm.classList.add('disabled');
     if (read) read.classList.add('disabled');
   } else if (activity === 'reading') {
     if (read) {
@@ -320,18 +329,49 @@ function handleDungeon() {
 function handleTavern() {
   if (!charState) return;
   if (farmEndsAt) return;
-  if (charState.activity === 'tavern') stopActivity();
-  else if (!charState.activity) startTavern();
+  if (charState.activity === 'tavern') { stopActivity(); return; }
+  if (!charState.activity) openTavernModal();
 }
 
-async function startTavern() {
-  const res = await api.post(`/api/game/${charId}/start`, { action: 'tavern' });
+function openTavernModal() {
+  const gold = Number(charState?.gold) || 0;
+  const REST_TYPES = [
+    { key: 'relax',    cost: 10, nameKey: 'tavern.rest.relax',    descKey: 'tavern.rest.relax_desc' },
+    { key: 'break',    cost: 30, nameKey: 'tavern.rest.break',    descKey: 'tavern.rest.break_desc' },
+    { key: 'recovery', cost: 70, nameKey: 'tavern.rest.recovery', descKey: 'tavern.rest.recovery_desc' },
+  ];
+  const container = document.getElementById('tavern-rest-options');
+  container.innerHTML = REST_TYPES.map(r => {
+    const canAfford = gold >= r.cost;
+    return `<div class="tavern-rest-card${canAfford ? '' : ' disabled'}"
+                 ${canAfford ? `onclick="startTavernRest('${r.key}')"` : ''}>
+      <div class="tavern-rest-card-info">
+        <span class="tavern-rest-card-name">${t(r.nameKey)}</span>
+        <span class="tavern-rest-card-desc">${t(r.descKey)}</span>
+      </div>
+      <span class="tavern-rest-card-cost">🪙 ${r.cost}g</span>
+    </div>`;
+  }).join('');
+  document.getElementById('tavern-modal').classList.add('open');
+}
+
+function closeTavernModal() {
+  document.getElementById('tavern-modal').classList.remove('open');
+}
+
+async function startTavernRest(restType) {
+  closeTavernModal();
+  const res = await api.post(`/api/game/${charId}/start`, { action: 'tavern', restType });
   if (!res) return;
   const data = await res.json();
   if (!res.ok) { showToast(data.error || t('game.js.failed'), 'danger'); return; }
   charState = data;
+  tavernStartedAt = Date.now();
+  startLocalTimer();
   renderAll(data);
-  showToast(t('game.js.resting_start'), 'success');
+  document.getElementById('gold-display').textContent = `🪙 ${Number(data.gold) || 0}g`;
+  const COST_LABELS = { relax: '10g', break: '30g', recovery: '70g' };
+  showToast(`${t('game.js.resting_start')} (−${COST_LABELS[restType]})`, 'success');
 }
 
 async function stopActivity() {
@@ -339,6 +379,10 @@ async function stopActivity() {
   if (!res) return;
   const data = await res.json();
   if (!res.ok) { showToast(data.error || t('game.js.failed_stop'), 'danger'); return; }
+  tavernStartedAt = null;
+  const fill = document.getElementById('tavern-progress-fill');
+  if (fill) fill.style.width = '0%';
+  if (!dungeonEndsAt) stopLocalTimer();
   charState = data;
   renderAll(data);
   showToast(t('game.js.activity_stopped'), '');
@@ -534,6 +578,10 @@ document.getElementById('dungeon-modal').addEventListener('click', function(e) {
   if (e.target === this) closeDungeonModal();
 });
 
+document.getElementById('tavern-modal').addEventListener('click', function(e) {
+  if (e.target === this) closeTavernModal();
+});
+
 // ---- Battle panel (timer-based) ----
 function renderBattlePanel(char) {
   if (!char || !char.dungeonRun) return;
@@ -584,11 +632,19 @@ function updateTimerDisplay() {
 // Local 1-second timer update (purely cosmetic — server is authoritative)
 let localTimerInterval = null;
 
+function updateTavernProgressBar() {
+  const fill = document.getElementById('tavern-progress-fill');
+  if (!fill) return;
+  if (!tavernStartedAt) { fill.style.width = '0%'; return; }
+  const elapsedSec = (Date.now() - tavernStartedAt) / 1000;
+  fill.style.width = Math.min(100, (elapsedSec / 300) * 100) + '%';
+}
+
 function startLocalTimer() {
   if (localTimerInterval) clearInterval(localTimerInterval);
   localTimerInterval = setInterval(() => {
-    if (!dungeonEndsAt) return;
-    updateTimerDisplay();
+    if (dungeonEndsAt) updateTimerDisplay();
+    updateTavernProgressBar();
   }, 1000);
 }
 

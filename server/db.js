@@ -152,6 +152,7 @@ async function initDb() {
     'ALTER TABLE characters ADD COLUMN dungeon_mastery_s8 INTEGER DEFAULT 0',
     'ALTER TABLE characters ADD COLUMN farm_level INTEGER NOT NULL DEFAULT 1',
     'ALTER TABLE characters ADD COLUMN farm_xp    INTEGER NOT NULL DEFAULT 0',
+    "ALTER TABLE characters ADD COLUMN rest_type   TEXT    DEFAULT NULL",
   ];
 
   for (const sql of additiveMigrations) {

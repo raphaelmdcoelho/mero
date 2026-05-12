@@ -55,6 +55,7 @@
         <div class="action-sq-wrap" style="grid-column:3;grid-row:1;">
           <span id="tavern-label" class="sq-label" data-i18n="game.tavern">Tavern</span>
           <div class="action-sq" id="sq-tavern" onclick="handleTavern()">
+            <div class="tavern-progress-fill" id="tavern-progress-fill"></div>
             <img src="/tavern-icon.png" alt="Tavern" class="sq-icon" />
           </div>
         </div>
@@ -235,6 +236,20 @@
       <div class="modal-footer">
         <button class="btn btn-outline" onclick="closeDungeonModal()" data-i18n="game.dm.cancel">Cancel</button>
         <button class="btn btn-primary" id="enter-dungeon-btn" onclick="confirmEnterDungeon()" data-i18n="game.dm.enter">Enter Dungeon</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tavern Rest Modal -->
+  <div class="modal-overlay" id="tavern-modal">
+    <div class="modal">
+      <h2 class="modal-title" data-i18n="tavern.modal.title">Rest at the Tavern</h2>
+      <p class="tavern-modal-subtitle" data-i18n="tavern.modal.subtitle">Choose your rest type</p>
+      <div class="tavern-rest-options" id="tavern-rest-options">
+        <!-- populated by JS -->
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" onclick="closeTavernModal()" data-i18n="game.dm.cancel">Cancel</button>
       </div>
     </div>
   </div>
@@ -610,6 +625,69 @@
       z-index: 0;
     }
     #sq-farm > * { position: relative; z-index: 1; }
+
+    /* Tavern rest progress fill */
+    .tavern-progress-fill {
+      position: absolute;
+      inset: 0;
+      width: 0%;
+      background: rgba(34, 197, 94, 0.35);
+      border-radius: inherit;
+      z-index: 0;
+      pointer-events: none;
+      transition: width 0.5s linear;
+    }
+    #sq-tavern > * { position: relative; z-index: 1; }
+
+    /* Tavern rest modal */
+    .tavern-modal-subtitle {
+      font-size: 0.82rem;
+      color: var(--muted);
+      text-align: center;
+      margin: -0.5rem 0 1rem;
+    }
+    .tavern-rest-options {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+      margin-bottom: 0.5rem;
+    }
+    .tavern-rest-card {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      padding: 0.85rem 1rem;
+      border: 2px solid var(--border);
+      border-radius: 10px;
+      background: var(--surface2);
+      cursor: pointer;
+      transition: border-color 0.15s, background 0.15s;
+    }
+    .tavern-rest-card:hover:not(.disabled) {
+      border-color: var(--accent);
+      background: rgba(192, 132, 252, 0.08);
+    }
+    .tavern-rest-card.disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+    .tavern-rest-card-info { display: flex; flex-direction: column; gap: 2px; }
+    .tavern-rest-card-name {
+      font-family: 'Cinzel', serif;
+      font-size: 0.9rem;
+      color: var(--text);
+    }
+    .tavern-rest-card-desc {
+      font-size: 0.75rem;
+      color: var(--muted);
+    }
+    .tavern-rest-card-cost {
+      font-family: 'Cinzel', serif;
+      font-size: 0.95rem;
+      color: #f5c842;
+      white-space: nowrap;
+    }
   </style>
 
   <!-- Toast container -->
