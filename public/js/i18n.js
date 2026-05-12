@@ -262,7 +262,7 @@
       'game.js.points_spend_many':  '✨ {n} points to spend',
       'game.js.dungeon_badge':      '🏰 Dungeon Lv.{n}',
       'game.js.farming_badge':      '🌱 Farming',
-      'game.js.reading_badge':      '📖 Reading · {mins}m left · {pts}/2 pts',
+      'game.js.reading_badge':      '📖 Reading · {mins}m left',
       'game.js.resting_badge':      '🍺 Resting',
 
       // Game JS — action square labels (dynamic)
@@ -624,7 +624,7 @@
       'game.js.points_spend_many':  '✨ {n} pontos para gastar',
       'game.js.dungeon_badge':      '🏰 Masmorra Nv.{n}',
       'game.js.farming_badge':      '🌱 Cultivando',
-      'game.js.reading_badge':      '📖 Lendo · {mins}m restantes · {pts}/2 pts',
+      'game.js.reading_badge':      '📖 Lendo · {mins}m restantes',
       'game.js.resting_badge':      '🍺 Descansando',
 
       // Game JS — action square labels (dynamic)

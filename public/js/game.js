@@ -211,7 +211,7 @@ function renderAll(char) {
     } else if (char.activity === 'reading') {
       const elapsed = Math.floor(Date.now() / 1000) - (char.activity_started_at || 0);
       const minsLeft = Math.max(0, Math.ceil((3600 - elapsed) / 60));
-      actLabel.textContent = t('game.js.reading_badge', { mins: minsLeft, pts: 0 });
+      actLabel.textContent = t('game.js.reading_badge', { mins: minsLeft });
     } else {
       actLabel.textContent = t('game.js.resting_badge');
     }
