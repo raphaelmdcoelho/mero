@@ -7,7 +7,8 @@ const CLASS_ICONS = { Warrior: '⚔️', Mage: '🔮', Rogue: '🗡️', Cleric:
 
 // Item image map: item_id → base path (gender suffix + .png appended at runtime)
 const ITEM_IMAGES = {
-  3: '/items/leather_armor', // Leather Armor
+  3:  '/items/leather_armor', // Leather Armor
+  15: '/items/hunter_armor',  // Hunter Armor
 };
 
 function getItemImage(itemId, gender) {
