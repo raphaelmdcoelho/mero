@@ -301,43 +301,57 @@
     </div>
   </div>
 
-  <!-- Equipment Panel -->
-  <div class="side-panel" id="eq-panel">
-    <div class="side-panel-header">
-      <span class="side-panel-title">🛡️ Equipment</span>
-      <button class="close-btn" onclick="closePanel('equipment')">✕</button>
-    </div>
-    <div class="side-panel-body">
-      <div id="eq-weapon" class="equip-slot">
-        <span class="equip-slot-icon">🗡️</span>
-        <div class="equip-slot-info">
-          <div class="equip-slot-label" data-i18n="game.eq.weapon">Weapon</div>
-          <div class="equip-slot-name" id="eq-weapon-name"></div>
-          <div class="equip-slot-stat" id="eq-weapon-stat"></div>
-          <div id="eq-weapon-action" style="margin-top:0.35rem;"></div>
-        </div>
+  <!-- Equipment Modal (Diablo/PoE style) -->
+  <div class="modal-overlay" id="eq-panel" onclick="eqOverlayClick(event)">
+    <div class="eq-modal">
+      <div class="eq-modal-header">
+        <span class="side-panel-title">🛡️ <span data-i18n="game.equipment">Equipment</span></span>
+        <button type="button" class="close-btn" onclick="closePanel('equipment')">✕</button>
       </div>
-      <div id="eq-armor" class="equip-slot">
-        <span class="equip-slot-icon">🥋</span>
-        <div class="equip-slot-info">
-          <div class="equip-slot-label" data-i18n="game.eq.armor">Armor</div>
-          <div class="equip-slot-name" id="eq-armor-name"></div>
-          <div class="equip-slot-stat" id="eq-armor-stat"></div>
-          <div id="eq-armor-action" style="margin-top:0.35rem;"></div>
+      <div class="eq-modal-body">
+
+        <!-- Character doll: weapon | avatar | shield+armor -->
+        <div class="eq-doll-grid">
+
+          <!-- Left: weapon slot -->
+          <div class="eq-doll-col eq-doll-left">
+            <div class="eq-doll-slot" id="eq-slot-weapon" data-slot="weapon">
+              <div class="eq-doll-slot-label" data-i18n="game.eq.weapon">Weapon</div>
+              <div class="eq-doll-slot-icon" id="eq-doll-weapon-icon">🗡️</div>
+              <div class="eq-doll-slot-name" id="eq-doll-weapon-name">—</div>
+              <div class="eq-doll-slot-stat" id="eq-doll-weapon-stat"></div>
+            </div>
+          </div>
+
+          <!-- Center: hero avatar -->
+          <div class="eq-doll-col eq-doll-center">
+            <div class="eq-doll-avatar" id="eq-doll-avatar"></div>
+          </div>
+
+          <!-- Right: shield (top) + armor (bottom) -->
+          <div class="eq-doll-col eq-doll-right">
+            <div class="eq-doll-slot" id="eq-slot-shield" data-slot="shield">
+              <div class="eq-doll-slot-label" data-i18n="game.eq.shield">Shield</div>
+              <div class="eq-doll-slot-icon" id="eq-doll-shield-icon">🛡️</div>
+              <div class="eq-doll-slot-name" id="eq-doll-shield-name">—</div>
+              <div class="eq-doll-slot-stat" id="eq-doll-shield-stat"></div>
+            </div>
+            <div class="eq-doll-slot" id="eq-slot-armor" data-slot="armor">
+              <div class="eq-doll-slot-label" data-i18n="game.eq.armor">Armor</div>
+              <div class="eq-doll-slot-icon" id="eq-doll-armor-icon">🥋</div>
+              <div class="eq-doll-slot-name" id="eq-doll-armor-name">—</div>
+              <div class="eq-doll-slot-stat" id="eq-doll-armor-stat"></div>
+            </div>
+          </div>
+
         </div>
+
+        <!-- Inventory: equippable items -->
+        <hr class="panel-divider eq-divider" />
+        <p class="panel-sub" data-i18n="game.eq.equip_from">Equip from inventory:</p>
+        <div class="eq-inv-grid" id="eq-inv-grid"></div>
+
       </div>
-      <div id="eq-shield" class="equip-slot">
-        <span class="equip-slot-icon">🛡️</span>
-        <div class="equip-slot-info">
-          <div class="equip-slot-label" data-i18n="game.eq.shield">Shield</div>
-          <div class="equip-slot-name" id="eq-shield-name"></div>
-          <div class="equip-slot-stat" id="eq-shield-stat"></div>
-          <div id="eq-shield-action" style="margin-top:0.35rem;"></div>
-        </div>
-      </div>
-      <hr class="panel-divider" />
-      <p class="panel-sub" data-i18n="game.eq.equip_from">Equip from inventory:</p>
-      <div id="eq-list"></div>
     </div>
   </div>
 

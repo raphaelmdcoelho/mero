@@ -1593,3 +1593,176 @@ input:focus, select:focus {
   color: var(--accent);
 }
 
+/* ── Equipment Modal (Diablo/PoE style) ───────────────────────────────────── */
+.eq-modal {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  width: 100%;
+  max-width: 480px;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 20px 60px #000000cc, 0 0 40px #c084fc22;
+  transform: translateY(20px);
+  transition: transform 0.2s;
+}
+.modal-overlay.open .eq-modal { transform: translateY(0); }
+
+.eq-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.eq-modal-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 1.25rem;
+}
+
+/* 3-column character doll layout */
+.eq-doll-grid {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  gap: 1rem;
+  align-items: center;
+  justify-items: center;
+}
+.eq-doll-col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  width: 100%;
+}
+
+/* Individual equipment slot squares */
+.eq-doll-slot {
+  width: 90px;
+  min-height: 90px;
+  background: var(--surface2);
+  border: 2px solid var(--border);
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.2rem;
+  padding: 0.5rem 0.4rem;
+  cursor: pointer;
+  transition: border-color 0.15s, box-shadow 0.15s;
+  text-align: center;
+  position: relative;
+}
+.eq-doll-slot:hover { border-color: var(--accent); box-shadow: var(--glow); }
+.eq-doll-slot.has-item { border-color: var(--gold); box-shadow: 0 0 8px #facc1544; }
+
+.eq-doll-slot-label {
+  font-size: 0.6rem;
+  font-family: 'Cinzel', serif;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+}
+.eq-doll-slot-icon { font-size: 1.8rem; line-height: 1; }
+.eq-doll-slot-name {
+  font-size: 0.72rem;
+  color: var(--text);
+  line-height: 1.3;
+  word-break: break-word;
+}
+.eq-doll-slot-stat {
+  font-size: 0.65rem;
+  color: var(--accent);
+}
+
+/* Center avatar area */
+.eq-doll-avatar {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  border: 3px solid var(--border);
+  background: var(--surface2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 0 20px #c084fc33, inset 0 0 30px #00000055;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+.eq-doll-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+.eq-doll-avatar-emoji {
+  font-size: 3.5rem;
+  line-height: 1;
+}
+
+/* Inventory grid in modal */
+.eq-inv-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(60px, 1fr));
+  gap: 6px;
+}
+.eq-inv-slot {
+  aspect-ratio: 1;
+  background: var(--surface2);
+  border: 2px solid var(--border);
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  cursor: pointer;
+  position: relative;
+  transition: border-color 0.15s, box-shadow 0.15s, opacity 0.15s;
+}
+.eq-inv-slot:hover { border-color: var(--accent); }
+.eq-inv-slot.equipped { border-color: var(--gold); box-shadow: 0 0 8px #facc1544; }
+.eq-inv-slot img { width: 80%; height: 80%; object-fit: contain; display: block; }
+
+/* Divider spacing in modal */
+.eq-divider { margin: 1rem 0 0.6rem; }
+
+/* Drag & Drop states */
+.eq-inv-slot.dragging { opacity: 0.4; transform: scale(0.9); }
+
+.eq-doll-slot.drop-target-valid {
+  border-color: var(--success);
+  box-shadow: 0 0 0 2px var(--success), 0 0 14px #22c55e66;
+}
+.eq-doll-slot.drop-target-invalid {
+  border-color: var(--danger);
+  box-shadow: 0 0 0 2px var(--danger), 0 0 14px #ef444466;
+}
+
+/* Touch drag ghost */
+.drag-ghost {
+  position: fixed;
+  pointer-events: none;
+  z-index: 9999;
+  width: 60px;
+  height: 60px;
+  background: var(--surface2);
+  border: 2px solid var(--accent);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  opacity: 0.85;
+  box-shadow: 0 4px 20px #00000088;
+  transform: translate(-50%, -50%);
+}
+
+@media (max-width: 480px) {
+  .eq-doll-slot { width: 76px; min-height: 76px; }
+  .eq-doll-avatar { width: 96px; height: 96px; }
+  .eq-doll-avatar-emoji { font-size: 2.8rem; }
+}
