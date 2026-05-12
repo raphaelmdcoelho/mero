@@ -11,6 +11,11 @@ const ITEM_IMAGES = {
   15: '/items/hunter_armor',  // Hunter Armor
 };
 
+// Optional extra CSS class per item (e.g. to scale down an oversized image)
+const ITEM_IMG_MODIFIER = {
+  15: 'item-img-sm', // Hunter Armor
+};
+
 function getItemImage(itemId, gender) {
   const base = ITEM_IMAGES[Number(itemId)];
   if (!base) return null;
@@ -19,7 +24,10 @@ function getItemImage(itemId, gender) {
 
 function itemIconHtml(itemId, itemIcon, itemName, gender, imgClass) {
   const img = getItemImage(itemId, gender);
-  if (img) return `<img class="${imgClass}" src="${img}" alt="${escHtml(itemName)}" />`;
+  if (img) {
+    const modifier = ITEM_IMG_MODIFIER[Number(itemId)];
+    return `<img class="${imgClass}${modifier ? ' ' + modifier : ''}" src="${img}" alt="${escHtml(itemName)}" />`;
+  }
   return itemIcon || '?';
 }
 
