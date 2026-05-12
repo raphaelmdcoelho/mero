@@ -145,11 +145,7 @@ function renderAll(char) {
   document.getElementById('char-class-header').textContent =
     `${CLASS_ICONS[char.class] || ''} ${char.class || ''} · ${t('game.js.level', { n: char.level })}`;
 
-  if (char.avatar_path) {
-    const img = document.getElementById('avatar-img');
-    img.src = char.avatar_path;
-    img.style.display = 'block';
-  }
+  renderCharAvatar(document.getElementById('avatar-display'), char);
 
   const xpPct = char.xp_to_next > 0 ? Math.min(100, (char.xp / char.xp_to_next) * 100) : 100;
   document.getElementById('xp-fill').style.width = xpPct + '%';
@@ -234,22 +230,19 @@ function renderAll(char) {
   renderBattlePanel(char);
   renderMarketPanel(char);
   refreshCombatStats();
-  renderEquipOverlay(char);
 }
 
-function renderEquipOverlay(char) {
-  const overlay = document.getElementById('equip-overlay');
-  const armor = char.equippedArmor;
-  if (armor) {
-    const img = getItemImage(armor.id, char.gender);
-    if (img) {
-      overlay.src = img;
-      overlay.style.display = 'block';
-      return;
-    }
+// Shared avatar renderer — used by the game screen and the equipment modal
+function renderCharAvatar(containerEl, char) {
+  if (!containerEl || !char) return;
+  const overlayImg = char.equippedArmor ? getItemImage(char.equippedArmor.id, char.gender) : null;
+  const overlay = overlayImg ? `<img class="equip-overlay" src="${escHtml(overlayImg)}" alt="" />` : '';
+  if (char.avatar_path) {
+    containerEl.innerHTML = `<img class="char-avatar-img" src="${escHtml(char.avatar_path)}" alt="Avatar" />${overlay}`;
+  } else {
+    const icon = CLASS_ICONS[char.class] || '🧍';
+    containerEl.innerHTML = `<span class="char-avatar-icon">${icon}</span>${overlay}`;
   }
-  overlay.style.display = 'none';
-  overlay.src = '';
 }
 
 function updateActionSquares(activity) {
@@ -873,18 +866,8 @@ function renderEquipment(char) {
   _eqFillSlot('arm',    char.equippedArm,    '🥊');
   _eqFillSlot('boots',  char.equippedBoots,  '👢');
 
-  // Avatar in the center — with equipped-armor overlay (mirrors main game screen)
-  const avatarEl = document.getElementById('eq-doll-avatar');
-  const overlayImg = char.equippedArmor ? getItemImage(char.equippedArmor.id, char.gender) : null;
-  const overlayHtml = overlayImg
-    ? `<img class="eq-modal-overlay" src="${escHtml(overlayImg)}" alt="" />`
-    : '';
-  if (char.avatar_path) {
-    avatarEl.innerHTML = `<img src="${escHtml(char.avatar_path)}" alt="avatar" />${overlayHtml}`;
-  } else {
-    const icon = CLASS_ICONS[char.class] || '🧍';
-    avatarEl.innerHTML = `<span class="eq-doll-avatar-emoji">${icon}</span>${overlayHtml}`;
-  }
+  // Avatar in the center — shared renderer, same as main game screen
+  renderCharAvatar(document.getElementById('eq-doll-avatar'), char);
 
   // Inventory grid — equippable items only
   const equippedBySlot = equippedSlotMap(char);
@@ -1069,7 +1052,7 @@ async function equipItem(slot, itemId) {
   charState = { ...charState, ...data };
   renderEquipment(charState);
   renderInventory(charState);
-  renderEquipOverlay(charState);
+  renderCharAvatar(document.getElementById('avatar-display'), charState);
   showToast(t('game.js.item_equipped'), 'success');
   refreshCombatStats();
 }
@@ -1082,7 +1065,7 @@ async function unequipItem(slot) {
   charState = { ...charState, ...data };
   renderEquipment(charState);
   renderInventory(charState);
-  renderEquipOverlay(charState);
+  renderCharAvatar(document.getElementById('avatar-display'), charState);
   showToast(t('game.js.item_unequipped'), 'success');
   refreshCombatStats();
 }
