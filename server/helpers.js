@@ -51,7 +51,11 @@ async function fullChar(charId) {
     dungeonRun.monster = monR.rows[0] ? Object.assign({}, monR.rows[0]) : null;
   }
 
-  return { ...char, inventory, equippedWeapon, equippedArmor, equippedShield, farmQueue, dungeonRun };
+  const farmLevel   = Number(char.farm_level) || 1;
+  const farmXp      = Number(char.farm_xp)    || 0;
+  const farmXpToNext = farmLevel * 5;
+
+  return { ...char, inventory, equippedWeapon, equippedArmor, equippedShield, farmQueue, dungeonRun, farmLevel, farmXp, farmXpToNext };
 }
 
 module.exports = { fullChar };

@@ -456,7 +456,6 @@ router.get('/:characterId/tick', async (req, res) => {
 
   const now = Math.floor(Date.now() / 1000);
   await progressFarmCountdown(char, now);
-  await harvestFarm(char.id);
 
   // Tavern handles its own stamina regen; idle/farm/reading use the generic slower regen
   const stRegen = (char.activity !== 'dungeon' && char.activity !== 'tavern')

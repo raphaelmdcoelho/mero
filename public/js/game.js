@@ -120,7 +120,10 @@ async function init() {
   // Resume farm timer if plants are growing
   if (data.farmQueue && data.farmQueue.length > 0) {
     const maxReadyAt = Math.max(...data.farmQueue.map(j => Number(j.ready_at)));
-    farmEndsAt = maxReadyAt * 1000;
+    farmEndsAt  = maxReadyAt * 1000;
+    farmTotalMs = Number(localStorage.getItem('farmTotalMs')) || null;
+    // Fallback: if no stored total, estimate from endsAt vs now (progress will start at current %)
+    if (!farmTotalMs || farmTotalMs <= 0) farmTotalMs = farmEndsAt - Date.now();
     startFarmLocalTimer();
     startFarmPoll();
   }
@@ -208,36 +211,27 @@ function renderAll(char) {
     actBadge.style.display = 'none';
   }
 
-  updateActionSquares(char.activity);
+  updateActionSquares(char.activity, char.farmQueue && char.farmQueue.length > 0);
 
-  const farmLock  = document.getElementById('farm-lock-badge');
-  const farmStock = document.getElementById('farm-stock-badge');
+  const farmLock = document.getElementById('farm-lock-badge');
   const level = Number(char.level) || 1;
-  const PLANT_ITEM_IDS_SET = new Set([6, 7, 29, 30]);
   if (level < 3) {
     farmLock.style.display = 'flex';
-    farmStock.style.display = 'none';
     document.getElementById('sq-farm').classList.add('disabled');
   } else {
     farmLock.style.display = 'none';
     document.getElementById('sq-farm').classList.remove('disabled');
-    const totalPlants = (char.inventory || [])
-      .filter(i => PLANT_ITEM_IDS_SET.has(i.item_id))
-      .reduce((s, p) => s + p.quantity, 0);
-    if (totalPlants > 0 && !(char.farmQueue && char.farmQueue.length > 0)) {
-      farmStock.textContent = totalPlants;
-      farmStock.style.display = 'flex';
-    } else {
-      farmStock.style.display = 'none';
-    }
   }
-  // Farm timer badge — update if growing
+  // Farm progress bar — resume if growing
   if (!farmEndsAt && char.farmQueue && char.farmQueue.length > 0) {
     const maxReadyAt = Math.max(...char.farmQueue.map(j => Number(j.ready_at)));
-    farmEndsAt = maxReadyAt * 1000;
+    farmEndsAt  = maxReadyAt * 1000;
+    farmTotalMs = Number(localStorage.getItem('farmTotalMs')) || null;
+    if (!farmTotalMs || farmTotalMs <= 0) farmTotalMs = farmEndsAt - Date.now();
     startFarmLocalTimer();
     startFarmPoll();
   }
+  updateFarmTimerBadge();
 
   const gold = Number(char.gold) || 0;
   document.getElementById('gold-display').textContent = `🪙 ${gold}g`;
@@ -266,7 +260,7 @@ function renderEquipOverlay(char) {
   overlay.src = '';
 }
 
-function updateActionSquares(activity) {
+function updateActionSquares(activity, isFarming = false) {
   const dungeon = document.getElementById('sq-dungeon');
   const farm    = document.getElementById('sq-farm');
   const tavern  = document.getElementById('sq-tavern');
@@ -284,7 +278,11 @@ function updateActionSquares(activity) {
   document.getElementById('farm-label').textContent    = t('game.js.farm_lbl');
   if (read) document.getElementById('read-label').textContent = t('game.js.read_lbl');
 
-  if (activity === 'dungeon') {
+  if (isFarming) {
+    dungeon.classList.add('disabled');
+    tavern.classList.add('disabled');
+    if (read) read.classList.add('disabled');
+  } else if (activity === 'dungeon') {
     dungeon.classList.add('active');
     tavern.classList.add('disabled');
     if (read) read.classList.add('disabled');
@@ -304,12 +302,13 @@ function updateActionSquares(activity) {
   }
 
   const pickaxe = document.getElementById('pickaxe-wrap');
-  if (pickaxe) pickaxe.classList.toggle('mining', !!activity);
+  if (pickaxe) pickaxe.classList.toggle('mining', !!activity || isFarming);
 }
 
 // ---- Action handlers ----
 function handleDungeon() {
   if (!charState) return;
+  if (farmEndsAt) return;
   if (charState.activity === 'dungeon') {
     openPanel('battle');
     return;
@@ -320,6 +319,7 @@ function handleDungeon() {
 
 function handleTavern() {
   if (!charState) return;
+  if (farmEndsAt) return;
   if (charState.activity === 'tavern') stopActivity();
   else if (!charState.activity) startTavern();
 }
@@ -979,6 +979,7 @@ async function startActivity(action) {
 
 function handleRead() {
   if (!charState) return;
+  if (farmEndsAt) return;
   if (charState.activity === 'reading') {
     stopActivity();
   } else if (!charState.activity) {
@@ -994,11 +995,12 @@ const FARM_PLANTS = [
   { type: 'onion',  label: 'Onion',  img: '/img/onion.png'  },
   { type: 'corn',   label: 'Corn',   img: '/img/corn.png'   },
 ];
-const FARM_SLOT_COUNT = 12;
+const FARM_MAX_SLOTS = 12;
 
-let farmSlots       = Array(FARM_SLOT_COUNT).fill(null);
-let farmEndsAt      = null;
-let farmLocalTimer  = null;
+let farmSlots        = [null];
+let farmEndsAt       = null;
+let farmTotalMs      = null;
+let farmLocalTimer   = null;
 let farmPollInterval = null;
 
 function handleFarm() {
@@ -1007,14 +1009,31 @@ function handleFarm() {
   openFarmModal();
 }
 
+function renderFarmXpBar() {
+  const level    = charState?.farmLevel    || 1;
+  const xp       = charState?.farmXp       || 0;
+  const xpToNext = charState?.farmXpToNext || (level * 5);
+  const pct      = level >= FARM_MAX_SLOTS ? 100 : Math.min(100, Math.round(xp / xpToNext * 100));
+
+  const labelEl = document.getElementById('farm-level-label');
+  const textEl  = document.getElementById('farm-xp-text');
+  const fillEl  = document.getElementById('farm-xp-fill');
+  if (!labelEl) return;
+
+  labelEl.textContent = `Farm Lv.${level}`;
+  textEl.textContent  = level >= FARM_MAX_SLOTS ? 'Max level' : `${xp} / ${xpToNext} XP`;
+  fillEl.style.width  = pct + '%';
+}
+
 function openFarmModal() {
   const queue = charState?.farmQueue || [];
+  renderFarmXpBar();
   if (queue.length > 0) {
     document.getElementById('farm-planting-view').style.display = 'none';
     document.getElementById('farm-growing-view').style.display  = '';
     renderFarmGrowingView();
   } else {
-    farmSlots = Array(FARM_SLOT_COUNT).fill(null);
+    farmSlots = Array(charState?.farmLevel || 1).fill(null);
     document.getElementById('farm-growing-view').style.display  = 'none';
     document.getElementById('farm-planting-view').style.display = '';
     renderFarmPalette();
@@ -1051,11 +1070,13 @@ function farmDragStart(e, plantType) {
 function renderFarmSlots() {
   const container = document.getElementById('farm-slots');
   container.innerHTML = '';
-  for (let i = 0; i < FARM_SLOT_COUNT; i++) {
+  const slotCount = charState?.farmLevel || 1;
+  for (let i = 0; i < FARM_MAX_SLOTS; i++) {
+    const locked = i >= slotCount;
     const slot = document.createElement('div');
-    slot.className = 'farm-slot';
+    slot.className = locked ? 'farm-slot farm-slot-locked' : 'farm-slot';
 
-    if (farmSlots[i]) {
+    if (!locked && farmSlots[i]) {
       const plant = FARM_PLANTS.find(p => p.type === farmSlots[i]);
       if (plant) {
         slot.classList.add('occupied');
@@ -1065,6 +1086,8 @@ function renderFarmSlots() {
         slot.appendChild(img);
       }
     }
+
+    if (locked) { container.appendChild(slot); continue; }
 
     slot.addEventListener('dragover',  (e) => { e.preventDefault(); slot.classList.add('drag-over'); });
     slot.addEventListener('dragleave', ()  => slot.classList.remove('drag-over'));
@@ -1086,7 +1109,8 @@ function renderFarmSlots() {
 function updateFarmStartBtn() {
   const count = farmSlots.filter(Boolean).length;
   document.getElementById('farm-start-btn').disabled = count === 0;
-  document.getElementById('farm-slot-count').textContent = `${count} / ${FARM_SLOT_COUNT} planted`;
+  const slotMax = charState?.farmLevel || 1;
+  document.getElementById('farm-slot-count').textContent = `${count} / ${slotMax} planted`;
 }
 
 async function startFarmGrow() {
@@ -1097,15 +1121,39 @@ async function startFarmGrow() {
   const data = await res.json();
   if (!res.ok) { showToast(data.error || 'Failed to start growing', 'danger'); btn.disabled = false; return; }
 
-  charState = { ...charState, farmQueue: data.farmQueue };
+  charState = { ...charState, farmQueue: data.farmQueue, farmLevel: data.farmLevel ?? charState.farmLevel, farmXp: data.farmXp ?? charState.farmXp, farmXpToNext: data.farmXpToNext ?? charState.farmXpToNext };
   if (data.durationSeconds > 0) {
-    farmEndsAt = Date.now() + data.durationSeconds * 1000;
+    farmTotalMs = data.durationSeconds * 1000;
+    farmEndsAt  = Date.now() + farmTotalMs;
+    localStorage.setItem('farmEndsAt',  farmEndsAt);
+    localStorage.setItem('farmTotalMs', farmTotalMs);
     startFarmLocalTimer();
     startFarmPoll();
   }
   closeFarmModal();
   renderAll(charState);
   showToast('🌱 Plants are growing!', 'success');
+}
+
+async function cancelFarmGrow() {
+  const res = await api.delete(`/api/farm/${charId}`);
+  if (!res || !res.ok) { showToast('Failed to cancel', 'danger'); return; }
+  stopFarmLocalTimer();
+  stopFarmPoll();
+  farmEndsAt = null;
+  farmTotalMs = null;
+  localStorage.removeItem('farmEndsAt');
+  localStorage.removeItem('farmTotalMs');
+  farmSlots = Array(charState?.farmLevel || 1).fill(null);
+  charState = { ...charState, farmQueue: [] };
+  renderAll(charState);
+  // Switch back to planting view inside modal if it's open
+  const growView = document.getElementById('farm-growing-view');
+  const plantView = document.getElementById('farm-planting-view');
+  if (growView) growView.style.display = 'none';
+  if (plantView) plantView.style.display = '';
+  renderFarmSlots();
+  showToast('Grow cancelled', 'info');
 }
 
 function renderFarmGrowingView() {
@@ -1148,15 +1196,13 @@ function stopFarmLocalTimer() {
 }
 
 function updateFarmTimerBadge() {
-  const badge = document.getElementById('farm-timer-badge');
-  if (!badge) return;
-  if (!farmEndsAt) { badge.style.display = 'none'; return; }
+  const btn = document.getElementById('sq-farm');
+  if (!btn) return;
+  if (!farmEndsAt || !farmTotalMs) { btn.style.setProperty('--farm-progress', '0%'); return; }
   const remainingMs = Math.max(0, farmEndsAt - Date.now());
-  if (remainingMs === 0) { badge.style.display = 'none'; stopFarmLocalTimer(); return; }
-  const mins = Math.floor(remainingMs / 60000);
-  const secs = Math.floor((remainingMs % 60000) / 1000);
-  badge.textContent = `${mins}:${String(secs).padStart(2, '0')}`;
-  badge.style.display = 'flex';
+  if (remainingMs === 0) { btn.style.setProperty('--farm-progress', '0%'); stopFarmLocalTimer(); return; }
+  const pct = Math.min(100, (1 - remainingMs / farmTotalMs) * 100).toFixed(1);
+  btn.style.setProperty('--farm-progress', pct + '%');
 }
 
 // ---- Farm poll ----
@@ -1181,6 +1227,9 @@ async function pollFarmStatus() {
   const data = await res.json();
 
   farmEndsAt = null;
+  farmTotalMs = null;
+  localStorage.removeItem('farmEndsAt');
+  localStorage.removeItem('farmTotalMs');
   updateFarmTimerBadge();
 
   // Refresh full char state
@@ -1202,7 +1251,8 @@ async function pollFarmStatus() {
   if (modal.classList.contains('open')) {
     document.getElementById('farm-growing-view').style.display  = 'none';
     document.getElementById('farm-planting-view').style.display = '';
-    farmSlots = Array(FARM_SLOT_COUNT).fill(null);
+    farmSlots = Array(charState?.farmLevel || 1).fill(null);
+    renderFarmXpBar();
     renderFarmPalette();
     renderFarmSlots();
     updateFarmStartBtn();

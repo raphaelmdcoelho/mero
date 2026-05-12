@@ -525,6 +525,7 @@ input:focus, select:focus {
   -webkit-user-select: none;
   user-select: none;
   position: relative;
+  overflow: hidden;
 }
 .action-sq .sq-icon { font-size: 2.2rem; line-height: 1; }
 #sq-attributes .sq-icon,

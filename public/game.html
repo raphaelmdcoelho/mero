@@ -48,8 +48,6 @@
           <div class="action-sq" id="sq-farm" onclick="handleFarm()">
             <img src="/farm-icon.png" alt="Farm" class="sq-icon" />
             <span id="farm-lock-badge" class="unspent-badge" style="display:none;font-size:0.55rem;">Lv.3</span>
-            <span id="farm-stock-badge" class="unspent-badge" style="display:none;background:var(--accent);"></span>
-            <span id="farm-timer-badge" class="unspent-badge" style="display:none;background:#4a7c3f;font-size:0.55rem;min-width:2.8rem;padding:0 4px;"></span>
           </div>
         </div>
 
@@ -408,8 +406,20 @@
         <button type="button" class="close-btn" onclick="closeFarmModal()">✕</button>
       </div>
 
+      <!-- Farm XP bar (always visible) -->
+      <div class="farm-xp-section" id="farm-xp-section">
+        <div class="farm-xp-header">
+          <span id="farm-level-label">Farm Lv.1</span>
+          <span id="farm-xp-text">0 / 5 XP</span>
+        </div>
+        <div class="farm-xp-track">
+          <div class="farm-xp-fill" id="farm-xp-fill"></div>
+        </div>
+      </div>
+
       <!-- Planting view -->
       <div id="farm-planting-view">
+        <p class="farm-palette-title" data-i18n="game.js.farm_select_plants">Select your plants</p>
         <div class="farm-plant-palette" id="farm-plant-palette"></div>
         <p class="farm-hint">Drag a plant onto a square. Right-click a square to remove it.</p>
         <div class="farm-grid-wrapper">
@@ -431,6 +441,9 @@
           <div id="farm-modal-timer" class="farm-modal-timer"></div>
           <div id="farm-growing-list" class="farm-growing-list"></div>
         </div>
+        <div class="modal-footer farm-stop-footer">
+          <button type="button" class="btn btn-outline btn-sm farm-stop-btn" onclick="cancelFarmGrow()">Stop Growing</button>
+        </div>
       </div>
 
     </div>
@@ -444,6 +457,40 @@
       display: flex;
       flex-direction: column;
       gap: 10px;
+    }
+    .farm-xp-section {
+      padding: 8px 16px 12px;
+      border-bottom: 1px solid var(--border);
+    }
+    .farm-xp-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      margin-bottom: 5px;
+      font-size: 0.75rem;
+    }
+    #farm-level-label { font-weight: 700; color: #a0c878; }
+    #farm-xp-text { color: var(--muted); }
+    .farm-xp-track {
+      height: 6px;
+      background: rgba(255,255,255,0.1);
+      border-radius: 3px;
+      overflow: hidden;
+    }
+    .farm-xp-fill {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, #4a8c30, #7fc850);
+      border-radius: 3px;
+      transition: width 0.4s ease;
+    }
+    .farm-palette-title {
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: var(--text);
+      text-align: center;
+      margin: 0 0 6px;
+      letter-spacing: 0.03em;
     }
     .farm-plant-palette {
       display: flex;
@@ -467,10 +514,10 @@
       transition: border-color 0.15s, background 0.15s;
     }
     .plant-card:hover { border-color: #a0c878; background: rgba(160,200,120,0.1); }
-    .plant-card img { width: 44px; height: 44px; object-fit: contain; pointer-events: none; }
+    .plant-card img { width: 56px; height: 56px; object-fit: contain; pointer-events: none; }
     .plant-card span { font-size: 0.68rem; color: #ccc; }
-    .farm-hint { font-size: 0.72rem; color: var(--muted); text-align: center; margin: 0; }
-    .farm-grid-wrapper { position: relative; width: 100%; }
+    .farm-hint { font-size: 0.72rem; color: var(--muted); text-align: center; margin: 10px 0 0; }
+    .farm-grid-wrapper { position: relative; width: 100%; margin-top: 16px; }
     .farm-bg-img { width: 100%; display: block; border-radius: 8px; }
     /* Overlay sits exactly over the 4×3 soil squares in farm_background_1.png (1402×1122px).
        Measured from pixel scan: soil grid x=308–1108 (22%–79%), y=325–762 (29%–68%).
@@ -502,6 +549,11 @@
       border-color: #a0c878;
       border-style: solid;
     }
+    .farm-slot-locked {
+      background: rgba(0,0,0,0.45);
+      border-color: rgba(255,255,255,0.06);
+      cursor: not-allowed;
+    }
     .farm-slot.occupied {
       border-color: rgba(140,200,80,0.55);
       border-style: solid;
@@ -511,6 +563,8 @@
     .farm-slot img {
       position: absolute;
       top: 10%; left: 10%; right: 10%; bottom: 10%;
+      width: 80%;
+      height: 80%;
       object-fit: contain;
       pointer-events: none;
       filter: drop-shadow(0 1px 3px rgba(0,0,0,0.6));
@@ -543,6 +597,19 @@
       font-size: 0.8rem;
     }
     .farm-growing-item img { width: 36px; height: 36px; object-fit: contain; }
+    .farm-stop-footer { justify-content: center; }
+    .farm-stop-btn { color: #e07070; border-color: #e07070; }
+    #sq-farm::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      width: var(--farm-progress, 0%);
+      background: rgba(80, 180, 60, 0.28);
+      transition: width 1s linear;
+      pointer-events: none;
+      z-index: 0;
+    }
+    #sq-farm > * { position: relative; z-index: 1; }
   </style>
 
   <!-- Toast container -->
