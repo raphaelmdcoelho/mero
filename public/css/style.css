@@ -1096,7 +1096,7 @@ input:focus, select:focus {
   width: 100%;
 }
 .dungeon-modal-note { text-align: center; font-size: 0.8rem; color: var(--muted); margin-bottom: 0.75rem; }
-#dungeon-modal .modal { height: 600px; overflow-y: hidden; }
+#dungeon-modal .modal { min-height: 600px; overflow-y: auto; }
 
 /* ---- Battle panel ---- */
 .battle-progress {
