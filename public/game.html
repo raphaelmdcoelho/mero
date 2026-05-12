@@ -69,20 +69,20 @@
           </div>
         </div>
 
-        <!-- Row 1 far-right: Research (coming soon) -->
+        <!-- Row 1 col 5: Fishing -->
         <div class="action-sq-wrap" style="grid-column:5;grid-row:1;">
+          <span id="fishing-label" class="sq-label" data-i18n="game.fishing">Fishing</span>
+          <div class="action-sq" id="sq-fishing" onclick="handleFishing()">
+            <img src="/fishing.png" alt="Fishing" class="sq-icon" />
+          </div>
+        </div>
+
+        <!-- Row 1 col 6: Research (coming soon) -->
+        <div class="action-sq-wrap" style="grid-column:6;grid-row:1;">
           <span id="research-label" class="sq-label" data-i18n="game.research">Research</span>
           <div class="action-sq disabled" id="sq-research">
             <img src="/research-icon.png" alt="Research" class="sq-icon" />
             <span class="unspent-badge" style="font-size:0.5rem;" data-i18n="game.coming_soon">Soon</span>
-          </div>
-        </div>
-
-        <!-- Row 1 col 6: Fishing -->
-        <div class="action-sq-wrap" style="grid-column:6;grid-row:1;">
-          <span id="fishing-label" class="sq-label" data-i18n="game.fishing">Fishing</span>
-          <div class="action-sq" id="sq-fishing" onclick="handleFishing()">
-            <img src="/fishing.png" alt="Fishing" class="sq-icon" />
           </div>
         </div>
 
@@ -285,9 +285,10 @@
       </div>
       <!-- Phase 2: timing minigame — shown after bait is selected -->
       <div class="fishing-minigame" id="fishing-minigame" style="display:none;">
-        <p class="fishing-minigame-hint">
-          Click 🪝 when the bobber is in the <span class="fishing-zone-label">green zone</span>!
-        </p>
+        <div class="fishing-minigame-header">
+          <p class="fishing-minigame-hint">Click 🪝 when the bobber hits the <span class="fishing-zone-label">green zone</span>!</p>
+          <span class="fishing-attempts-badge" id="fish-attempts">3 tries left</span>
+        </div>
         <div class="fishing-track-wrap">
           <div class="fishing-track" id="fish-track">
             <div class="fishing-green-zone"></div>
@@ -295,7 +296,7 @@
           </div>
           <button type="button" class="fishing-hook-btn" id="fish-hook-btn" onclick="clickFishHook()">🪝</button>
         </div>
-        <p class="fishing-retry-hint" id="fish-retry-hint" style="display:none;">The fish got away! Try again…</p>
+        <p class="fishing-retry-hint" id="fish-retry-hint" style="display:none;">Missed! Try again…</p>
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-outline" onclick="closeFishingModal()">Cancel</button>

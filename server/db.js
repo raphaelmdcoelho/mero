@@ -250,6 +250,12 @@ async function initDb() {
     [34, 'Iron Boots',      'armor',      'Heavy iron boots offering solid protection.',  '🥿',  0,  3, null,    'boots',   22,  44],
     [35, 'Leather Helmet',  'armor',      'A simple padded leather cap.',                 '🪖',  0,  1, null,    'helmet',  8,  16],
     [36, 'Iron Helmet',     'armor',      'Solid iron helmet with a nose guard.',         '⛑️',  0,  3, null,    'helmet', 22,  44],
+    // Fishing bait items (buyable) + fish reward (catchable only)
+    [37, 'Worm Bait',      'misc',       'A simple worm. Basic fishing bait.',            '🪱',  0,  0, null,    null,      1,   5],
+    [38, 'Fly Bait',       'misc',       'An artificial fly. Attracts faster fish.',      '🪰',  0,  0, null,    null,      2,  10],
+    [39, 'Fishing Lure',   'misc',       'A shiny lure that attracts bigger fish.',       '✨',  0,  0, null,    null,      3,  15],
+    [40, 'Bread Bait',     'misc',       'Tasty bread crumbs. Fish love them.',           '🍞',  0,  0, null,    null,      2,   8],
+    [41, 'Fish',           'misc',       'A freshly caught fish. Sell it for gold.',      '🐟',  0,  0, null,    null,      8,   0],
   ];
 
   // item_subtype and buff_effect for adventure potions
