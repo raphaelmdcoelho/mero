@@ -11,23 +11,20 @@ const ITEM_IMAGES = {
   15: '/items/hunter_armor',  // Hunter Armor
 };
 
-// Optional extra CSS class per item (e.g. to scale down an oversized image)
-const ITEM_IMG_MODIFIER = {
-  15: 'item-img-sm', // Hunter Armor
-};
-
 function getItemImage(itemId, gender) {
   const base = ITEM_IMAGES[Number(itemId)];
   if (!base) return null;
   return `${base}_${gender || 'male'}.png`;
 }
 
+// Per-item overlay size overrides (percentage of avatar container)
+const ITEM_OVERLAY_SIZE = {
+  15: '50%', // Hunter Armor — slightly smaller on avatar
+};
+
 function itemIconHtml(itemId, itemIcon, itemName, gender, imgClass) {
   const img = getItemImage(itemId, gender);
-  if (img) {
-    const modifier = ITEM_IMG_MODIFIER[Number(itemId)];
-    return `<img class="${imgClass}${modifier ? ' ' + modifier : ''}" src="${img}" alt="${escHtml(itemName)}" />`;
-  }
+  if (img) return `<img class="${imgClass}" src="${img}" alt="${escHtml(itemName)}" />`;
   return itemIcon || '?';
 }
 
@@ -276,7 +273,12 @@ function renderAll(char) {
 function renderCharAvatar(containerEl, char) {
   if (!containerEl || !char) return;
   const overlayImg = char.equippedArmor ? getItemImage(char.equippedArmor.id, char.gender) : null;
-  const overlay = overlayImg ? `<img class="equip-overlay" src="${escHtml(overlayImg)}" alt="" />` : '';
+  let overlay = '';
+  if (overlayImg) {
+    const size = ITEM_OVERLAY_SIZE[Number(char.equippedArmor.id)];
+    const style = size ? ` style="width:${size};height:${size}"` : '';
+    overlay = `<img class="equip-overlay"${style} src="${escHtml(overlayImg)}" alt="" />`;
+  }
   if (char.avatar_path) {
     containerEl.innerHTML = `<img class="char-avatar-img" src="${escHtml(char.avatar_path)}" alt="Avatar" />${overlay}`;
   } else {
