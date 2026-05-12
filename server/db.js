@@ -68,7 +68,7 @@ async function initDb() {
     CREATE TABLE IF NOT EXISTS plants_inventory (
       id           INTEGER PRIMARY KEY AUTOINCREMENT,
       character_id INTEGER NOT NULL REFERENCES characters(id),
-      plant_type   TEXT NOT NULL CHECK(plant_type IN ('carrot', 'apple')),
+      plant_type   TEXT NOT NULL,
       quantity     INTEGER NOT NULL DEFAULT 0,
       UNIQUE(character_id, plant_type)
     );
@@ -76,7 +76,7 @@ async function initDb() {
     CREATE TABLE IF NOT EXISTS farm_queue (
       id           INTEGER PRIMARY KEY AUTOINCREMENT,
       character_id INTEGER NOT NULL REFERENCES characters(id),
-      plant_type   TEXT NOT NULL CHECK(plant_type IN ('carrot', 'apple')),
+      plant_type   TEXT NOT NULL,
       ready_at     INTEGER NOT NULL,
       remaining_seconds INTEGER DEFAULT NULL,
       last_progress_at  INTEGER DEFAULT NULL
@@ -139,10 +139,50 @@ async function initDb() {
     'ALTER TABLE farm_queue ADD COLUMN remaining_seconds INTEGER DEFAULT NULL',
     'ALTER TABLE farm_queue ADD COLUMN last_progress_at INTEGER DEFAULT NULL',
     "ALTER TABLE characters ADD COLUMN gender TEXT DEFAULT 'male'",
+    'ALTER TABLE characters ADD COLUMN attr_stamina_points INTEGER DEFAULT 0',
+    'ALTER TABLE characters ADD COLUMN stamina             INTEGER DEFAULT 10',
+    'ALTER TABLE characters ADD COLUMN max_stamina         INTEGER DEFAULT 10',
+    'ALTER TABLE dungeon_run ADD COLUMN difficulty TEXT',
+    'ALTER TABLE dungeon_run ADD COLUMN ends_at    INTEGER',
+    'ALTER TABLE items ADD COLUMN item_subtype TEXT DEFAULT NULL',
+    'ALTER TABLE items ADD COLUMN buff_effect  TEXT DEFAULT NULL',
+    'ALTER TABLE dungeon_run ADD COLUMN potion_item_id INTEGER DEFAULT NULL',
+    'ALTER TABLE characters ADD COLUMN dungeon_mastery_s6 INTEGER DEFAULT 0',
+    'ALTER TABLE characters ADD COLUMN dungeon_mastery_s7 INTEGER DEFAULT 0',
+    'ALTER TABLE characters ADD COLUMN dungeon_mastery_s8 INTEGER DEFAULT 0',
+    'ALTER TABLE characters ADD COLUMN farm_level INTEGER NOT NULL DEFAULT 1',
+    'ALTER TABLE characters ADD COLUMN farm_xp    INTEGER NOT NULL DEFAULT 0',
+    'ALTER TABLE characters ADD COLUMN arm_id    INTEGER REFERENCES items(id)',
+    'ALTER TABLE characters ADD COLUMN boots_id  INTEGER REFERENCES items(id)',
+    'ALTER TABLE characters ADD COLUMN helmet_id INTEGER REFERENCES items(id)',
+    "ALTER TABLE characters ADD COLUMN rest_type   TEXT    DEFAULT NULL",
   ];
 
   for (const sql of additiveMigrations) {
     try { await client.execute(sql); } catch { /* column already exists — skip */ }
+  }
+
+  // Migrate farm_queue to remove restrictive CHECK constraint (adds onion, corn support).
+  // Test by inserting a dummy row with the new type; if it fails, recreate the table.
+  try {
+    await client.execute({ sql: "INSERT INTO farm_queue (character_id, plant_type, ready_at) VALUES (-999, 'onion', 0)", args: [] });
+    await client.execute({ sql: 'DELETE FROM farm_queue WHERE character_id = -999', args: [] });
+  } catch {
+    await client.execute('PRAGMA foreign_keys = OFF');
+    await client.execute(`
+      CREATE TABLE farm_queue_new (
+        id                INTEGER PRIMARY KEY AUTOINCREMENT,
+        character_id      INTEGER NOT NULL,
+        plant_type        TEXT NOT NULL,
+        ready_at          INTEGER NOT NULL,
+        remaining_seconds INTEGER DEFAULT NULL,
+        last_progress_at  INTEGER DEFAULT NULL
+      )
+    `);
+    await client.execute('INSERT INTO farm_queue_new SELECT * FROM farm_queue');
+    await client.execute('DROP TABLE farm_queue');
+    await client.execute('ALTER TABLE farm_queue_new RENAME TO farm_queue');
+    await client.execute('PRAGMA foreign_keys = ON');
   }
 
   // Convert legacy farm_queue rows (ready_at absolute unix time) into pauseable remaining_seconds.
@@ -158,6 +198,16 @@ async function initDb() {
     UPDATE characters
     SET max_hp = 10 + (level - 1) * 5 + COALESCE(attr_vitality, 5) * 2,
         hp     = MIN(hp, 10 + (level - 1) * 5 + COALESCE(attr_vitality, 5) * 2)
+    WHERE 1=1
+  `);
+
+  // Recalculate max_stamina: 5 + attr_stamina + floor((level-1)/5)
+  // Seed stamina = max_stamina for existing characters that still hold the old default of 10
+  await client.execute(`
+    UPDATE characters
+    SET max_stamina = 5 + COALESCE(attr_stamina, 5) + ((level - 1) / 5),
+        stamina     = CASE WHEN stamina = 10 THEN 5 + COALESCE(attr_stamina, 5) + ((level - 1) / 5)
+                          ELSE MIN(stamina, 5 + COALESCE(attr_stamina, 5) + ((level - 1) / 5)) END
     WHERE 1=1
   `);
 
@@ -183,7 +233,39 @@ async function initDb() {
     [17, 'Longbow',        'weapon',     'High-tension bow with strong pull.', '🏹', 6,  0, 'ranged', null,   38,  75],
     [18, 'Guardian Armor', 'armor',      'Layered plates for elite guards.',  '🦾', 0,  8, null,    'body',   60, 120],
     [19, 'Tower Shield',   'armor',      'Massive shield with near-wall cover.','🧱',0,10, null,    'shield', 75, 150],
+    [20, 'Swift Elixir',     'consumable', 'Reduces dungeon time by 30%.',               '⚡', 0, 0, null, null, 15, 30],
+    [21, 'Fortune Brew',     'consumable', 'Greatly improves dungeon loot quality.',      '🍀', 0, 0, null, null, 20, 40],
+    [22, 'Abundance Tonic',  'consumable', 'Gain 2 extra loot items from the dungeon.',   '🎁', 0, 0, null, null, 15, 30],
+    [23, 'Vitality Draught', 'consumable', 'Restores 1 stamina upon dungeon completion.', '💚', 0, 0, null, null, 10, 20],
+    [24, 'Wisdom Potion',    'consumable', 'Doubles XP gained in the dungeon.',           '📚', 0, 0, null, null, 25, 50],
+    [25, 'Crimson Blade',   'weapon',     'A blade forged from autumn iron.',            '🍁', 10, 0, 'melee',  null,    70, 140],
+    [26, 'Harvest Plate',   'armor',      'Sturdy armor crafted from harvest steel.',    '🎃',  0,10, null,    'body',   70, 140],
+    [27, 'Swamp Cleaver',   'weapon',     'Heavy cleaver coated in bog resin.',          '🌿', 14, 0, 'melee',  null,    95, 190],
+    [28, 'Bog Armor',       'armor',      'Armor reinforced with hardened swamp scale.', '🐊',  0,14, null,    'body',   95, 190],
+    [29, 'Onion',           'consumable', 'Restores 2 HP.',                              '🧅',  0,  0, null,    null,      3,   5],
+    [30, 'Corn',            'consumable', 'Restores 3 HP.',                              '🌽',  0,  0, null,    null,      4,   7],
+    [31, 'Iron Gauntlets',  'armor',      'Sturdy iron gloves for melee fighters.',       '🥊',  0,  2, null,    'arm',    12,  24],
+    [32, 'Steel Gauntlets', 'armor',      'Reinforced steel gloves with knuckle plates.', '🤛',  0,  4, null,    'arm',    28,  56],
+    [33, 'Leather Boots',   'armor',      'Light boots for swift movement.',              '👢',  0,  1, null,    'boots',   8,  16],
+    [34, 'Iron Boots',      'armor',      'Heavy iron boots offering solid protection.',  '🥿',  0,  3, null,    'boots',   22,  44],
+    [35, 'Leather Helmet',  'armor',      'A simple padded leather cap.',                 '🪖',  0,  1, null,    'helmet',  8,  16],
+    [36, 'Iron Helmet',     'armor',      'Solid iron helmet with a nose guard.',         '⛑️',  0,  3, null,    'helmet', 22,  44],
+    // Fishing bait items (buyable) + fish reward (catchable only)
+    [37, 'Worm Bait',      'misc',       'A simple worm. Basic fishing bait.',            '🪱',  0,  0, null,    null,      1,   5],
+    [38, 'Fly Bait',       'misc',       'An artificial fly. Attracts faster fish.',      '🪰',  0,  0, null,    null,      2,  10],
+    [39, 'Fishing Lure',   'misc',       'A shiny lure that attracts bigger fish.',       '✨',  0,  0, null,    null,      3,  15],
+    [40, 'Bread Bait',     'misc',       'Tasty bread crumbs. Fish love them.',           '🍞',  0,  0, null,    null,      2,   8],
+    [41, 'Fish',           'misc',       'A freshly caught fish. Sell it for gold.',      '🐟',  0,  0, null,    null,      8,   0],
   ];
+
+  // item_subtype and buff_effect for adventure potions
+  const POTION_META = {
+    20: { subtype: 'adventure_potion', buff: '{"type":"speed","value":0.7}' },
+    21: { subtype: 'adventure_potion', buff: '{"type":"loot_quality","value":2}' },
+    22: { subtype: 'adventure_potion', buff: '{"type":"loot_count","value":2}' },
+    23: { subtype: 'adventure_potion', buff: '{"type":"stamina","value":1}' },
+    24: { subtype: 'adventure_potion', buff: '{"type":"xp_multiplier","value":2}' },
+  };
 
   await client.batch([
     ...itemData.map(([id, name, type, desc, icon]) => ({
@@ -193,6 +275,10 @@ async function initDb() {
     ...itemData.map(([id, , , , , dmg, def, wt, as, sp, bp]) => ({
       sql:  'UPDATE items SET damage = ?, defense = ?, weapon_type = ?, armor_slot = ?, sell_price = ?, buy_price = ? WHERE id = ?',
       args: [dmg, def, wt, as, sp, bp, id],
+    })),
+    ...itemData.filter(([id]) => POTION_META[id]).map(([id]) => ({
+      sql:  'UPDATE items SET item_subtype = ?, buff_effect = ? WHERE id = ?',
+      args: [POTION_META[id].subtype, POTION_META[id].buff, id],
     })),
   ], 'write');
 
@@ -357,6 +443,93 @@ async function initDb() {
         { sql: monsterSql, args: [5,  8,'Arch Void Demon',    '👿',  39200,  1620, 81, 17,114,  57750,  1, 11, 25] },
         { sql: monsterSql, args: [5,  9,'Void Emperor',       '👁️',  49000,  2070, 83, 21,130,  77000,  1, 11, 25] },
         { sql: monsterSql, args: [5, 10,'Void Leviathan',     '🌑',  63700,  2700, 86, 23,162,  94500,  1, 11, 40] },
+      ], 'write');
+    }
+  }
+
+  // Set 6 — Autumn Harvest (unlocks at level 5, ~1.5x Set 1 stats)
+  {
+    const r = await client.execute("SELECT COUNT(*) as cnt FROM monsters WHERE dungeon_set = 6");
+    if (Number(r.rows[0].cnt) === 0) {
+      await client.batch([
+        { sql: monsterSql, args: [6,  1,'Scarecrow',           '🎃',    18,   5, 56,  9,  0,    8,  0, 25,  8] },
+        { sql: monsterSql, args: [6,  2,'Harvest Shade',       '🍂',    27,   6, 59,  6,  1,   12,  0, 25,  8] },
+        { sql: monsterSql, args: [6,  3,'Wither Wight',        '💀',    33,   8, 61,  7,  2,   18,  0, 25,  8] },
+        { sql: monsterSql, args: [6,  4,'Autumn Elf',          '🧝',    42,  11, 66, 13,  3,   27,  0, 25,  8] },
+        { sql: monsterSql, args: [6,  5,'Hollow Wolf',         '🐺',    57,  14, 68, 15,  4,   39,  0, 25,  8] },
+        { sql: monsterSql, args: [6,  6,'Dusk Vampire',        '🧛',    75,  18, 69, 17,  5,   57,  0, 26,  8] },
+        { sql: monsterSql, args: [6,  7,'Blight Golem',        '🪨',    98,  23, 66,  7,  7,   83,  0, 26,  8] },
+        { sql: monsterSql, args: [6,  8,'Harvest Demon',       '😈',   120,  27, 71, 13,  8,  113,  0, 26,  8] },
+        { sql: monsterSql, args: [6,  9,'Crimson Beast',       '🍁',   150,  35, 73, 17,  9,  150,  0, 26,  8] },
+        { sql: monsterSql, args: [6, 10,'Autumn Drake',        '🐉',   195,  45, 76, 19, 11,  203,  0, 26, 10] },
+        { sql: monsterSql, args: [6,  1,'Scarecrow King',      '🎃',    90,   8, 61,  6,  1,   83,  1, 25, 40] },
+        { sql: monsterSql, args: [6,  2,'Harvest Warlord',     '💪',   150,  12, 63,  5,  2,  135,  1, 25, 38] },
+        { sql: monsterSql, args: [6,  3,'Skeletal Reaper',     '⚔️',   225,  15, 66,  7,  3,  195,  1, 25, 35] },
+        { sql: monsterSql, args: [6,  4,'Shadow Leaf Assassin','🗡️',   300,  20, 69, 16,  5,  270,  1, 26, 35] },
+        { sql: monsterSql, args: [6,  5,'Ancient Hollow Wolf', '🌕',   420,  26, 71, 13,  6,  375,  1, 26, 30] },
+        { sql: monsterSql, args: [6,  6,'Twilight Lord',       '🍂',   570,  33, 73, 15,  7,  540,  1, 26, 30] },
+        { sql: monsterSql, args: [6,  7,'Amber Titan',         '⛰️',   750,  42, 69,  6,  9,  720,  1, 26, 30] },
+        { sql: monsterSql, args: [6,  8,'Arch Harvest Demon',  '👿',   960,  51, 74, 11, 10,  960,  1, 26, 25] },
+        { sql: monsterSql, args: [6,  9,'Crimson Emperor',     '👁️',  1200,  63, 76, 15, 12, 1230,  1, 26, 25] },
+        { sql: monsterSql, args: [6, 10,'Ancient Autumn Dragon','🐉',  1500,  78, 79, 17, 14, 1500,  1, 26, 40] },
+      ], 'write');
+    }
+  }
+
+  // Set 7 — Murky Swamp (unlocks at level 10, ~2.5x Set 1 stats)
+  {
+    const r = await client.execute("SELECT COUNT(*) as cnt FROM monsters WHERE dungeon_set = 7");
+    if (Number(r.rows[0].cnt) === 0) {
+      await client.batch([
+        { sql: monsterSql, args: [7,  1,'Bog Wisp',            '🌿',    30,   8, 57, 10,  1,   13,  0, 27,  8] },
+        { sql: monsterSql, args: [7,  2,'Swamp Troll',         '🧌',    45,  10, 60,  6,  2,   20,  0, 27,  8] },
+        { sql: monsterSql, args: [7,  3,'Muck Bones',          '💀',    55,  13, 62,  8,  3,   30,  0, 27,  8] },
+        { sql: monsterSql, args: [7,  4,'Marsh Elf',           '🧝',    70,  18, 67, 14,  4,   45,  0, 27,  8] },
+        { sql: monsterSql, args: [7,  5,'Swamp Hound',         '🐺',    95,  23, 69, 16,  5,   65,  0, 27,  8] },
+        { sql: monsterSql, args: [7,  6,'Bog Wraith',          '👻',   125,  30, 70, 18,  6,   95,  0, 28,  8] },
+        { sql: monsterSql, args: [7,  7,'Mud Golem',           '🪨',   163,  38, 67,  8,  8,  138,  0, 28,  8] },
+        { sql: monsterSql, args: [7,  8,'Swamp Demon',         '😈',   200,  45, 72, 14, 10,  188,  0, 28,  8] },
+        { sql: monsterSql, args: [7,  9,'Mire Beast',          '🐊',   250,  58, 74, 18, 12,  250,  0, 28,  8] },
+        { sql: monsterSql, args: [7, 10,'Serpent Drake',       '🐍',   325,  75, 77, 20, 14,  338,  0, 28, 10] },
+        { sql: monsterSql, args: [7,  1,'Bog Titan',           '🌿',   150,  13, 62,  7,  2,  138,  1, 27, 40] },
+        { sql: monsterSql, args: [7,  2,'Swamp Warchief',      '💪',   250,  20, 64,  6,  4,  225,  1, 27, 38] },
+        { sql: monsterSql, args: [7,  3,'Muck Warlord',        '⚔️',   375,  25, 67,  8,  5,  325,  1, 27, 35] },
+        { sql: monsterSql, args: [7,  4,'Poison Assassin',     '🗡️',   500,  33, 70, 17,  7,  450,  1, 28, 35] },
+        { sql: monsterSql, args: [7,  5,'Alpha Swamp Hound',   '🌕',   700,  43, 72, 14,  9,  625,  1, 28, 30] },
+        { sql: monsterSql, args: [7,  6,'Swamp Lord',          '🌿',   950,  55, 74, 16, 11,  900,  1, 28, 30] },
+        { sql: monsterSql, args: [7,  7,'Mire Titan',          '⛰️',  1250,  70, 70,  7, 13, 1200,  1, 28, 30] },
+        { sql: monsterSql, args: [7,  8,'Arch Bog Demon',      '👿',  1600,  85, 75, 12, 15, 1600,  1, 28, 25] },
+        { sql: monsterSql, args: [7,  9,'Swamp Emperor',       '👁️',  2000, 105, 77, 16, 17, 2050,  1, 28, 25] },
+        { sql: monsterSql, args: [7, 10,'Ancient Serpent',     '🐊',  2500, 130, 80, 18, 20, 2500,  1, 28, 40] },
+      ], 'write');
+    }
+  }
+
+  // Set 8 — Crystal Cave (unlocks at level 15, ~3.75x Set 1 stats)
+  {
+    const r = await client.execute("SELECT COUNT(*) as cnt FROM monsters WHERE dungeon_set = 8");
+    if (Number(r.rows[0].cnt) === 0) {
+      await client.batch([
+        { sql: monsterSql, args: [8,  1,'Crystal Bat',          '🦇',    45,  12, 58, 11,  2,   20,  0, 11,  8] },
+        { sql: monsterSql, args: [8,  2,'Gem Crawler',          '🪲',    68,  15, 61,  7,  3,   30,  0, 11,  8] },
+        { sql: monsterSql, args: [8,  3,'Crystal Skeleton',     '💎',    83,  20, 63,  9,  4,   45,  0, 11,  8] },
+        { sql: monsterSql, args: [8,  4,'Cave Elf',             '🧝',   105,  27, 68, 15,  6,   68,  0, 11,  8] },
+        { sql: monsterSql, args: [8,  5,'Crystal Wolf',         '🐺',   143,  35, 70, 17,  8,   98,  0, 11,  8] },
+        { sql: monsterSql, args: [8,  6,'Prism Vampire',        '🧊',   188,  45, 71, 19,  9,  143,  0, 11,  8] },
+        { sql: monsterSql, args: [8,  7,'Gem Golem',            '🪨',   245,  57, 68,  9, 12,  207,  0, 11,  8] },
+        { sql: monsterSql, args: [8,  8,'Crystal Demon',        '😈',   300,  68, 73, 15, 15,  282,  0, 11,  8] },
+        { sql: monsterSql, args: [8,  9,'Prism Beast',          '💎',   375,  87, 75, 19, 18,  375,  0, 11,  8] },
+        { sql: monsterSql, args: [8, 10,'Crystal Drake',        '🐉',   488, 113, 78, 21, 21,  507,  0, 11, 10] },
+        { sql: monsterSql, args: [8,  1,'Crystal Titan',        '💎',   225,  20, 63,  8,  3,  207,  1, 11, 40] },
+        { sql: monsterSql, args: [8,  2,'Cave Warchief',        '💪',   375,  30, 65,  7,  6,  338,  1, 11, 38] },
+        { sql: monsterSql, args: [8,  3,'Gem Warlord',          '⚔️',   563,  38, 68,  9,  8,  488,  1, 11, 35] },
+        { sql: monsterSql, args: [8,  4,'Prism Assassin',       '🗡️',   750,  50, 71, 18, 11,  675,  1, 11, 35] },
+        { sql: monsterSql, args: [8,  5,'Alpha Crystal Wolf',   '🌕',  1050,  65, 73, 15, 14,  938,  1, 11, 30] },
+        { sql: monsterSql, args: [8,  6,'Crystal Lord',         '💎',  1425,  83, 75, 17, 17, 1350,  1, 11, 30] },
+        { sql: monsterSql, args: [8,  7,'Gem Titan',            '⛰️',  1875, 105, 71,  8, 20, 1800,  1, 11, 30] },
+        { sql: monsterSql, args: [8,  8,'Arch Crystal Demon',   '👿',  2400, 128, 76, 13, 23, 2400,  1, 11, 25] },
+        { sql: monsterSql, args: [8,  9,'Crystal Emperor',      '👁️',  3000, 158, 78, 17, 26, 3075,  1, 11, 25] },
+        { sql: monsterSql, args: [8, 10,'Ancient Crystal Dragon','🐉', 3750, 195, 81, 19, 30, 3750,  1, 11, 40] },
       ], 'write');
     }
   }

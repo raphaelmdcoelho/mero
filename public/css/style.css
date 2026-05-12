@@ -156,6 +156,7 @@ input:focus, select:focus {
   color: var(--accent);
   text-shadow: 0 0 20px #c084fc99, 0 0 60px #c084fc44;
   letter-spacing: 0.2em;
+  -webkit-user-select: none;
   user-select: none;
 }
 
@@ -235,6 +236,23 @@ input:focus, select:focus {
 .site-header .game-logo { font-size: 1.6rem; }
 .header-right { display: flex; align-items: center; gap: 1rem; }
 .header-username { color: var(--muted); font-size: 0.9rem; }
+
+/* ---- Site footer ---- */
+.site-footer {
+  text-align: center;
+  padding: 1rem;
+  border-top: 1px solid var(--border);
+  margin-top: 2rem;
+}
+.version-badge {
+  font-size: 0.75rem;
+  color: var(--muted);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 0.2rem 0.7rem;
+  letter-spacing: 0.05em;
+}
 
 /* ---- Page toolbar ---- */
 .page-toolbar {
@@ -495,7 +513,7 @@ input:focus, select:focus {
 .action-grid {
   display: grid;
   grid-template-columns: repeat(6, 100px);
-  grid-template-rows: 120px 200px 100px;
+  grid-template-rows: 120px 200px 120px;
   column-gap: 12px;
   row-gap: 24px;
   align-items: center;
@@ -521,10 +539,33 @@ input:focus, select:focus {
   letter-spacing: 0.05em;
   color: var(--muted);
   transition: all 0.2s;
+  -webkit-user-select: none;
   user-select: none;
   position: relative;
+  overflow: hidden;
 }
 .action-sq .sq-icon { font-size: 2.2rem; line-height: 1; }
+#sq-attributes .sq-icon,
+#sq-equipment .sq-icon,
+#sq-market .sq-icon,
+#sq-castle .sq-icon,
+#sq-achievements .sq-icon,
+#sq-research .sq-icon,
+#sq-farm .sq-icon,
+#sq-tavern .sq-icon {
+  width: 125px !important;
+  max-width: none !important;
+  height: auto !important;
+  object-fit: unset;
+  position: absolute !important;
+  top: 50% !important;
+  left: 50% !important;
+  transform: translate(-50%, -50%) !important;
+}
+#sq-farm .sq-icon,
+#sq-tavern .sq-icon { width: 135px !important; }
+#sq-achievements .sq-icon { width: 118px !important; top: 54% !important; }
+#sq-attributes .sq-icon { top: 54% !important; }
 
 /* Top-row action button wrappers — label above, button below */
 .action-sq-wrap {
@@ -554,15 +595,16 @@ input:focus, select:focus {
 #sq-tavern,
 #sq-read,
 #sq-research,
+#sq-fishing,
 #sq-inventory,
 #sq-attributes,
 #sq-equipment,
 #sq-castle,
+#sq-achievements,
 #sq-market {
   border: none;
   outline: 2px solid var(--border);
   outline-offset: -2px;
-  overflow: hidden;
   padding: 0;
 }
 #sq-dungeon:hover:not(.disabled),
@@ -570,37 +612,47 @@ input:focus, select:focus {
 #sq-tavern:hover:not(.disabled),
 #sq-read:hover:not(.disabled),
 #sq-research:hover:not(.disabled),
+#sq-fishing:hover:not(.disabled),
 #sq-inventory:hover:not(.disabled),
 #sq-attributes:hover:not(.disabled),
 #sq-equipment:hover:not(.disabled),
 #sq-castle:hover:not(.disabled),
+#sq-achievements:hover:not(.disabled),
 #sq-market:hover:not(.disabled) { outline-color: var(--accent); }
 #sq-dungeon.active,
 #sq-farm.active,
 #sq-tavern.active,
 #sq-read.active,
 #sq-research.active,
+#sq-fishing.active,
 #sq-inventory.active,
 #sq-attributes.active,
 #sq-equipment.active,
 #sq-castle.active,
+#sq-achievements.active,
 #sq-market.active { outline-color: var(--accent); }
-#sq-dungeon    .sq-icon,
-#sq-farm       .sq-icon,
-#sq-tavern     .sq-icon,
-#sq-read       .sq-icon,
-#sq-research   .sq-icon,
-#sq-inventory  .sq-icon,
-#sq-attributes .sq-icon,
-#sq-equipment  .sq-icon,
-#sq-castle     .sq-icon,
-#sq-market     .sq-icon {
+#sq-dungeon      .sq-icon,
+#sq-farm         .sq-icon,
+#sq-tavern       .sq-icon,
+#sq-read         .sq-icon,
+#sq-research     .sq-icon,
+#sq-fishing      .sq-icon,
+#sq-inventory    .sq-icon,
+#sq-attributes   .sq-icon,
+#sq-equipment    .sq-icon,
+#sq-castle       .sq-icon,
+#sq-achievements .sq-icon,
+#sq-market       .sq-icon {
   position: absolute;
   top: 0; left: 0;
   width: 100%; height: 100%;
   object-fit: fill;
   transform: scale(1.5);
   filter: brightness(1.15);
+}
+#sq-fishing .sq-icon {
+  transform: scale(0.82) translateY(6px);
+  object-fit: contain;
 }
 #sq-attributes .sq-icon {
   transform: scale(1.3);
@@ -654,11 +706,15 @@ input:focus, select:focus {
   align-items: center;
   justify-content: center;
 }
-.avatar-display img {
+.avatar-display .char-avatar-img {
   max-width: 100%;
   max-height: 100%;
   object-fit: contain;
   display: block;
+}
+.char-avatar-icon {
+  font-size: 3.5rem;
+  line-height: 1;
 }
 .equip-overlay {
   position: absolute;
@@ -710,9 +766,11 @@ input:focus, select:focus {
   border-radius: 5px;
   transition: width 0.5s ease;
 }
-.stat-fill.xp  { background: var(--gold); }
-.stat-fill.hp  { background: var(--success); }
-.stat-fill.hp.low { background: var(--danger); }
+.stat-fill.xp      { background: var(--gold); }
+.stat-fill.hp      { background: var(--success); }
+.stat-fill.hp.low  { background: var(--danger); }
+.stat-fill.stamina { background: #4fc3f7; }
+#dungeon-timer-fill { width: 100%; }
 .stat-value {
   font-size: 0.8rem;
   color: var(--text);
@@ -989,54 +1047,87 @@ input:focus, select:focus {
 .panel-sub { font-size: 0.85rem; color: var(--muted); margin-bottom: 0.5rem; }
 .equip-slot-stat { font-size: 0.75rem; color: var(--accent); margin-top: 0.15rem; }
 
-/* ---- Dungeon level modal ---- */
-.dungeon-set-tabs {
+/* ---- Dungeon carousel modal ---- */
+.dungeon-level-selector {
   display: flex;
-  gap: 0.35rem;
-  flex-wrap: wrap;
   justify-content: center;
-  margin-bottom: 0.75rem;
+  gap: 0.75rem;
+  margin-bottom: 0.5rem;
 }
-.dungeon-set-tab {
+.dungeon-level-btn {
   background: var(--surface2);
   border: 2px solid var(--border);
   border-radius: 8px;
-  padding: 0.35rem 0.65rem;
+  padding: 0.5rem 1.1rem;
   cursor: pointer;
-  font-size: 0.78rem;
-  color: var(--text);
   font-family: 'Cinzel', serif;
+  color: var(--text);
   transition: all 0.2s;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.15rem;
+}
+.dungeon-level-btn:hover { border-color: var(--accent); }
+.dungeon-level-btn.selected { border-color: var(--accent); background: #c084fc11; }
+.dungeon-level-btn .dlb-num { font-size: 1.3rem; font-weight: 700; color: var(--gold); }
+.dungeon-level-btn .dlb-label { font-size: 0.65rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; }
+.dungeon-carousel {
   display: flex;
   align-items: center;
-  gap: 0.3rem;
-}
-.dungeon-set-tab:hover:not(:disabled) { border-color: var(--accent); }
-.dungeon-set-tab.active { border-color: var(--accent); background: #c084fc11; color: var(--accent); }
-.dungeon-set-tab.locked { opacity: 0.4; cursor: not-allowed; }
-.dungeon-modal-note { text-align: center; font-size: 0.8rem; color: var(--muted); margin-bottom: 0.75rem; }
-.dungeon-level-grid {
-  display: grid;
-  grid-template-columns: repeat(5, 1fr);
-  gap: 0.5rem;
+  justify-content: center;
+  gap: 1rem;
   margin: 0.5rem 0 0.75rem;
 }
-.dungeon-level-card {
+.carousel-arrow {
   background: var(--surface2);
   border: 2px solid var(--border);
-  border-radius: 8px;
-  padding: 0.6rem 0.25rem;
-  text-align: center;
+  border-radius: 50%;
+  width: 2.4rem;
+  height: 2.4rem;
+  font-size: 1.6rem;
+  color: var(--text);
   cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   transition: all 0.2s;
-  font-family: 'Cinzel', serif;
+  flex-shrink: 0;
+  line-height: 1;
+  padding: 0 0 3px 0;
 }
-.dungeon-level-card:hover:not(.locked) { border-color: var(--accent); }
-.dungeon-level-card.selected { border-color: var(--accent); background: #c084fc11; }
-.dungeon-level-card.locked { opacity: 0.35; cursor: not-allowed; }
-.dungeon-level-card .dl-num { font-size: 1.1rem; font-weight: 700; color: var(--gold); }
-.dungeon-level-card .dl-icon { font-size: 1rem; }
-.dungeon-level-card .dl-mastery { font-size: 0.6rem; color: var(--success); margin-top: 0.15rem; }
+.carousel-arrow:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); }
+.carousel-arrow:disabled { opacity: 0.25; cursor: not-allowed; }
+.dungeon-carousel-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  width: 180px;
+  flex-shrink: 0;
+}
+.dungeon-icon-img {
+  width: 140px;
+  height: 140px;
+  object-fit: cover;
+  border-radius: 12px;
+  border: 2px solid var(--border);
+}
+.dungeon-carousel-name {
+  font-family: 'Cinzel', serif;
+  font-size: 1.1rem;
+  color: var(--gold);
+  letter-spacing: 0.05em;
+  height: 2.6em;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  text-align: center;
+  width: 100%;
+}
+.dungeon-modal-note { text-align: center; font-size: 0.8rem; color: var(--muted); margin-bottom: 0.75rem; }
+#dungeon-modal .modal { min-height: 600px; overflow-y: auto; }
 
 /* ---- Battle panel ---- */
 .battle-progress {
@@ -1118,6 +1209,10 @@ input:focus, select:focus {
 .cstat-label { font-family: 'Cinzel', serif; font-size: 0.82rem; color: var(--muted); }
 .cstat-value { font-size: 1rem; font-weight: 700; color: var(--gold); }
 .cstat-note  { font-size: 0.75rem; color: var(--muted); text-align: center; margin-top: 0.5rem; }
+.attr-section-title { font-family: 'Cinzel', serif; font-size: 0.8rem; color: var(--accent); margin-bottom: 0.4rem; }
+.cstat-diff  { font-size: 0.8rem; font-weight: 600; }
+.cstat-diff.pos { color: #4caf50; }
+.cstat-diff.neg { color: #f44336; }
 
 /* Pickaxe animation */
 .pickaxe-wrap {
@@ -1146,11 +1241,11 @@ input:focus, select:focus {
 /* ---- Mobile (375px) ---- */
 @media (max-width: 480px) {
   .action-grid {
-    grid-template-columns: repeat(6, 60px);
-    grid-template-rows: 80px 150px 80px;
-    gap: 6px;
+    grid-template-columns: repeat(6, 54px);
+    grid-template-rows: 74px 150px 74px;
+    gap: 5px;
   }
-  .action-sq { width: 60px; height: 60px; font-size: 0.55rem; }
+  .action-sq { width: 54px; height: 54px; font-size: 0.55rem; }
   .action-sq .sq-icon { font-size: 1.4rem; }
   .avatar-cell { width: 140px; height: 150px; }
   .pickaxe-wrap { right: -72px; top: 30px; width: 48px; height: 48px; transform-origin: 44px 40px; }
@@ -1217,6 +1312,7 @@ input:focus, select:focus {
   cursor: pointer;
   transition: border-color 0.15s, background 0.15s;
   font-size: 1.6rem;
+  -webkit-user-select: none;
   user-select: none;
 }
 .market-item-img { width: 75%; height: 75%; object-fit: contain; display: block; }
@@ -1235,8 +1331,8 @@ input:focus, select:focus {
   line-height: 1;
 }
 
-/* Tooltip */
-.market-cell .market-tooltip {
+/* Global market tooltip — lives at body level, unaffected by cell opacity */
+#market-tooltip-global {
   display: none;
   position: fixed;
   z-index: 999;
@@ -1249,7 +1345,6 @@ input:focus, select:focus {
   pointer-events: none;
   box-shadow: 0 4px 20px rgba(0,0,0,0.6);
 }
-.market-cell:hover .market-tooltip { display: block; }
 .market-tooltip-name {
   font-size: 0.8rem;
   font-weight: 700;
@@ -1268,6 +1363,13 @@ input:focus, select:focus {
   margin-top: 0.35rem;
   font-size: 0.68rem;
   color: #a78bfa;
+}
+.market-tooltip-buff {
+  display: block;
+  margin-top: 0.25rem;
+  font-size: 0.68rem;
+  color: #a78bfa;
+  font-style: italic;
 }
 
 /* ---- Language switcher ---- */
@@ -1299,3 +1401,571 @@ input:focus, select:focus {
   color: var(--text);
 }
 
+/* ---- Stamina / Dungeon difficulty ---- */
+.hidden { display: none !important; }
+
+.dungeon-difficulty-selector {
+  margin: 0.75rem 0 0.5rem;
+}
+.difficulty-label {
+  font-size: 0.75rem;
+  color: var(--muted);
+  margin-bottom: 0.4rem;
+  text-align: center;
+}
+.difficulty-options {
+  display: flex;
+  gap: 0.4rem;
+}
+.difficulty-btn {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.2rem;
+  padding: 0.55rem 0.4rem;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--surface2);
+  color: var(--muted);
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s, background 0.15s;
+}
+.difficulty-btn:hover {
+  border-color: var(--accent);
+  color: var(--text);
+}
+.difficulty-btn.selected {
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 12%, var(--surface2));
+  color: var(--accent);
+}
+.diff-name {
+  font-size: 0.82rem;
+  font-weight: 700;
+  font-family: 'Cinzel', serif;
+}
+.diff-detail {
+  font-size: 0.68rem;
+  color: var(--muted);
+}
+.diff-xp {
+  font-size: 0.68rem;
+  color: var(--gold);
+}
+.stamina-warning {
+  margin-top: 0.5rem;
+  font-size: 0.78rem;
+  color: var(--danger);
+  text-align: center;
+  min-height: 2.5em;
+}
+.stamina-warning.hidden {
+  display: block !important;
+  visibility: hidden;
+}
+
+/* ---- Dungeon timer (battle panel) ---- */
+.dungeon-run-info {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.82rem;
+  color: var(--muted);
+  margin-bottom: 1rem;
+}
+.dungeon-diff-badge {
+  font-size: 0.72rem;
+  font-weight: 700;
+  font-family: 'Cinzel', serif;
+  padding: 0.15rem 0.55rem;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  color: var(--accent);
+  text-transform: capitalize;
+}
+.dungeon-timer-wrap {
+  text-align: center;
+  margin: 1.5rem 0 1.25rem;
+}
+.dungeon-timer-display {
+  font-size: 2.8rem;
+  font-family: 'Cinzel', serif;
+  font-weight: 700;
+  color: var(--text);
+  letter-spacing: 0.05em;
+  line-height: 1;
+}
+.dungeon-timer-sub {
+  font-size: 0.72rem;
+  color: var(--muted);
+  margin-top: 0.25rem;
+  margin-bottom: 0.75rem;
+}
+.dungeon-timer-bar {
+  height: 8px;
+  margin: 0 auto;
+  max-width: 220px;
+}
+
+/* ---- Loot modal ---- */
+.loot-xp-row {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--gold);
+  text-align: center;
+  margin-bottom: 0.35rem;
+}
+.loot-gold-row {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #f5c842;
+  text-align: center;
+  margin-bottom: 0.75rem;
+}
+.loot-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  margin-bottom: 0.5rem;
+  max-height: 260px;
+  overflow-y: auto;
+}
+.loot-item-row {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 0.45rem 0.75rem;
+  font-size: 0.88rem;
+}
+.loot-item-icon { font-size: 1.2rem; }
+.loot-item-name { flex: 1; }
+.loot-item-qty  { color: var(--muted); font-size: 0.8rem; }
+
+/* ---- Loot buff row (potion applied) ---- */
+.loot-buff-row {
+  font-size: 0.82rem;
+  color: var(--accent);
+  text-align: center;
+  margin-bottom: 0.6rem;
+  padding: 0.3rem 0.6rem;
+  background: color-mix(in srgb, var(--accent) 10%, var(--surface2));
+  border-radius: 8px;
+  border: 1px solid var(--border);
+}
+
+/* ---- Dungeon potion selector ---- */
+.dungeon-potion-section {
+  margin-top: 0.75rem;
+}
+.potion-optional {
+  font-size: 0.7rem;
+  color: var(--muted);
+  font-weight: 400;
+}
+.potion-slot-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-top: 0.4rem;
+}
+.potion-empty-msg {
+  font-size: 0.95rem;
+  color: var(--muted);
+  margin: 0.4rem 0 0;
+  font-style: italic;
+  text-align: center;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 0.6rem 1rem;
+  width: 100%;
+}
+.potion-slot {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.15rem;
+  padding: 0.45rem 0.6rem;
+  min-width: 72px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--surface2);
+  color: var(--muted);
+  cursor: pointer;
+  font-size: 0.78rem;
+  text-align: center;
+  transition: border-color 0.15s, color 0.15s, background 0.15s;
+}
+.potion-slot:hover {
+  border-color: var(--accent);
+  color: var(--text);
+}
+.potion-slot.selected {
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 12%, var(--surface2));
+  color: var(--accent);
+}
+.potion-slot-icon { font-size: 1.2rem; line-height: 1; }
+.potion-slot-name { font-size: 0.72rem; font-weight: 600; }
+.potion-slot-qty  { font-size: 0.65rem; color: var(--muted); }
+.potion-slot-buff { font-size: 0.65rem; color: var(--muted); }
+.potion-slot.selected .potion-slot-buff { color: var(--accent); }
+
+/* ---- Active potion badge (battle panel) ---- */
+.active-potion-row {
+  margin-bottom: 0.75rem;
+  text-align: center;
+}
+.active-potion-badge {
+  display: inline-block;
+  font-size: 0.78rem;
+  padding: 0.25rem 0.7rem;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: color-mix(in srgb, var(--accent) 10%, var(--surface2));
+  color: var(--accent);
+}
+
+/* ── Equipment Modal (Diablo/PoE style) ───────────────────────────────────── */
+.eq-modal {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  width: 100%;
+  max-width: 480px;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 20px 60px #000000cc, 0 0 40px #c084fc22;
+  transform: translateY(20px);
+  transition: transform 0.2s;
+}
+.modal-overlay.open .eq-modal { transform: translateY(0); }
+
+.eq-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.eq-modal-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 1.25rem;
+}
+
+/* 3-column character doll layout */
+.eq-doll-grid {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  gap: 1rem;
+  align-items: center;
+  justify-items: center;
+}
+.eq-doll-col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  width: 100%;
+}
+
+/* Individual equipment slot squares */
+.eq-doll-slot {
+  width: 90px;
+  min-height: 90px;
+  background: var(--surface2);
+  border: 2px solid var(--border);
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.2rem;
+  padding: 0.5rem 0.4rem;
+  cursor: pointer;
+  transition: border-color 0.15s, box-shadow 0.15s;
+  text-align: center;
+  position: relative;
+}
+.eq-doll-slot:hover { border-color: var(--accent); box-shadow: var(--glow); }
+.eq-doll-slot.has-item { border-color: var(--gold); box-shadow: 0 0 8px #facc1544; }
+
+.eq-doll-slot-label {
+  font-size: 0.6rem;
+  font-family: 'Cinzel', serif;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+}
+.eq-doll-slot-icon { font-size: 1.8rem; line-height: 1; display: flex; align-items: center; justify-content: center; }
+.eq-slot-icon-img  { width: 48px; height: 48px; object-fit: contain; display: block; }
+.eq-doll-slot-name {
+  font-size: 0.72rem;
+  color: var(--text);
+  line-height: 1.3;
+  word-break: break-word;
+}
+.eq-doll-slot-stat {
+  font-size: 0.65rem;
+  color: var(--accent);
+}
+
+/* Center avatar area — outer ring provides the circular border/glow.
+   No overflow:hidden here so the equip-overlay can extend past the circle. */
+.eq-doll-avatar {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  border: 3px solid var(--border);
+  background: var(--surface2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 0 20px #c084fc33, inset 0 0 30px #00000055;
+  flex-shrink: 0;
+  position: relative;
+}
+/* Avatar image inside the modal circle — clip it to the circle shape */
+.eq-doll-avatar .char-avatar-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  border-radius: 50%;
+}
+
+/* Inventory grid in modal */
+.eq-inv-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(60px, 1fr));
+  gap: 6px;
+}
+.eq-inv-slot {
+  aspect-ratio: 1;
+  background: var(--surface2);
+  border: 2px solid var(--border);
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  cursor: pointer;
+  position: relative;
+  transition: border-color 0.15s, box-shadow 0.15s, opacity 0.15s;
+}
+.eq-inv-slot:hover { border-color: var(--accent); }
+.eq-inv-slot.equipped { border-color: var(--gold); box-shadow: 0 0 8px #facc1544; }
+.eq-inv-slot img { width: 80%; height: 80%; object-fit: contain; display: block; }
+
+/* Divider spacing in modal */
+.eq-divider { margin: 1rem 0 0.6rem; }
+
+/* Drag & Drop states */
+.eq-inv-slot.dragging { opacity: 0.4; transform: scale(0.9); }
+
+.eq-doll-slot.drop-target-valid {
+  border-color: var(--success);
+  box-shadow: 0 0 0 2px var(--success), 0 0 14px #22c55e66;
+}
+.eq-doll-slot.drop-target-invalid {
+  border-color: var(--danger);
+  box-shadow: 0 0 0 2px var(--danger), 0 0 14px #ef444466;
+}
+
+/* Touch drag ghost */
+.drag-ghost {
+  position: fixed;
+  pointer-events: none;
+  z-index: 9999;
+  width: 60px;
+  height: 60px;
+  background: var(--surface2);
+  border: 2px solid var(--accent);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  opacity: 0.85;
+  box-shadow: 0 4px 20px #00000088;
+  transform: translate(-50%, -50%);
+}
+
+@media (max-width: 480px) {
+  .eq-doll-slot { width: 76px; min-height: 76px; }
+  .eq-doll-avatar { width: 96px; height: 96px; }
+}
+
+/* ---- Fishing Modal ---- */
+.fishing-modal-subtitle {
+  font-size: 0.82rem;
+  color: var(--muted);
+  text-align: center;
+  margin: -0.5rem 0 1rem;
+}
+
+.fishing-bait-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.6rem;
+  margin-bottom: 1rem;
+}
+
+.fishing-bait-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.2rem;
+  padding: 0.65rem 0.4rem;
+  border: 2px solid var(--border);
+  border-radius: 10px;
+  background: var(--surface2);
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+  text-align: center;
+}
+.fishing-bait-card:hover:not(.disabled) {
+  border-color: var(--accent);
+  background: rgba(192, 132, 252, 0.08);
+}
+.fishing-bait-card.selected {
+  border-color: #60a5fa;
+  background: rgba(96, 165, 250, 0.1);
+}
+.fishing-bait-card.disabled {
+  opacity: 0.5;
+  cursor: pointer;
+}
+.fishing-bait-card.disabled .fishing-bait-desc {
+  color: #f59e0b;
+  font-size: 0.6rem;
+}
+.fishing-bait-icon { font-size: 1.6rem; }
+.fishing-bait-name {
+  font-family: 'Cinzel', serif;
+  font-size: 0.72rem;
+  color: var(--text);
+}
+.fishing-bait-desc { font-size: 0.65rem; color: var(--muted); }
+.fishing-bait-qty {
+  font-size: 0.65rem;
+  font-family: 'Cinzel', serif;
+  color: #60a5fa;
+  margin-top: 1px;
+}
+
+/* Phase 2: timing minigame */
+.fishing-minigame { margin: 0.5rem 0 0.25rem; }
+
+.fishing-minigame-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+}
+.fishing-minigame-hint {
+  font-size: 0.8rem;
+  color: var(--muted);
+  margin: 0;
+}
+.fishing-attempts-badge {
+  font-family: 'Cinzel', serif;
+  font-size: 0.72rem;
+  color: #f59e0b;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.fishing-zone-label { color: #4ade80; font-weight: 600; }
+
+.fishing-track-wrap {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.fishing-track {
+  flex: 1;
+  height: 48px;
+  background: var(--surface2);
+  border: 2px solid var(--border);
+  border-radius: 24px;
+  position: relative;
+  overflow: hidden;
+  transition: border-color 0.2s, background 0.2s;
+}
+
+.fishing-green-zone {
+  position: absolute;
+  left: 55%;
+  width: 20%;
+  top: 0;
+  bottom: 0;
+  background: rgba(74, 222, 128, 0.2);
+  border-left: 2px solid rgba(74, 222, 128, 0.55);
+  border-right: 2px solid rgba(74, 222, 128, 0.55);
+  pointer-events: none;
+}
+
+.fishing-slider {
+  position: absolute;
+  width: 36px;
+  height: 36px;
+  top: 50%;
+  transform: translateY(-50%);
+  left: 0;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 8px rgba(192, 132, 252, 0.55);
+  pointer-events: none;
+}
+
+.fishing-hook-btn {
+  background: var(--surface);
+  border: 2px solid var(--border);
+  border-radius: 50%;
+  width: 52px;
+  height: 52px;
+  font-size: 1.5rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: border-color 0.15s, box-shadow 0.15s;
+  line-height: 1;
+}
+.fishing-hook-btn:hover { border-color: var(--accent); }
+.fishing-hook-btn.in-zone {
+  border-color: #4ade80;
+  box-shadow: 0 0 14px rgba(74, 222, 128, 0.55);
+}
+
+.fishing-track.fish-success {
+  background: rgba(74, 222, 128, 0.12);
+  border-color: #4ade80;
+}
+.fishing-track.fish-fail {
+  background: rgba(239, 68, 68, 0.12);
+  border-color: #ef4444;
+  animation: fish-shake 0.35s ease;
+}
+
+.fishing-retry-hint {
+  text-align: center;
+  font-size: 0.8rem;
+  color: #ef4444;
+  margin-top: 0.6rem;
+}
+
+@keyframes fish-shake {
+  0%, 100% { transform: translateX(0); }
+  25%       { transform: translateX(-5px); }
+  75%       { transform: translateX(5px); }
+}

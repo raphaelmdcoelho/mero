@@ -42,13 +42,12 @@
           </div>
         </div>
 
-        <!-- Top center-left: Farm (activity, unlocks at level 3) -->
+        <!-- Top center-left: Farm (unlocks at level 3) -->
         <div class="action-sq-wrap" style="grid-column:2;grid-row:1;position:relative;">
           <span id="farm-label" class="sq-label" data-i18n="game.farm">Farm</span>
           <div class="action-sq" id="sq-farm" onclick="handleFarm()">
             <img src="/farm-icon.png" alt="Farm" class="sq-icon" />
             <span id="farm-lock-badge" class="unspent-badge" style="display:none;font-size:0.55rem;">Lv.3</span>
-            <span id="farm-stock-badge" class="unspent-badge" style="display:none;background:var(--accent);"></span>
           </div>
         </div>
 
@@ -56,6 +55,7 @@
         <div class="action-sq-wrap" style="grid-column:3;grid-row:1;">
           <span id="tavern-label" class="sq-label" data-i18n="game.tavern">Tavern</span>
           <div class="action-sq" id="sq-tavern" onclick="handleTavern()">
+            <div class="tavern-progress-fill" id="tavern-progress-fill"></div>
             <img src="/tavern-icon.png" alt="Tavern" class="sq-icon" />
           </div>
         </div>
@@ -64,12 +64,21 @@
         <div class="action-sq-wrap" style="grid-column:4;grid-row:1;">
           <span id="read-label" class="sq-label" data-i18n="game.read">Read</span>
           <div class="action-sq" id="sq-read" onclick="handleRead()">
+            <div class="read-progress-fill" id="read-progress-fill"></div>
             <img src="/read-icon.png" alt="Read" class="sq-icon" />
           </div>
         </div>
 
-        <!-- Row 1 far-right: Research (coming soon) -->
+        <!-- Row 1 col 5: Fishing -->
         <div class="action-sq-wrap" style="grid-column:5;grid-row:1;">
+          <span id="fishing-label" class="sq-label" data-i18n="game.fishing">Fishing</span>
+          <div class="action-sq" id="sq-fishing" onclick="handleFishing()">
+            <img src="/fishing.png" alt="Fishing" class="sq-icon" />
+          </div>
+        </div>
+
+        <!-- Row 1 col 6: Research (coming soon) -->
+        <div class="action-sq-wrap" style="grid-column:6;grid-row:1;">
           <span id="research-label" class="sq-label" data-i18n="game.research">Research</span>
           <div class="action-sq disabled" id="sq-research">
             <img src="/research-icon.png" alt="Research" class="sq-icon" />
@@ -77,12 +86,9 @@
           </div>
         </div>
 
-        <!-- Center: Avatar (spans columns 2-5 to stay centered in 6-col grid) -->
-        <div class="avatar-cell" style="grid-column:2/6;grid-row:2;justify-self:center;">
-          <div class="avatar-display" id="avatar-display">
-            <img id="avatar-img" src="" alt="Avatar" style="display:none;" />
-            <img id="equip-overlay" class="equip-overlay" src="" alt="" style="display:none;" />
-          </div>
+        <!-- Center: Avatar (spans all 6 columns) -->
+        <div class="avatar-cell" style="grid-column:1/7;grid-row:2;justify-self:center;">
+          <div class="avatar-display" id="avatar-display"></div>
 
           <!-- Pixel art pickaxe — appears on the right of the avatar when an activity is active -->
           <div id="pickaxe-wrap" class="pickaxe-wrap">
@@ -127,31 +133,49 @@
         </div>
 
         <!-- Bottom row: all action buttons in one row (cols 1-6, row 3) -->
-        <div class="action-sq" id="sq-inventory" style="grid-column:1;grid-row:3;" onclick="openPanel('inventory')">
-          <img src="/inventory-icon.png" alt="Inventory" class="sq-icon" />
+        <div class="action-sq-wrap" style="grid-column:1;grid-row:3;">
+          <span class="sq-label" data-i18n="game.inventory">Inventory</span>
+          <div class="action-sq" id="sq-inventory" onclick="openPanel('inventory')">
+            <img src="/inventory-icon.png" alt="Inventory" class="sq-icon" />
+          </div>
         </div>
 
-        <div class="action-sq" id="sq-attributes" style="grid-column:2;grid-row:3;position:relative;" onclick="openPanel('attributes')">
-          <img src="/attributes-icon.png" alt="Attributes" class="sq-icon" />
-          <span id="unspent-badge" class="unspent-badge" style="display:none;"></span>
+        <div class="action-sq-wrap" style="grid-column:2;grid-row:3;">
+          <span class="sq-label" data-i18n="game.attributes">Attributes</span>
+          <div class="action-sq" id="sq-attributes" style="position:relative;" onclick="openPanel('attributes')">
+            <img src="/attributes-icon.png" alt="Attributes" class="sq-icon" />
+            <span id="unspent-badge" class="unspent-badge" style="display:none;"></span>
+          </div>
         </div>
 
-        <div class="action-sq" id="sq-equipment" style="grid-column:3;grid-row:3;" onclick="openPanel('equipment')">
-          <img src="/equipment-icon.png" alt="Equipment" class="sq-icon" />
+        <div class="action-sq-wrap" style="grid-column:3;grid-row:3;">
+          <span class="sq-label" data-i18n="game.equipment">Equipment</span>
+          <div class="action-sq" id="sq-equipment" onclick="openPanel('equipment')">
+            <img src="/equipment-icon.png" alt="Equipment" class="sq-icon" />
+          </div>
         </div>
 
-        <div class="action-sq" id="sq-market" style="grid-column:4;grid-row:3;" onclick="openPanel('market')">
-          <img src="/market-icon.png" alt="Market" class="sq-icon" />
+        <div class="action-sq-wrap" style="grid-column:4;grid-row:3;">
+          <span class="sq-label" data-i18n="game.market">Market</span>
+          <div class="action-sq" id="sq-market" onclick="openPanel('market')">
+            <img src="/market-icon.png" alt="Market" class="sq-icon" />
+          </div>
         </div>
 
-        <div class="action-sq" id="sq-stats" style="grid-column:5;grid-row:3;" onclick="openPanel('stats')">
-          <span class="sq-icon">📊</span>
-          <span data-i18n="game.stats">Stats</span>
+        <div class="action-sq-wrap" style="grid-column:5;grid-row:3;">
+          <span class="sq-label" data-i18n="game.castle">Castle</span>
+          <div class="action-sq disabled" id="sq-castle" style="position:relative;">
+            <img src="/castle-icon.png" alt="Castle" class="sq-icon" />
+            <span class="unspent-badge" style="font-size:0.5rem;" data-i18n="game.coming_soon">Soon</span>
+          </div>
         </div>
 
-        <div class="action-sq disabled" id="sq-castle" style="grid-column:6;grid-row:3;position:relative;">
-          <img src="/castle-icon.png" alt="Castle" class="sq-icon" />
-          <span class="unspent-badge" style="font-size:0.5rem;" data-i18n="game.coming_soon">Soon</span>
+        <div class="action-sq-wrap" style="grid-column:6;grid-row:3;">
+          <span class="sq-label" data-i18n="game.achievements">Achievements</span>
+          <div class="action-sq disabled" id="sq-achievements" style="position:relative;">
+            <img src="/achivements_icon.png" alt="Achievements" class="sq-icon" />
+            <span class="unspent-badge" style="font-size:0.5rem;" data-i18n="game.coming_soon">Soon</span>
+          </div>
         </div>
       </div>
     </div>
@@ -167,11 +191,11 @@
           <span class="stat-value" id="xp-text">0 / 10</span>
         </div>
         <div class="stat-row">
-          <span class="stat-label">HP</span>
+          <span class="stat-label">ST</span>
           <div class="stat-track">
-            <div class="stat-fill hp" id="hp-fill" style="width:100%"></div>
+            <div class="stat-fill stamina" id="stamina-fill" style="width:100%"></div>
           </div>
-          <span class="stat-value" id="hp-text">10 / 10</span>
+          <span class="stat-value" id="stamina-text">10 / 10</span>
         </div>
         <div style="text-align:center;margin-top:0.25rem;display:flex;align-items:center;justify-content:center;gap:0.75rem;">
           <span id="level-display" style="font-family:'Cinzel',serif;font-size:0.85rem;color:var(--gold);">Level 1</span>
@@ -182,16 +206,46 @@
     </div>
   </div>
 
-  <!-- Dungeon Level Modal -->
+  <!-- Dungeon Modal -->
   <div class="modal-overlay" id="dungeon-modal">
     <div class="modal">
-      <h2 class="modal-title" data-i18n="game.dm.title">Choose Dungeon Level</h2>
-      <div class="dungeon-set-tabs" id="dungeon-set-tabs">
-        <!-- populated by JS -->
+      <h2 class="modal-title" data-i18n="game.dm.title">Choose Dungeon</h2>
+      <!-- Carousel -->
+      <div class="dungeon-carousel">
+        <button class="carousel-arrow" id="carousel-prev" onclick="prevDungeon()" disabled>&#8249;</button>
+        <div class="dungeon-carousel-content" id="dungeon-carousel-content">
+          <!-- populated by JS -->
+        </div>
+        <button class="carousel-arrow" id="carousel-next" onclick="nextDungeon()">&#8250;</button>
       </div>
-      <p class="dungeon-modal-note" data-i18n="game.dm.note">Defeat 100 monsters, then face the Boss to increase your mastery.</p>
-      <div class="dungeon-level-grid" id="dungeon-level-grid">
-        <!-- populated by JS -->
+      <!-- Difficulty selector -->
+      <div class="dungeon-difficulty-selector" id="dungeon-difficulty-selector">
+        <div class="difficulty-label" data-i18n="dungeon.choose_diff">Choose Difficulty</div>
+        <div class="difficulty-options">
+          <button type="button" class="difficulty-btn selected" id="diff-easy" onclick="selectDifficulty('easy')">
+            <span class="diff-name" data-i18n="dungeon.diff.easy">Easy</span>
+            <span class="diff-detail">−2 ST · 2 min</span>
+            <span class="diff-xp" id="diff-xp-easy"></span>
+          </button>
+          <button type="button" class="difficulty-btn" id="diff-medium" onclick="selectDifficulty('medium')">
+            <span class="diff-name" data-i18n="dungeon.diff.medium">Medium</span>
+            <span class="diff-detail">−4 ST · 3 min</span>
+            <span class="diff-xp" id="diff-xp-medium"></span>
+          </button>
+          <button type="button" class="difficulty-btn" id="diff-hard" onclick="selectDifficulty('hard')">
+            <span class="diff-name" data-i18n="dungeon.diff.hard">Hard</span>
+            <span class="diff-detail">−7 ST · 5 min</span>
+            <span class="diff-xp" id="diff-xp-hard"></span>
+          </button>
+        </div>
+        <div class="stamina-warning hidden" id="stamina-warning"></div>
+      </div>
+      <!-- Adventure Potion selector -->
+      <div class="dungeon-potion-section" id="dungeon-potion-section">
+        <div class="difficulty-label"><span data-i18n="dungeon.potion_label">Adventure Potion</span> <span class="potion-optional" data-i18n="dungeon.potion_optional">(optional)</span></div>
+        <div class="potion-slot-list" id="potion-slot-list">
+          <!-- populated by JS -->
+        </div>
       </div>
       <div class="modal-footer">
         <button class="btn btn-outline" onclick="closeDungeonModal()" data-i18n="game.dm.cancel">Cancel</button>
@@ -200,50 +254,106 @@
     </div>
   </div>
 
+  <!-- Tavern Rest Modal -->
+  <div class="modal-overlay" id="tavern-modal">
+    <div class="modal">
+      <h2 class="modal-title" data-i18n="tavern.modal.title">Rest at the Tavern</h2>
+      <p class="tavern-modal-subtitle" data-i18n="tavern.modal.subtitle">Choose your rest type</p>
+      <div class="tavern-rest-options" id="tavern-rest-options">
+        <!-- populated by JS -->
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" onclick="closeTavernModal()" data-i18n="game.dm.cancel">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Read Modal -->
+  <div class="modal-overlay" id="read-modal">
+    <div class="modal">
+      <h2 class="modal-title">Choose a Book</h2>
+      <p class="read-modal-subtitle">Select a book to read</p>
+      <div class="read-book-list" id="read-book-list">
+        <!-- populated by JS -->
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" onclick="closeReadModal()">Cancel</button>
+        <button class="btn btn-primary" id="start-read-btn" onclick="confirmStartReading()">Start Reading</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Fishing Modal -->
+  <div class="modal-overlay" id="fishing-modal">
+    <div class="modal">
+      <h2 class="modal-title">Go Fishing</h2>
+      <p class="fishing-modal-subtitle">Choose your bait</p>
+      <div class="fishing-bait-grid" id="fishing-bait-grid">
+        <!-- populated by JS -->
+      </div>
+      <!-- Phase 2: timing minigame — shown after bait is selected -->
+      <div class="fishing-minigame" id="fishing-minigame" style="display:none;">
+        <div class="fishing-minigame-header">
+          <p class="fishing-minigame-hint">Click 🪝 when the bobber hits the <span class="fishing-zone-label">green zone</span>!</p>
+          <span class="fishing-attempts-badge" id="fish-attempts">3 tries left</span>
+        </div>
+        <div class="fishing-track-wrap">
+          <div class="fishing-track" id="fish-track">
+            <div class="fishing-green-zone"></div>
+            <div class="fishing-slider" id="fish-slider"></div>
+          </div>
+          <button type="button" class="fishing-hook-btn" id="fish-hook-btn" onclick="clickFishHook()">🪝</button>
+        </div>
+        <p class="fishing-retry-hint" id="fish-retry-hint" style="display:none;">Missed! Try again…</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline" onclick="closeFishingModal()">Cancel</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Battle Panel -->
   <div class="side-panel" id="battle-panel">
     <div class="side-panel-header">
-      <span class="side-panel-title" id="battle-title"><img src="/dungeon-icon.png" alt="Dungeon" style="height:1.2rem;width:1.2rem;display:inline;margin-right:0.5rem;vertical-align:middle;filter:brightness(1.2);" /> Dungeon</span>
+      <span class="side-panel-title" id="battle-title">⚔️ Dungeon</span>
       <button class="close-btn" onclick="closePanel('battle')">✕</button>
     </div>
     <div class="side-panel-body">
-      <!-- Progress -->
-      <div class="battle-progress" id="battle-progress">
-        <span id="battle-kills-label">0 / 100 monsters</span>
-        <span id="battle-boss-label" class="boss-label" style="display:none;">⚠️ BOSS</span>
+      <!-- Dungeon info -->
+      <div class="dungeon-run-info" id="dungeon-run-info">
+        <span id="dungeon-run-label">Forest · Level 1</span>
+        <span class="dungeon-diff-badge" id="dungeon-diff-badge">Easy</span>
       </div>
 
-      <!-- Monster card -->
-      <div class="monster-card" id="monster-card">
-        <div class="monster-icon" id="monster-icon">👺</div>
-        <div class="monster-info">
-          <div class="monster-name" id="monster-name">Goblin</div>
-          <div class="monster-hp-row">
-            <div class="stat-track">
-              <div class="stat-fill hp" id="monster-hp-fill" style="width:100%;"></div>
-            </div>
-            <span class="monster-hp-text" id="monster-hp-text">12 / 12</span>
-          </div>
+      <!-- Active potion badge -->
+      <div class="active-potion-row hidden" id="active-potion-row"></div>
+
+      <!-- Countdown timer -->
+      <div class="dungeon-timer-wrap">
+        <div class="dungeon-timer-display" id="dungeon-timer-display">0:00</div>
+        <div class="dungeon-timer-sub" data-i18n="dungeon.remaining">remaining</div>
+        <div class="stat-track dungeon-timer-bar">
+          <div class="stat-fill stamina" id="dungeon-timer-fill"></div>
         </div>
       </div>
 
-      <!-- Hero HP (inside battle panel) -->
-      <div class="battle-hero-hp">
-        <span class="battle-hero-label" data-i18n="game.bp.hero">🧙 Hero</span>
-        <div class="stat-track">
-          <div class="stat-fill hp" id="battle-hero-hp-fill" style="width:100%;"></div>
-        </div>
-        <span class="monster-hp-text" id="battle-hero-hp-text">— / —</span>
-      </div>
-
-      <!-- Combat log -->
-      <div class="battle-log" id="battle-log">
-        <div class="battle-log-empty" data-i18n="game.bp.press_attack">Press Attack to begin!</div>
-      </div>
-
-      <!-- Actions -->
+      <!-- Stop button -->
       <div class="battle-actions">
-        <button class="btn btn-danger battle-attack-btn" id="stop-btn" onclick="stopDungeon()" data-i18n="game.bp.stop">🚪 Stop Dungeon</button>
+        <button type="button" class="btn btn-danger battle-attack-btn" id="stop-btn" onclick="stopDungeon()">🚪 Stop Dungeon</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loot Modal -->
+  <div class="modal-overlay" id="loot-modal">
+    <div class="modal">
+      <h2 class="modal-title" id="loot-modal-title">Dungeon Complete!</h2>
+      <div class="loot-xp-row" id="loot-xp-row"></div>
+      <div class="loot-gold-row" id="loot-gold-row"></div>
+      <div class="loot-buff-row hidden" id="loot-buff-row"></div>
+      <div class="loot-list" id="loot-list"></div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-primary" onclick="closeLootModal()" data-i18n="dungeon.collect_close">Collect &amp; Close</button>
       </div>
     </div>
   </div>
@@ -256,67 +366,82 @@
     </div>
     <div class="side-panel-body">
       <p style="font-size:0.8rem;color:var(--muted);margin-bottom:0.75rem;" data-i18n="game.inv.hint">
-        Max 10 slots · Gold border = equipped
+        Max 25 slots · Gold border = equipped
       </p>
       <div class="inv-grid" id="inv-grid"></div>
       <div id="item-tooltip" style="display:none;margin-top:1rem;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:0.75rem;font-size:0.85rem;"></div>
     </div>
   </div>
 
-  <!-- Equipment Panel -->
-  <div class="side-panel" id="eq-panel">
-    <div class="side-panel-header">
-      <span class="side-panel-title">🛡️ Equipment</span>
-      <button class="close-btn" onclick="closePanel('equipment')">✕</button>
-    </div>
-    <div class="side-panel-body">
-      <div id="eq-weapon" class="equip-slot">
-        <span class="equip-slot-icon">🗡️</span>
-        <div class="equip-slot-info">
-          <div class="equip-slot-label" data-i18n="game.eq.weapon">Weapon</div>
-          <div class="equip-slot-name" id="eq-weapon-name"></div>
-          <div class="equip-slot-stat" id="eq-weapon-stat"></div>
-          <div id="eq-weapon-action" style="margin-top:0.35rem;"></div>
-        </div>
+  <!-- Equipment Modal (Diablo/PoE style) -->
+  <div class="modal-overlay" id="eq-panel" onclick="eqOverlayClick(event)">
+    <div class="eq-modal">
+      <div class="eq-modal-header">
+        <span class="side-panel-title">🛡️ <span data-i18n="game.equipment">Equipment</span></span>
+        <button type="button" class="close-btn" onclick="closePanel('equipment')">✕</button>
       </div>
-      <div id="eq-armor" class="equip-slot">
-        <span class="equip-slot-icon">🥋</span>
-        <div class="equip-slot-info">
-          <div class="equip-slot-label" data-i18n="game.eq.armor">Armor</div>
-          <div class="equip-slot-name" id="eq-armor-name"></div>
-          <div class="equip-slot-stat" id="eq-armor-stat"></div>
-          <div id="eq-armor-action" style="margin-top:0.35rem;"></div>
-        </div>
-      </div>
-      <div id="eq-shield" class="equip-slot">
-        <span class="equip-slot-icon">🛡️</span>
-        <div class="equip-slot-info">
-          <div class="equip-slot-label" data-i18n="game.eq.shield">Shield</div>
-          <div class="equip-slot-name" id="eq-shield-name"></div>
-          <div class="equip-slot-stat" id="eq-shield-stat"></div>
-          <div id="eq-shield-action" style="margin-top:0.35rem;"></div>
-        </div>
-      </div>
-      <hr class="panel-divider" />
-      <p class="panel-sub" data-i18n="game.eq.equip_from">Equip from inventory:</p>
-      <div id="eq-list"></div>
-    </div>
-  </div>
+      <div class="eq-modal-body">
 
-  <!-- Combat Stats Panel -->
-  <div class="side-panel" id="stats-panel">
-    <div class="side-panel-header">
-      <span class="side-panel-title">📊 Combat Stats</span>
-      <button class="close-btn" onclick="closePanel('stats')">✕</button>
-    </div>
-    <div class="side-panel-body">
-      <div class="combat-stat-row"><span class="cstat-label" data-i18n="game.sp.max_hp">❤️ Max HP</span><span class="cstat-value" id="cstat-hp">—</span></div>
-      <div class="combat-stat-row"><span class="cstat-label" data-i18n="game.sp.damage">⚔️ Damage</span><span class="cstat-value" id="cstat-dmg">—</span></div>
-      <div class="combat-stat-row"><span class="cstat-label" data-i18n="game.sp.hit_chance">🎯 Hit Chance</span><span class="cstat-value" id="cstat-hit">—</span></div>
-      <div class="combat-stat-row"><span class="cstat-label" data-i18n="game.sp.dodge_chance">💨 Dodge Chance</span><span class="cstat-value" id="cstat-dodge">—</span></div>
-      <div class="combat-stat-row"><span class="cstat-label" data-i18n="game.sp.defense">🛡️ Defense</span><span class="cstat-value" id="cstat-def">—</span></div>
-      <hr class="panel-divider" />
-      <p class="cstat-note" data-i18n="game.sp.note">Stats include equipped gear and attribute bonuses.</p>
+        <!-- Character doll: weapon | avatar | shield+armor -->
+        <div class="eq-doll-grid">
+
+          <!-- Left: weapon (top) + arm/gauntlets (bottom) -->
+          <div class="eq-doll-col eq-doll-left">
+            <div class="eq-doll-slot" id="eq-slot-weapon" data-slot="weapon">
+              <div class="eq-doll-slot-label" data-i18n="game.eq.weapon">Weapon</div>
+              <div class="eq-doll-slot-icon" id="eq-doll-weapon-icon">🗡️</div>
+              <div class="eq-doll-slot-name" id="eq-doll-weapon-name">—</div>
+              <div class="eq-doll-slot-stat" id="eq-doll-weapon-stat"></div>
+            </div>
+            <div class="eq-doll-slot" id="eq-slot-arm" data-slot="arm">
+              <div class="eq-doll-slot-label" data-i18n="game.eq.arm">Gauntlets</div>
+              <div class="eq-doll-slot-icon" id="eq-doll-arm-icon">🥊</div>
+              <div class="eq-doll-slot-name" id="eq-doll-arm-name">—</div>
+              <div class="eq-doll-slot-stat" id="eq-doll-arm-stat"></div>
+            </div>
+          </div>
+
+          <!-- Center: helmet (top) + hero avatar (bottom) -->
+          <div class="eq-doll-col eq-doll-center">
+            <div class="eq-doll-slot" id="eq-slot-helmet" data-slot="helmet">
+              <div class="eq-doll-slot-label" data-i18n="game.eq.helmet">Helmet</div>
+              <div class="eq-doll-slot-icon" id="eq-doll-helmet-icon">🪖</div>
+              <div class="eq-doll-slot-name" id="eq-doll-helmet-name">—</div>
+              <div class="eq-doll-slot-stat" id="eq-doll-helmet-stat"></div>
+            </div>
+            <div class="eq-doll-avatar" id="eq-doll-avatar"></div>
+          </div>
+
+          <!-- Right: shield (top) + armor (mid) + boots (bottom) -->
+          <div class="eq-doll-col eq-doll-right">
+            <div class="eq-doll-slot" id="eq-slot-shield" data-slot="shield">
+              <div class="eq-doll-slot-label" data-i18n="game.eq.shield">Shield</div>
+              <div class="eq-doll-slot-icon" id="eq-doll-shield-icon">🛡️</div>
+              <div class="eq-doll-slot-name" id="eq-doll-shield-name">—</div>
+              <div class="eq-doll-slot-stat" id="eq-doll-shield-stat"></div>
+            </div>
+            <div class="eq-doll-slot" id="eq-slot-armor" data-slot="armor">
+              <div class="eq-doll-slot-label" data-i18n="game.eq.armor">Armor</div>
+              <div class="eq-doll-slot-icon" id="eq-doll-armor-icon">🥋</div>
+              <div class="eq-doll-slot-name" id="eq-doll-armor-name">—</div>
+              <div class="eq-doll-slot-stat" id="eq-doll-armor-stat"></div>
+            </div>
+            <div class="eq-doll-slot" id="eq-slot-boots" data-slot="boots">
+              <div class="eq-doll-slot-label" data-i18n="game.eq.boots">Boots</div>
+              <div class="eq-doll-slot-icon" id="eq-doll-boots-icon">👢</div>
+              <div class="eq-doll-slot-name" id="eq-doll-boots-name">—</div>
+              <div class="eq-doll-slot-stat" id="eq-doll-boots-stat"></div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Inventory: equippable items -->
+        <hr class="panel-divider eq-divider" />
+        <p class="panel-sub" data-i18n="game.eq.equip_from">Equip from inventory:</p>
+        <div class="eq-inv-grid" id="eq-inv-grid"></div>
+
+      </div>
     </div>
   </div>
 
@@ -335,48 +460,15 @@
       <div id="attr-confirm-row" class="attr-confirm-row">
         <button type="button" class="btn btn-primary btn-full" onclick="confirmAttributes()" data-i18n="game.ap.confirm">Confirm Allocation</button>
       </div>
-    </div>
-  </div>
-
-  <!-- Farm Panel -->
-  <div class="side-panel" id="farm-panel">
-    <div class="side-panel-header">
-      <span class="side-panel-title">🌱 Farm</span>
-      <button class="close-btn" onclick="closePanel('farm')">✕</button>
-    </div>
-    <div class="side-panel-body">
-      <p style="font-size:0.8rem;color:var(--muted);margin-bottom:0.75rem;" data-i18n="game.fp.desc">
-        Grow plants to restore HP in dungeons.
-      </p>
-
-      <div style="margin-bottom:0.75rem;display:flex;align-items:center;gap:0.6rem;justify-content:space-between;">
-        <span id="farm-activity-status" style="font-size:0.78rem;color:var(--muted);"></span>
-        <button type="button" class="btn btn-outline btn-sm" id="farm-activity-btn" onclick="toggleFarmActivity()"></button>
-      </div>
-
-      <!-- Plant stock -->
-      <div id="farm-stock-section" style="margin-bottom:1rem;">
-        <div style="font-size:0.8rem;color:var(--muted);margin-bottom:0.4rem;" data-i18n="game.fp.in_stock">In stock:</div>
-        <div id="farm-stock-list" style="display:flex;gap:0.75rem;"></div>
-      </div>
-
-      <!-- Growing queue -->
-      <div id="farm-queue-section" style="margin-bottom:1rem;">
-        <div style="font-size:0.8rem;color:var(--muted);margin-bottom:0.4rem;" data-i18n="game.fp.growing">Growing:</div>
-        <div id="farm-queue-list"></div>
-      </div>
-
-      <hr style="border-color:var(--border);margin:0.75rem 0;" />
-
-      <!-- Grow actions -->
-      <div style="font-size:0.8rem;color:var(--muted);margin-bottom:0.5rem;" data-i18n="game.fp.start_growing">Start growing:</div>
-      <div style="display:flex;gap:0.5rem;">
-        <button type="button" class="btn btn-outline" style="flex:1;" onclick="startGrowing('apple')">
-          🍎 Apple <span style="font-size:0.7rem;color:var(--muted);display:block;" data-i18n="game.fp.apple_detail">5 min · +1 HP</span>
-        </button>
-        <button type="button" class="btn btn-outline" style="flex:1;" onclick="startGrowing('carrot')">
-          🥕 Carrot <span style="font-size:0.7rem;color:var(--muted);display:block;" data-i18n="game.fp.carrot_detail">9 min · +2 HP</span>
-        </button>
+      <hr class="panel-divider" />
+      <div id="attr-combat-stats">
+        <p class="attr-section-title" data-i18n="game.sp.title">📊 Combat Stats</p>
+        <div class="combat-stat-row"><span class="cstat-label" data-i18n="game.sp.max_hp">❤️ Max HP</span><span class="cstat-value" id="cstat-hp">—</span></div>
+        <div class="combat-stat-row"><span class="cstat-label" data-i18n="game.sp.damage">⚔️ Damage</span><span class="cstat-value" id="cstat-dmg">—</span></div>
+        <div class="combat-stat-row"><span class="cstat-label" data-i18n="game.sp.hit_chance">🎯 Hit Chance</span><span class="cstat-value" id="cstat-hit">—</span></div>
+        <div class="combat-stat-row"><span class="cstat-label" data-i18n="game.sp.dodge_chance">💨 Dodge Chance</span><span class="cstat-value" id="cstat-dodge">—</span></div>
+        <div class="combat-stat-row"><span class="cstat-label" data-i18n="game.sp.defense">🛡️ Defense</span><span class="cstat-value" id="cstat-def">—</span></div>
+        <p class="cstat-note" data-i18n="game.sp.note">Stats include equipped gear and attribute bonuses.</p>
       </div>
     </div>
   </div>
@@ -407,8 +499,362 @@
     </div>
   </div>
 
+  <!-- Global market tooltip (lives at body level to escape opacity stacking contexts) -->
+  <div id="market-tooltip-global"></div>
+
+  <!-- Farm Modal -->
+  <div class="modal-overlay" id="farm-modal">
+    <div class="modal farm-modal-content">
+
+      <div class="modal-header">
+        <h2 class="modal-title">🌱 Farm</h2>
+        <button type="button" class="close-btn" onclick="closeFarmModal()">✕</button>
+      </div>
+
+      <!-- Farm XP bar (always visible) -->
+      <div class="farm-xp-section" id="farm-xp-section">
+        <div class="farm-xp-header">
+          <span id="farm-level-label">Farm Lv.1</span>
+          <span id="farm-xp-text">0 / 5 XP</span>
+        </div>
+        <div class="farm-xp-track">
+          <div class="farm-xp-fill" id="farm-xp-fill"></div>
+        </div>
+      </div>
+
+      <!-- Planting view -->
+      <div id="farm-planting-view">
+        <p class="farm-palette-title" data-i18n="game.js.farm_select_plants">Select your plants</p>
+        <div class="farm-plant-palette" id="farm-plant-palette"></div>
+        <p class="farm-hint">Drag a plant onto a square. Right-click a square to remove it.</p>
+        <div class="farm-grid-wrapper">
+          <img src="/img/farm_background_1.png" class="farm-bg-img" alt="Farm" />
+          <div class="farm-slots" id="farm-slots"></div>
+        </div>
+        <div class="modal-footer">
+          <span class="farm-slot-count" id="farm-slot-count">0 / 12 planted</span>
+          <button type="button" class="btn btn-primary" id="farm-start-btn" disabled onclick="startFarmGrow()">
+            Start Growing
+          </button>
+        </div>
+      </div>
+
+      <!-- Growing view (shown when grow is in progress) -->
+      <div id="farm-growing-view" style="display:none;">
+        <div class="farm-growing-status">
+          <p class="farm-growing-title">🌱 Your plants are growing…</p>
+          <div id="farm-modal-timer" class="farm-modal-timer"></div>
+          <div id="farm-growing-list" class="farm-growing-list"></div>
+        </div>
+        <div class="modal-footer farm-stop-footer">
+          <button type="button" class="btn btn-outline btn-sm farm-stop-btn" onclick="cancelFarmGrow()">Stop Growing</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <style>
+    .farm-modal-content {
+      width: min(92vw, 660px);
+      max-height: 90vh;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .farm-xp-section {
+      padding: 8px 16px 12px;
+      border-bottom: 1px solid var(--border);
+    }
+    .farm-xp-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      margin-bottom: 5px;
+      font-size: 0.75rem;
+    }
+    #farm-level-label { font-weight: 700; color: #a0c878; }
+    #farm-xp-text { color: var(--muted); }
+    .farm-xp-track {
+      height: 6px;
+      background: rgba(255,255,255,0.1);
+      border-radius: 3px;
+      overflow: hidden;
+    }
+    .farm-xp-fill {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, #4a8c30, #7fc850);
+      border-radius: 3px;
+      transition: width 0.4s ease;
+    }
+    .farm-palette-title {
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: var(--text);
+      text-align: center;
+      margin: 0 0 6px;
+      letter-spacing: 0.03em;
+    }
+    .farm-plant-palette {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+      flex-wrap: wrap;
+      padding: 6px 0 2px;
+    }
+    .plant-card {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 3px;
+      cursor: grab;
+      padding: 8px 12px;
+      border: 2px solid transparent;
+      border-radius: 8px;
+      background: rgba(255,255,255,0.05);
+      -webkit-user-select: none;
+      user-select: none;
+      transition: border-color 0.15s, background 0.15s;
+    }
+    .plant-card:hover { border-color: #a0c878; background: rgba(160,200,120,0.1); }
+    .plant-card img { width: 56px; height: 56px; object-fit: contain; pointer-events: none; }
+    .plant-card span { font-size: 0.68rem; color: #ccc; }
+    .farm-hint { font-size: 0.72rem; color: var(--muted); text-align: center; margin: 10px 0 0; }
+    .farm-grid-wrapper { position: relative; width: 100%; margin-top: 16px; }
+    .farm-bg-img { width: 100%; display: block; border-radius: 8px; }
+    /* Overlay sits exactly over the 4×3 soil squares in farm_background_1.png (1402×1122px).
+       Measured from pixel scan: soil grid x=308–1108 (22%–79%), y=325–762 (29%–68%).
+       column-gap/row-gap are % of grid container width (CSS always uses inline-size for % gaps).
+       column-gap: 33px/800px = 4.1%;  row-gap: 22px/800px = 2.75% (keeps correct aspect). */
+    .farm-slots {
+      position: absolute;
+      top: 29%;
+      left: 22%;
+      right: 21%;
+      bottom: 32%;
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      grid-template-rows: repeat(3, 1fr);
+      column-gap: 4.1%;
+      row-gap: 2.75%;
+    }
+    .farm-slot {
+      position: relative;
+      border: 2px dashed rgba(255,255,255,0.25);
+      border-radius: 4px;
+      background: rgba(0,0,0,0.0);
+      transition: background 0.12s, border-color 0.12s;
+      cursor: pointer;
+      overflow: hidden;
+    }
+    .farm-slot.drag-over {
+      background: rgba(160,200,120,0.45);
+      border-color: #a0c878;
+      border-style: solid;
+    }
+    .farm-slot-locked {
+      background: rgba(0,0,0,0.45);
+      border-color: rgba(255,255,255,0.06);
+      cursor: not-allowed;
+    }
+    .farm-slot.occupied {
+      border-color: rgba(140,200,80,0.55);
+      border-style: solid;
+      background: rgba(50,110,30,0.15);
+    }
+    /* Plant image fills 80% of the slot via absolute inset — works regardless of parent height */
+    .farm-slot img {
+      position: absolute;
+      top: 10%; left: 10%; right: 10%; bottom: 10%;
+      width: 80%;
+      height: 80%;
+      object-fit: contain;
+      pointer-events: none;
+      filter: drop-shadow(0 1px 3px rgba(0,0,0,0.6));
+    }
+    .farm-slot-count { font-size: 0.83rem; color: var(--muted); }
+    .farm-growing-status {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 14px;
+      padding: 20px 0 10px;
+    }
+    .farm-growing-title { font-size: 1rem; font-weight: 600; margin: 0; }
+    .farm-modal-timer { font-size: 1.5rem; font-weight: 700; color: #a0c878; letter-spacing: 0.05em; }
+    .farm-growing-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      justify-content: center;
+    }
+    .farm-growing-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 8px 14px;
+      font-size: 0.8rem;
+    }
+    .farm-growing-item img { width: 36px; height: 36px; object-fit: contain; }
+    .farm-stop-footer { justify-content: center; }
+    .farm-stop-btn { color: #e07070; border-color: #e07070; }
+    #sq-farm::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      width: var(--farm-progress, 0%);
+      background: rgba(80, 180, 60, 0.28);
+      transition: width 1s linear;
+      pointer-events: none;
+      z-index: 0;
+    }
+    #sq-farm > * { position: relative; z-index: 1; }
+
+    /* Read progress fill */
+    .read-progress-fill {
+      position: absolute;
+      inset: 0;
+      width: 0%;
+      background: rgba(99, 179, 237, 0.35);
+      border-radius: inherit;
+      z-index: 0;
+      pointer-events: none;
+      transition: width 0.5s linear;
+    }
+    #sq-read > * { position: relative; z-index: 1; }
+
+    /* Read modal */
+    .read-modal-subtitle {
+      font-size: 0.82rem;
+      color: var(--muted);
+      text-align: center;
+      margin: -0.5rem 0 1rem;
+    }
+    .read-book-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+      margin-bottom: 0.5rem;
+    }
+    .read-book-card {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      padding: 0.85rem 1rem;
+      border: 2px solid var(--border);
+      border-radius: 10px;
+      background: var(--surface2);
+      cursor: pointer;
+      transition: border-color 0.15s, background 0.15s;
+    }
+    .read-book-card:hover {
+      border-color: var(--accent);
+      background: rgba(192, 132, 252, 0.08);
+    }
+    .read-book-card.selected {
+      border-color: #63b3ed;
+      background: rgba(99, 179, 237, 0.1);
+    }
+    .read-book-card-left {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+    .read-book-icon { font-size: 1.5rem; }
+    .read-book-info { display: flex; flex-direction: column; gap: 2px; }
+    .read-book-name {
+      font-family: 'Cinzel', serif;
+      font-size: 0.9rem;
+      color: var(--text);
+    }
+    .read-book-desc {
+      font-size: 0.75rem;
+      color: var(--muted);
+    }
+    .read-book-reward {
+      font-family: 'Cinzel', serif;
+      font-size: 0.85rem;
+      color: #63b3ed;
+      white-space: nowrap;
+    }
+
+    /* Tavern rest progress fill */
+    .tavern-progress-fill {
+      position: absolute;
+      inset: 0;
+      width: 0%;
+      background: rgba(34, 197, 94, 0.35);
+      border-radius: inherit;
+      z-index: 0;
+      pointer-events: none;
+      transition: width 0.5s linear;
+    }
+    #sq-tavern > * { position: relative; z-index: 1; }
+
+    /* Tavern rest modal */
+    .tavern-modal-subtitle {
+      font-size: 0.82rem;
+      color: var(--muted);
+      text-align: center;
+      margin: -0.5rem 0 1rem;
+    }
+    .tavern-rest-options {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+      margin-bottom: 0.5rem;
+    }
+    .tavern-rest-card {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      padding: 0.85rem 1rem;
+      border: 2px solid var(--border);
+      border-radius: 10px;
+      background: var(--surface2);
+      cursor: pointer;
+      transition: border-color 0.15s, background 0.15s;
+    }
+    .tavern-rest-card:hover:not(.disabled) {
+      border-color: var(--accent);
+      background: rgba(192, 132, 252, 0.08);
+    }
+    .tavern-rest-card.disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+    .tavern-rest-card-info { display: flex; flex-direction: column; gap: 2px; }
+    .tavern-rest-card-name {
+      font-family: 'Cinzel', serif;
+      font-size: 0.9rem;
+      color: var(--text);
+    }
+    .tavern-rest-card-desc {
+      font-size: 0.75rem;
+      color: var(--muted);
+    }
+    .tavern-rest-card-cost {
+      font-family: 'Cinzel', serif;
+      font-size: 0.95rem;
+      color: #f5c842;
+      white-space: nowrap;
+    }
+  </style>
+
   <!-- Toast container -->
   <div class="toast-container" id="toast-container"></div>
+
+  <footer class="site-footer">
+    <span class="version-badge">Alpha v0.1</span>
+  </footer>
 
   <script src="/js/i18n.js"></script>
   <script src="/js/api.js"></script>
