@@ -67,6 +67,17 @@ const DUNGEONS = [
     unlockLevel: 10,
     xp: { easy: 138, medium: 225, hard: 325 },
   },
+  {
+    id: 8,
+    nameKey: 'dungeon.crystal_cave',
+    name: 'Crystal Cave',
+    icon: '/crystal_cave_icon_4.png',
+    fallbackIcon: '/dungeon-icon.png',
+    set: 8,
+    masteryCol: 'dungeon_mastery_s8',
+    unlockLevel: 15,
+    xp: { easy: 200, medium: 325, hard: 475 },
+  },
 ];
 
 // Alias used in renderBattlePanel

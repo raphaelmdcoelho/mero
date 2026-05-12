@@ -117,6 +117,7 @@
       'dungeon.forest':          'Forest',
       'dungeon.autumn_harvest':  'Autumn Harvest',
       'dungeon.murky_swamp':     'Murky Swamp',
+      'dungeon.crystal_cave':    'Crystal Cave',
       // Difficulty labels
       'dungeon.choose_diff':     'Choose Difficulty',
       'dungeon.diff.easy':       'Easy',
@@ -464,6 +465,7 @@
       'dungeon.forest':          'Floresta',
       'dungeon.autumn_harvest':  'Colheita de Outono',
       'dungeon.murky_swamp':     'Pântano Sombrio',
+      'dungeon.crystal_cave':    'Caverna de Cristal',
       // Difficulty labels
       'dungeon.choose_diff':     'Escolha a Dificuldade',
       'dungeon.diff.easy':       'Fácil',

@@ -149,6 +149,7 @@ async function initDb() {
     'ALTER TABLE dungeon_run ADD COLUMN potion_item_id INTEGER DEFAULT NULL',
     'ALTER TABLE characters ADD COLUMN dungeon_mastery_s6 INTEGER DEFAULT 0',
     'ALTER TABLE characters ADD COLUMN dungeon_mastery_s7 INTEGER DEFAULT 0',
+    'ALTER TABLE characters ADD COLUMN dungeon_mastery_s8 INTEGER DEFAULT 0',
   ];
 
   for (const sql of additiveMigrations) {
@@ -457,6 +458,35 @@ async function initDb() {
         { sql: monsterSql, args: [7,  8,'Arch Bog Demon',      '👿',  1600,  85, 75, 12, 15, 1600,  1, 28, 25] },
         { sql: monsterSql, args: [7,  9,'Swamp Emperor',       '👁️',  2000, 105, 77, 16, 17, 2050,  1, 28, 25] },
         { sql: monsterSql, args: [7, 10,'Ancient Serpent',     '🐊',  2500, 130, 80, 18, 20, 2500,  1, 28, 40] },
+      ], 'write');
+    }
+  }
+
+  // Set 8 — Crystal Cave (unlocks at level 15, ~3.75x Set 1 stats)
+  {
+    const r = await client.execute("SELECT COUNT(*) as cnt FROM monsters WHERE dungeon_set = 8");
+    if (Number(r.rows[0].cnt) === 0) {
+      await client.batch([
+        { sql: monsterSql, args: [8,  1,'Crystal Bat',          '🦇',    45,  12, 58, 11,  2,   20,  0, 11,  8] },
+        { sql: monsterSql, args: [8,  2,'Gem Crawler',          '🪲',    68,  15, 61,  7,  3,   30,  0, 11,  8] },
+        { sql: monsterSql, args: [8,  3,'Crystal Skeleton',     '💎',    83,  20, 63,  9,  4,   45,  0, 11,  8] },
+        { sql: monsterSql, args: [8,  4,'Cave Elf',             '🧝',   105,  27, 68, 15,  6,   68,  0, 11,  8] },
+        { sql: monsterSql, args: [8,  5,'Crystal Wolf',         '🐺',   143,  35, 70, 17,  8,   98,  0, 11,  8] },
+        { sql: monsterSql, args: [8,  6,'Prism Vampire',        '🧊',   188,  45, 71, 19,  9,  143,  0, 11,  8] },
+        { sql: monsterSql, args: [8,  7,'Gem Golem',            '🪨',   245,  57, 68,  9, 12,  207,  0, 11,  8] },
+        { sql: monsterSql, args: [8,  8,'Crystal Demon',        '😈',   300,  68, 73, 15, 15,  282,  0, 11,  8] },
+        { sql: monsterSql, args: [8,  9,'Prism Beast',          '💎',   375,  87, 75, 19, 18,  375,  0, 11,  8] },
+        { sql: monsterSql, args: [8, 10,'Crystal Drake',        '🐉',   488, 113, 78, 21, 21,  507,  0, 11, 10] },
+        { sql: monsterSql, args: [8,  1,'Crystal Titan',        '💎',   225,  20, 63,  8,  3,  207,  1, 11, 40] },
+        { sql: monsterSql, args: [8,  2,'Cave Warchief',        '💪',   375,  30, 65,  7,  6,  338,  1, 11, 38] },
+        { sql: monsterSql, args: [8,  3,'Gem Warlord',          '⚔️',   563,  38, 68,  9,  8,  488,  1, 11, 35] },
+        { sql: monsterSql, args: [8,  4,'Prism Assassin',       '🗡️',   750,  50, 71, 18, 11,  675,  1, 11, 35] },
+        { sql: monsterSql, args: [8,  5,'Alpha Crystal Wolf',   '🌕',  1050,  65, 73, 15, 14,  938,  1, 11, 30] },
+        { sql: monsterSql, args: [8,  6,'Crystal Lord',         '💎',  1425,  83, 75, 17, 17, 1350,  1, 11, 30] },
+        { sql: monsterSql, args: [8,  7,'Gem Titan',            '⛰️',  1875, 105, 71,  8, 20, 1800,  1, 11, 30] },
+        { sql: monsterSql, args: [8,  8,'Arch Crystal Demon',   '👿',  2400, 128, 76, 13, 23, 2400,  1, 11, 25] },
+        { sql: monsterSql, args: [8,  9,'Crystal Emperor',      '👁️',  3000, 158, 78, 17, 26, 3075,  1, 11, 25] },
+        { sql: monsterSql, args: [8, 10,'Ancient Crystal Dragon','🐉', 3750, 195, 81, 19, 30, 3750,  1, 11, 40] },
       ], 'write');
     }
   }
