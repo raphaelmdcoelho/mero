@@ -32,10 +32,11 @@ const STAMINA_REGEN_INTERVAL = 600;
 
 // Move any ready farm_queue entries into the regular inventory
 async function harvestFarm(charId) {
-  const PLANT_ITEM_IDS = { carrot: 6, apple: 7 };
+  const PLANT_ITEM_IDS = { carrot: 6, apple: 7, onion: 29, corn: 30 };
+  const now = Math.floor(Date.now() / 1000);
   const r = await client.execute({
-    sql:  'SELECT * FROM farm_queue WHERE character_id = ? AND COALESCE(remaining_seconds, 0) <= 0',
-    args: [charId],
+    sql:  'SELECT * FROM farm_queue WHERE character_id = ? AND ready_at <= ?',
+    args: [charId, now],
   });
   for (const job of r.rows) {
     const itemId = PLANT_ITEM_IDS[job.plant_type];
@@ -61,8 +62,6 @@ async function harvestFarm(charId) {
 }
 
 async function progressFarmCountdown(char, nowTs) {
-  if (char.activity !== 'farm') return;
-
   const lastTick = Number(char.last_tick_at) || Number(char.activity_started_at) || nowTs;
   const elapsed = Math.max(0, nowTs - lastTick);
   if (elapsed <= 0) return;

@@ -68,7 +68,7 @@ async function initDb() {
     CREATE TABLE IF NOT EXISTS plants_inventory (
       id           INTEGER PRIMARY KEY AUTOINCREMENT,
       character_id INTEGER NOT NULL REFERENCES characters(id),
-      plant_type   TEXT NOT NULL CHECK(plant_type IN ('carrot', 'apple')),
+      plant_type   TEXT NOT NULL,
       quantity     INTEGER NOT NULL DEFAULT 0,
       UNIQUE(character_id, plant_type)
     );
@@ -76,7 +76,7 @@ async function initDb() {
     CREATE TABLE IF NOT EXISTS farm_queue (
       id           INTEGER PRIMARY KEY AUTOINCREMENT,
       character_id INTEGER NOT NULL REFERENCES characters(id),
-      plant_type   TEXT NOT NULL CHECK(plant_type IN ('carrot', 'apple')),
+      plant_type   TEXT NOT NULL,
       ready_at     INTEGER NOT NULL,
       remaining_seconds INTEGER DEFAULT NULL,
       last_progress_at  INTEGER DEFAULT NULL
@@ -156,6 +156,29 @@ async function initDb() {
     try { await client.execute(sql); } catch { /* column already exists — skip */ }
   }
 
+  // Migrate farm_queue to remove restrictive CHECK constraint (adds onion, corn support).
+  // Test by inserting a dummy row with the new type; if it fails, recreate the table.
+  try {
+    await client.execute({ sql: "INSERT INTO farm_queue (character_id, plant_type, ready_at) VALUES (-999, 'onion', 0)", args: [] });
+    await client.execute({ sql: 'DELETE FROM farm_queue WHERE character_id = -999', args: [] });
+  } catch {
+    await client.execute('PRAGMA foreign_keys = OFF');
+    await client.execute(`
+      CREATE TABLE farm_queue_new (
+        id                INTEGER PRIMARY KEY AUTOINCREMENT,
+        character_id      INTEGER NOT NULL,
+        plant_type        TEXT NOT NULL,
+        ready_at          INTEGER NOT NULL,
+        remaining_seconds INTEGER DEFAULT NULL,
+        last_progress_at  INTEGER DEFAULT NULL
+      )
+    `);
+    await client.execute('INSERT INTO farm_queue_new SELECT * FROM farm_queue');
+    await client.execute('DROP TABLE farm_queue');
+    await client.execute('ALTER TABLE farm_queue_new RENAME TO farm_queue');
+    await client.execute('PRAGMA foreign_keys = ON');
+  }
+
   // Convert legacy farm_queue rows (ready_at absolute unix time) into pauseable remaining_seconds.
   await client.execute(`
     UPDATE farm_queue
@@ -213,6 +236,8 @@ async function initDb() {
     [26, 'Harvest Plate',   'armor',      'Sturdy armor crafted from harvest steel.',    '🎃',  0,10, null,    'body',   70, 140],
     [27, 'Swamp Cleaver',   'weapon',     'Heavy cleaver coated in bog resin.',          '🌿', 14, 0, 'melee',  null,    95, 190],
     [28, 'Bog Armor',       'armor',      'Armor reinforced with hardened swamp scale.', '🐊',  0,14, null,    'body',   95, 190],
+    [29, 'Onion',           'consumable', 'Restores 2 HP.',                              '🧅',  0,  0, null,    null,      3,   5],
+    [30, 'Corn',            'consumable', 'Restores 3 HP.',                              '🌽',  0,  0, null,    null,      4,   7],
   ];
 
   // item_subtype and buff_effect for adventure potions
