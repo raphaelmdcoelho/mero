@@ -769,14 +769,20 @@ function itemEquipSlot(item) {
   if (!item) return null;
   if (item.type === 'weapon') return 'weapon';
   if (item.type !== 'armor') return null;
-  return item.armor_slot === 'shield' ? 'shield' : 'armor';
+  const s = item.armor_slot;
+  if (s === 'shield') return 'shield';
+  if (s === 'arm')    return 'arm';
+  if (s === 'boots')  return 'boots';
+  return 'armor';
 }
 
 function equippedSlotMap(char) {
   return {
     weapon: char.weapon_id || null,
-    armor: char.armor_id || null,
+    armor:  char.armor_id  || null,
     shield: char.shield_id || null,
+    arm:    char.arm_id    || null,
+    boots:  char.boots_id  || null,
   };
 }
 
@@ -860,18 +866,24 @@ function _eqFillSlot(slotName, item, defaultIcon) {
 function renderEquipment(char) {
   if (!char) return;
 
-  // Fill the three doll slots
+  // Fill all five doll slots
   _eqFillSlot('weapon', char.equippedWeapon, '🗡️');
   _eqFillSlot('armor',  char.equippedArmor,  '🥋');
   _eqFillSlot('shield', char.equippedShield, '🛡️');
+  _eqFillSlot('arm',    char.equippedArm,    '🥊');
+  _eqFillSlot('boots',  char.equippedBoots,  '👢');
 
-  // Avatar in the center
+  // Avatar in the center — with equipped-armor overlay (mirrors main game screen)
   const avatarEl = document.getElementById('eq-doll-avatar');
+  const overlayImg = char.equippedArmor ? getItemImage(char.equippedArmor.id, char.gender) : null;
+  const overlayHtml = overlayImg
+    ? `<img class="eq-modal-overlay" src="${escHtml(overlayImg)}" alt="" />`
+    : '';
   if (char.avatar_path) {
-    avatarEl.innerHTML = `<img src="${escHtml(char.avatar_path)}" alt="avatar" />`;
+    avatarEl.innerHTML = `<img src="${escHtml(char.avatar_path)}" alt="avatar" />${overlayHtml}`;
   } else {
     const icon = CLASS_ICONS[char.class] || '🧍';
-    avatarEl.innerHTML = `<span class="eq-doll-avatar-emoji">${icon}</span>`;
+    avatarEl.innerHTML = `<span class="eq-doll-avatar-emoji">${icon}</span>${overlayHtml}`;
   }
 
   // Inventory grid — equippable items only
@@ -925,7 +937,7 @@ let _touchGhost = null;
 
 function _eqAttachDragListeners(char) {
   const inv = (char.inventory || []).filter(i => itemEquipSlot(i));
-  const slots = ['weapon', 'armor', 'shield'];
+  const slots = ['weapon', 'armor', 'shield', 'arm', 'boots'];
 
   // Draggable inventory cells
   document.querySelectorAll('#eq-inv-grid .eq-inv-slot').forEach((el, idx) => {
@@ -995,7 +1007,7 @@ function _eqAttachDragListeners(char) {
 }
 
 function _eqClearDropHighlights() {
-  ['weapon', 'armor', 'shield'].forEach(s => {
+  ['weapon', 'armor', 'shield', 'arm', 'boots'].forEach(s => {
     const el = document.getElementById(`eq-slot-${s}`);
     if (el) el.classList.remove('drop-target-valid', 'drop-target-invalid');
   });
@@ -1057,6 +1069,7 @@ async function equipItem(slot, itemId) {
   charState = { ...charState, ...data };
   renderEquipment(charState);
   renderInventory(charState);
+  renderEquipOverlay(charState);
   showToast(t('game.js.item_equipped'), 'success');
   refreshCombatStats();
 }
@@ -1069,6 +1082,7 @@ async function unequipItem(slot) {
   charState = { ...charState, ...data };
   renderEquipment(charState);
   renderInventory(charState);
+  renderEquipOverlay(charState);
   showToast(t('game.js.item_unequipped'), 'success');
   refreshCombatStats();
 }

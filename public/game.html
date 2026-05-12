@@ -313,13 +313,19 @@
         <!-- Character doll: weapon | avatar | shield+armor -->
         <div class="eq-doll-grid">
 
-          <!-- Left: weapon slot -->
+          <!-- Left: weapon (top) + arm/gauntlets (bottom) -->
           <div class="eq-doll-col eq-doll-left">
             <div class="eq-doll-slot" id="eq-slot-weapon" data-slot="weapon">
               <div class="eq-doll-slot-label" data-i18n="game.eq.weapon">Weapon</div>
               <div class="eq-doll-slot-icon" id="eq-doll-weapon-icon">🗡️</div>
               <div class="eq-doll-slot-name" id="eq-doll-weapon-name">—</div>
               <div class="eq-doll-slot-stat" id="eq-doll-weapon-stat"></div>
+            </div>
+            <div class="eq-doll-slot" id="eq-slot-arm" data-slot="arm">
+              <div class="eq-doll-slot-label" data-i18n="game.eq.arm">Gauntlets</div>
+              <div class="eq-doll-slot-icon" id="eq-doll-arm-icon">🥊</div>
+              <div class="eq-doll-slot-name" id="eq-doll-arm-name">—</div>
+              <div class="eq-doll-slot-stat" id="eq-doll-arm-stat"></div>
             </div>
           </div>
 
@@ -328,7 +334,7 @@
             <div class="eq-doll-avatar" id="eq-doll-avatar"></div>
           </div>
 
-          <!-- Right: shield (top) + armor (bottom) -->
+          <!-- Right: shield (top) + armor (mid) + boots (bottom) -->
           <div class="eq-doll-col eq-doll-right">
             <div class="eq-doll-slot" id="eq-slot-shield" data-slot="shield">
               <div class="eq-doll-slot-label" data-i18n="game.eq.shield">Shield</div>
@@ -341,6 +347,12 @@
               <div class="eq-doll-slot-icon" id="eq-doll-armor-icon">🥋</div>
               <div class="eq-doll-slot-name" id="eq-doll-armor-name">—</div>
               <div class="eq-doll-slot-stat" id="eq-doll-armor-stat"></div>
+            </div>
+            <div class="eq-doll-slot" id="eq-slot-boots" data-slot="boots">
+              <div class="eq-doll-slot-label" data-i18n="game.eq.boots">Boots</div>
+              <div class="eq-doll-slot-icon" id="eq-doll-boots-icon">👢</div>
+              <div class="eq-doll-slot-name" id="eq-doll-boots-name">—</div>
+              <div class="eq-doll-slot-stat" id="eq-doll-boots-stat"></div>
             </div>
           </div>
 

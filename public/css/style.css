@@ -1693,11 +1693,23 @@ input:focus, select:focus {
   box-shadow: 0 0 20px #c084fc33, inset 0 0 30px #00000055;
   overflow: hidden;
   flex-shrink: 0;
+  position: relative;
 }
 .eq-doll-avatar img {
   width: 100%;
   height: 100%;
   object-fit: contain;
+}
+/* Armor overlay — mirrors the main game screen equip-overlay */
+.eq-modal-overlay {
+  position: absolute;
+  width: 65%;
+  height: 65%;
+  top: 40%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  object-fit: contain;
+  pointer-events: none;
 }
 .eq-doll-avatar-emoji {
   font-size: 3.5rem;
