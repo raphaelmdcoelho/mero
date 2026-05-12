@@ -543,6 +543,42 @@ router.get('/:characterId/tick', async (req, res) => {
   res.json(await fullChar(char.id));
 });
 
+// ── Fishing ─────────────────────────────────────────────────────────────────
+
+const FISHING_STAMINA_COST = 1;
+const FISHING_BASE_XP      = 20;
+const FISHING_BAIT_BONUS   = { worm: 0, fly: 5, lure: 10, bread: 5 };
+
+// POST /api/game/:characterId/fish
+router.post('/:characterId/fish', async (req, res) => {
+  const char = await ownedChar(req, res);
+  if (!char) return;
+
+  if (char.activity) {
+    return res.status(400).json({ error: 'Cannot fish during another activity' });
+  }
+
+  const stamina = Number(char.stamina) || 0;
+  if (stamina < FISHING_STAMINA_COST) {
+    return res.status(400).json({ error: `Not enough stamina to fish (need ${FISHING_STAMINA_COST})` });
+  }
+
+  const { baitId } = req.body;
+  const baitBonus  = FISHING_BAIT_BONUS[baitId] ?? 0;
+  const fishXp     = FISHING_BASE_XP + baitBonus;
+
+  const updated = levelUp({ ...char, xp: Number(char.xp) + fishXp });
+
+  await client.execute({
+    sql:  `UPDATE characters SET xp = ?, xp_to_next = ?, level = ?, max_hp = ?, hp = ?,
+           unspent_points = ?, stamina = ?, max_stamina = ? WHERE id = ?`,
+    args: [updated.xp, updated.xp_to_next, updated.level, updated.max_hp, updated.hp,
+           updated.unspent_points, stamina - FISHING_STAMINA_COST, updated.max_stamina, char.id],
+  });
+
+  res.json({ ...await fullChar(char.id), fishXp });
+});
+
 // ── Dungeon System ──────────────────────────────────────────────────────────
 
 // GET /api/game/:characterId/stats
