@@ -1063,6 +1063,7 @@ let farmPollInterval = null;
 function handleFarm() {
   if (!charState) return;
   if (Number(charState.level) < 3) { showToast(t('game.js.farm_unlock'), 'danger'); return; }
+  if (charState.activity && charState.activity !== 'farm') return;
   openFarmModal();
 }
 
