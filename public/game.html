@@ -472,31 +472,46 @@
     .farm-hint { font-size: 0.72rem; color: var(--muted); text-align: center; margin: 0; }
     .farm-grid-wrapper { position: relative; width: 100%; }
     .farm-bg-img { width: 100%; display: block; border-radius: 8px; }
+    /* Overlay sits exactly over the 4×3 soil squares in farm_background_1.png.
+       Percentages are relative to the rendered image size (top/bottom → height, left/right → width). */
     .farm-slots {
       position: absolute;
-      top: 0; left: 0; right: 0; bottom: 0;
+      top: 27%;
+      left: 21%;
+      right: 17%;
+      bottom: 25%;
       display: grid;
       grid-template-columns: repeat(4, 1fr);
       grid-template-rows: repeat(3, 1fr);
-      padding: 7.5% 6% 10% 6%;
-      gap: 3px;
+      gap: 12px;
     }
     .farm-slot {
-      border: 2px dashed rgba(255,255,255,0.18);
-      border-radius: 5px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      background: rgba(0,0,0,0.08);
+      position: relative;
+      border: 2px dashed rgba(255,255,255,0.25);
+      border-radius: 4px;
+      background: rgba(0,0,0,0.0);
       transition: background 0.12s, border-color 0.12s;
       cursor: pointer;
+      overflow: hidden;
     }
     .farm-slot.drag-over {
-      background: rgba(160,200,120,0.4);
+      background: rgba(160,200,120,0.45);
       border-color: #a0c878;
       border-style: solid;
     }
-    .farm-slot img { width: 60%; height: 60%; object-fit: contain; pointer-events: none; }
+    .farm-slot.occupied {
+      border-color: rgba(140,200,80,0.55);
+      border-style: solid;
+      background: rgba(50,110,30,0.15);
+    }
+    /* Plant image fills 80% of the slot via absolute inset — works regardless of parent height */
+    .farm-slot img {
+      position: absolute;
+      top: 10%; left: 10%; right: 10%; bottom: 10%;
+      object-fit: contain;
+      pointer-events: none;
+      filter: drop-shadow(0 1px 3px rgba(0,0,0,0.6));
+    }
     .farm-slot-count { font-size: 0.83rem; color: var(--muted); }
     .farm-growing-status {
       display: flex;

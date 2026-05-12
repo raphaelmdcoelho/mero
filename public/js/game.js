@@ -1058,6 +1058,7 @@ function renderFarmSlots() {
     if (farmSlots[i]) {
       const plant = FARM_PLANTS.find(p => p.type === farmSlots[i]);
       if (plant) {
+        slot.classList.add('occupied');
         const img = document.createElement('img');
         img.src = plant.img;
         img.alt = plant.label;
