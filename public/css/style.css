@@ -1672,7 +1672,8 @@ input:focus, select:focus {
   letter-spacing: 0.06em;
   color: var(--muted);
 }
-.eq-doll-slot-icon { font-size: 1.8rem; line-height: 1; }
+.eq-doll-slot-icon { font-size: 1.8rem; line-height: 1; display: flex; align-items: center; justify-content: center; }
+.eq-slot-icon-img  { width: 48px; height: 48px; object-fit: contain; display: block; }
 .eq-doll-slot-name {
   font-size: 0.72rem;
   color: var(--text);

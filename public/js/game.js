@@ -834,7 +834,7 @@ function _eqFillSlot(slotName, item, defaultIcon) {
   const nameEl = document.getElementById(`eq-doll-${slotName}-name`);
   const statEl = document.getElementById(`eq-doll-${slotName}-stat`);
   if (item) {
-    iconEl.textContent = item.icon || defaultIcon;
+    iconEl.innerHTML = itemIconHtml(item.id, item.icon, tItemName(item), charState?.gender, 'eq-slot-icon-img');
     nameEl.textContent = tItemName(item);
     if (slotName === 'weapon' && item.damage) {
       statEl.textContent = `⚔️ ${item.damage} ${t('game.js.dmg_unit')}`;
