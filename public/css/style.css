@@ -645,7 +645,7 @@ input:focus, select:focus {
   filter: brightness(1.15);
 }
 #sq-fishing .sq-icon {
-  transform: scale(1.0);
+  transform: scale(0.82) translateY(6px);
   object-fit: contain;
 }
 #sq-attributes .sq-icon {
