@@ -219,6 +219,7 @@
       'game.eq.shield':          'Shield',
       'game.eq.arm':             'Gauntlets',
       'game.eq.boots':           'Boots',
+      'game.eq.helmet':          'Helmet',
       'game.eq.equip_from':      'Equip from inventory:',
 
       // Stats panel
@@ -569,6 +570,7 @@
       'game.eq.shield':          'Escudo',
       'game.eq.arm':             'Manoplas',
       'game.eq.boots':           'Botas',
+      'game.eq.helmet':          'Elmo',
       'game.eq.equip_from':      'Equipar do inventário:',
 
       // Stats panel

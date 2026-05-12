@@ -53,12 +53,13 @@ async function enrichCharacter(char) {
   });
   const inventoryRows = invR.rows.map(toObj);
 
-  const [weapR, armR, shieldR, armGlovesR, bootsR] = await Promise.all([
-    c.weapon_id ? client.execute({ sql: 'SELECT * FROM items WHERE id = ?', args: [c.weapon_id] }) : Promise.resolve({ rows: [null] }),
-    c.armor_id  ? client.execute({ sql: 'SELECT * FROM items WHERE id = ?', args: [c.armor_id] })  : Promise.resolve({ rows: [null] }),
-    c.shield_id ? client.execute({ sql: 'SELECT * FROM items WHERE id = ?', args: [c.shield_id] }) : Promise.resolve({ rows: [null] }),
-    c.arm_id    ? client.execute({ sql: 'SELECT * FROM items WHERE id = ?', args: [c.arm_id] })    : Promise.resolve({ rows: [null] }),
-    c.boots_id  ? client.execute({ sql: 'SELECT * FROM items WHERE id = ?', args: [c.boots_id] })  : Promise.resolve({ rows: [null] }),
+  const [weapR, armR, shieldR, armGlovesR, bootsR, helmetR] = await Promise.all([
+    c.weapon_id ? client.execute({ sql: 'SELECT * FROM items WHERE id = ?', args: [c.weapon_id] })  : Promise.resolve({ rows: [null] }),
+    c.armor_id  ? client.execute({ sql: 'SELECT * FROM items WHERE id = ?', args: [c.armor_id] })   : Promise.resolve({ rows: [null] }),
+    c.shield_id ? client.execute({ sql: 'SELECT * FROM items WHERE id = ?', args: [c.shield_id] })  : Promise.resolve({ rows: [null] }),
+    c.arm_id    ? client.execute({ sql: 'SELECT * FROM items WHERE id = ?', args: [c.arm_id] })     : Promise.resolve({ rows: [null] }),
+    c.boots_id  ? client.execute({ sql: 'SELECT * FROM items WHERE id = ?', args: [c.boots_id] })   : Promise.resolve({ rows: [null] }),
+    c.helmet_id ? client.execute({ sql: 'SELECT * FROM items WHERE id = ?', args: [c.helmet_id] })  : Promise.resolve({ rows: [null] }),
   ]);
 
   const weapon = weapR.rows[0]      ? toObj(weapR.rows[0])      : null;
@@ -66,8 +67,9 @@ async function enrichCharacter(char) {
   const shield = shieldR.rows[0]    ? toObj(shieldR.rows[0])    : null;
   const arm    = armGlovesR.rows[0] ? toObj(armGlovesR.rows[0]) : null;
   const boots  = bootsR.rows[0]     ? toObj(bootsR.rows[0])     : null;
+  const helmet = helmetR.rows[0]    ? toObj(helmetR.rows[0])    : null;
 
-  return { ...c, inventory: inventoryRows, equippedWeapon: weapon, equippedArmor: armor, equippedShield: shield, equippedArm: arm, equippedBoots: boots };
+  return { ...c, inventory: inventoryRows, equippedWeapon: weapon, equippedArmor: armor, equippedShield: shield, equippedArm: arm, equippedBoots: boots, equippedHelmet: helmet };
 }
 
 // All routes require auth
@@ -215,12 +217,12 @@ router.put('/:id/equip', async (req, res) => {
   if (!char) return;
 
   const { slot, item_id } = req.body;
-  const VALID_SLOTS = ['weapon', 'armor', 'shield', 'arm', 'boots'];
+  const VALID_SLOTS = ['weapon', 'armor', 'shield', 'arm', 'boots', 'helmet'];
   if (!VALID_SLOTS.includes(slot)) {
-    return res.status(400).json({ error: 'slot must be one of: weapon, armor, shield, arm, boots' });
+    return res.status(400).json({ error: 'slot must be one of: weapon, armor, shield, arm, boots, helmet' });
   }
 
-  const SLOT_COL = { weapon: 'weapon_id', armor: 'armor_id', shield: 'shield_id', arm: 'arm_id', boots: 'boots_id' };
+  const SLOT_COL = { weapon: 'weapon_id', armor: 'armor_id', shield: 'shield_id', arm: 'arm_id', boots: 'boots_id', helmet: 'helmet_id' };
   const col = SLOT_COL[slot];
 
   if (item_id == null) {
@@ -235,7 +237,7 @@ router.put('/:id/equip', async (req, res) => {
   const parsedItemId = Number(item_id);
   if (!parsedItemId) return res.status(400).json({ error: 'item_id required' });
 
-  const ARMOR_SLOT_MAP = { armor: 'body', shield: 'shield', arm: 'arm', boots: 'boots' };
+  const ARMOR_SLOT_MAP = { armor: 'body', shield: 'shield', arm: 'arm', boots: 'boots', helmet: 'helmet' };
   let invSql = '';
   let invArgs = [];
   if (slot === 'weapon') {

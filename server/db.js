@@ -150,8 +150,9 @@ async function initDb() {
     'ALTER TABLE characters ADD COLUMN dungeon_mastery_s6 INTEGER DEFAULT 0',
     'ALTER TABLE characters ADD COLUMN dungeon_mastery_s7 INTEGER DEFAULT 0',
     'ALTER TABLE characters ADD COLUMN dungeon_mastery_s8 INTEGER DEFAULT 0',
-    'ALTER TABLE characters ADD COLUMN arm_id   INTEGER REFERENCES items(id)',
-    'ALTER TABLE characters ADD COLUMN boots_id INTEGER REFERENCES items(id)',
+    'ALTER TABLE characters ADD COLUMN arm_id    INTEGER REFERENCES items(id)',
+    'ALTER TABLE characters ADD COLUMN boots_id  INTEGER REFERENCES items(id)',
+    'ALTER TABLE characters ADD COLUMN helmet_id INTEGER REFERENCES items(id)',
   ];
 
   for (const sql of additiveMigrations) {
@@ -218,7 +219,9 @@ async function initDb() {
     [29, 'Iron Gauntlets',  'armor',      'Sturdy iron gloves for melee fighters.',       '🥊',  0,  2, null,    'arm',    12,  24],
     [30, 'Steel Gauntlets', 'armor',      'Reinforced steel gloves with knuckle plates.', '🤛',  0,  4, null,    'arm',    28,  56],
     [31, 'Leather Boots',   'armor',      'Light boots for swift movement.',              '👢',  0,  1, null,    'boots',   8,  16],
-    [32, 'Iron Boots',      'armor',      'Heavy iron boots offering solid protection.',  '🥿',  0,  3, null,    'boots',  22,  44],
+    [32, 'Iron Boots',      'armor',      'Heavy iron boots offering solid protection.',  '🥿',  0,  3, null,    'boots',   22,  44],
+    [33, 'Leather Helmet', 'armor',      'A simple padded leather cap.',                 '🪖',  0,  1, null,    'helmet',  8,  16],
+    [34, 'Iron Helmet',    'armor',      'Solid iron helmet with a nose guard.',         '⛑️',  0,  3, null,    'helmet', 22,  44],
   ];
 
   // item_subtype and buff_effect for adventure potions
