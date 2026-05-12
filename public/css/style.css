@@ -527,6 +527,25 @@ input:focus, select:focus {
   position: relative;
 }
 .action-sq .sq-icon { font-size: 2.2rem; line-height: 1; }
+#sq-attributes .sq-icon,
+#sq-equipment .sq-icon,
+#sq-market .sq-icon,
+#sq-castle .sq-icon,
+#sq-research .sq-icon,
+#sq-farm .sq-icon,
+#sq-tavern .sq-icon {
+  width: 125px !important;
+  max-width: none !important;
+  height: auto !important;
+  object-fit: unset;
+  position: absolute !important;
+  top: 50% !important;
+  left: 50% !important;
+  transform: translate(-50%, -50%) !important;
+}
+#sq-farm .sq-icon,
+#sq-tavern .sq-icon { width: 135px !important; }
+#sq-attributes .sq-icon { top: 54% !important; }
 
 /* Top-row action button wrappers — label above, button below */
 .action-sq-wrap {
@@ -564,7 +583,6 @@ input:focus, select:focus {
   border: none;
   outline: 2px solid var(--border);
   outline-offset: -2px;
-  overflow: hidden;
   padding: 0;
 }
 #sq-dungeon:hover:not(.disabled),
@@ -1049,6 +1067,8 @@ input:focus, select:focus {
   flex-direction: column;
   align-items: center;
   gap: 0.5rem;
+  width: 180px;
+  flex-shrink: 0;
 }
 .dungeon-icon-img {
   width: 140px;
@@ -1062,9 +1082,16 @@ input:focus, select:focus {
   font-size: 1.1rem;
   color: var(--gold);
   letter-spacing: 0.05em;
+  height: 2.6em;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  text-align: center;
+  width: 100%;
 }
 .dungeon-modal-note { text-align: center; font-size: 0.8rem; color: var(--muted); margin-bottom: 0.75rem; }
-#dungeon-modal .modal { height: 600px; overflow-y: auto; }
+#dungeon-modal .modal { height: 600px; overflow-y: hidden; }
 
 /* ---- Battle panel ---- */
 .battle-progress {
@@ -1395,6 +1422,7 @@ input:focus, select:focus {
   font-size: 0.78rem;
   color: var(--danger);
   text-align: center;
+  min-height: 2.5em;
 }
 .stamina-warning.hidden {
   display: block !important;
