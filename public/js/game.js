@@ -125,6 +125,11 @@ async function init() {
     tavernStartedAt = Number(data.activity_started_at) * 1000;
     startLocalTimer();
   }
+  // Resume read progress bar if reading
+  if (data.activity === 'reading' && data.activity_started_at) {
+    readStartedAt = Number(data.activity_started_at) * 1000;
+    startLocalTimer();
+  }
   // Resume farm timer if plants are growing
   if (data.farmQueue && data.farmQueue.length > 0) {
     const maxReadyAt = Math.max(...data.farmQueue.map(j => Number(j.ready_at)));
@@ -206,13 +211,22 @@ function renderAll(char) {
     } else if (char.activity === 'reading') {
       const elapsed = Math.floor(Date.now() / 1000) - (char.activity_started_at || 0);
       const minsLeft = Math.max(0, Math.ceil((3600 - elapsed) / 60));
-      const pts = Number(char.reading_points_awarded) || 0;
-      actLabel.textContent = t('game.js.reading_badge', { mins: minsLeft, pts });
+      actLabel.textContent = t('game.js.reading_badge', { mins: minsLeft, pts: 0 });
     } else {
       actLabel.textContent = t('game.js.resting_badge');
     }
   } else {
     actBadge.style.display = 'none';
+  }
+
+  // Sync read progress bar state with server activity
+  if (char.activity === 'reading' && char.activity_started_at && !readStartedAt) {
+    readStartedAt = Number(char.activity_started_at) * 1000;
+    startLocalTimer();
+  } else if (char.activity !== 'reading' && readStartedAt) {
+    readStartedAt = null;
+    const readFill = document.getElementById('read-progress-fill');
+    if (readFill) readFill.style.width = '0%';
   }
 
   updateActionSquares(char.activity, char.farmQueue && char.farmQueue.length > 0);
@@ -374,8 +388,11 @@ async function stopActivity() {
   const data = await res.json();
   if (!res.ok) { showToast(data.error || t('game.js.failed_stop'), 'danger'); return; }
   tavernStartedAt = null;
-  const fill = document.getElementById('tavern-progress-fill');
-  if (fill) fill.style.width = '0%';
+  readStartedAt   = null;
+  const tavernFill = document.getElementById('tavern-progress-fill');
+  if (tavernFill) tavernFill.style.width = '0%';
+  const readFill = document.getElementById('read-progress-fill');
+  if (readFill) readFill.style.width = '0%';
   if (!dungeonEndsAt) stopLocalTimer();
   charState = data;
   renderAll(data);
@@ -639,6 +656,7 @@ function startLocalTimer() {
   localTimerInterval = setInterval(() => {
     if (dungeonEndsAt) updateTimerDisplay();
     updateTavernProgressBar();
+    updateReadProgressBar();
   }, 1000);
 }
 
@@ -1203,28 +1221,79 @@ async function confirmAttributes() {
   refreshCombatStats();
 }
 
+function handleRead() {
+  if (!charState) return;
+  if (farmEndsAt) return;
+  if (charState.activity === 'reading') { stopActivity(); return; }
+  if (!charState.activity) openReadModal();
+}
+
+// ---- Farm Modal ----
 // ---- Read ----
-async function startActivity(action) {
-  const res = await api.post(`/api/game/${charId}/start`, { action });
+const BOOKS = [
+  { id: 'fairy_tale', name: 'Fairy Tale', icon: '📖', durationSec: 3600, reward: '+1 Stamina', desc: '1 hour · +1 Stamina' },
+];
+
+let selectedBook     = BOOKS[0];
+let readStartedAt    = null; // ms timestamp
+
+function openReadModal() {
+  selectedBook = BOOKS[0];
+  renderReadBookList();
+  document.getElementById('read-modal').classList.add('open');
+}
+
+function closeReadModal() {
+  document.getElementById('read-modal').classList.remove('open');
+}
+
+function renderReadBookList() {
+  const container = document.getElementById('read-book-list');
+  container.innerHTML = BOOKS.map(book => `
+    <div class="read-book-card${selectedBook.id === book.id ? ' selected' : ''}"
+         onclick="selectBook('${book.id}')">
+      <div class="read-book-card-left">
+        <span class="read-book-icon">${book.icon}</span>
+        <div class="read-book-info">
+          <span class="read-book-name">${escHtml(book.name)}</span>
+          <span class="read-book-desc">${escHtml(book.desc)}</span>
+        </div>
+      </div>
+      <span class="read-book-reward">${escHtml(book.reward)}</span>
+    </div>
+  `).join('');
+}
+
+function selectBook(bookId) {
+  selectedBook = BOOKS.find(b => b.id === bookId) || BOOKS[0];
+  renderReadBookList();
+}
+
+async function confirmStartReading() {
+  closeReadModal();
+  const res = await api.post(`/api/game/${charId}/start`, { action: 'reading', bookId: selectedBook.id });
   if (!res) return;
   const data = await res.json();
   if (!res.ok) { showToast(data.error || t('game.js.failed'), 'danger'); return; }
   charState = data;
+  readStartedAt = Date.now();
+  startLocalTimer();
   renderAll(data);
+  showToast(t('game.js.reading_start'), 'success');
 }
 
-function handleRead() {
-  if (!charState) return;
-  if (farmEndsAt) return;
-  if (charState.activity === 'reading') {
-    stopActivity();
-  } else if (!charState.activity) {
-    startActivity('reading');
-    showToast(t('game.js.reading_start'), 'success');
-  }
+function updateReadProgressBar() {
+  const fill = document.getElementById('read-progress-fill');
+  if (!fill) return;
+  if (!readStartedAt) { fill.style.width = '0%'; return; }
+  const elapsedSec = (Date.now() - readStartedAt) / 1000;
+  fill.style.width = Math.min(100, (elapsedSec / 3600) * 100) + '%';
 }
 
-// ---- Farm Modal ----
+document.getElementById('read-modal').addEventListener('click', function(e) {
+  if (e.target === this) closeReadModal();
+});
+
 const FARM_PLANTS = [
   { type: 'carrot', label: 'Carrot', img: '/img/carrot.png' },
   { type: 'apple',  label: 'Apple',  img: '/img/apple.png'  },

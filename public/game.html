@@ -64,6 +64,7 @@
         <div class="action-sq-wrap" style="grid-column:4;grid-row:1;">
           <span id="read-label" class="sq-label" data-i18n="game.read">Read</span>
           <div class="action-sq" id="sq-read" onclick="handleRead()">
+            <div class="read-progress-fill" id="read-progress-fill"></div>
             <img src="/read-icon.png" alt="Read" class="sq-icon" />
           </div>
         </div>
@@ -247,6 +248,21 @@
       </div>
       <div class="modal-footer">
         <button class="btn btn-outline" onclick="closeTavernModal()" data-i18n="game.dm.cancel">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Read Modal -->
+  <div class="modal-overlay" id="read-modal">
+    <div class="modal">
+      <h2 class="modal-title">Choose a Book</h2>
+      <p class="read-modal-subtitle">Select a book to read</p>
+      <div class="read-book-list" id="read-book-list">
+        <!-- populated by JS -->
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" onclick="closeReadModal()">Cancel</button>
+        <button class="btn btn-primary" id="start-read-btn" onclick="confirmStartReading()">Start Reading</button>
       </div>
     </div>
   </div>
@@ -654,6 +670,75 @@
       z-index: 0;
     }
     #sq-farm > * { position: relative; z-index: 1; }
+
+    /* Read progress fill */
+    .read-progress-fill {
+      position: absolute;
+      inset: 0;
+      width: 0%;
+      background: rgba(99, 179, 237, 0.35);
+      border-radius: inherit;
+      z-index: 0;
+      pointer-events: none;
+      transition: width 0.5s linear;
+    }
+    #sq-read > * { position: relative; z-index: 1; }
+
+    /* Read modal */
+    .read-modal-subtitle {
+      font-size: 0.82rem;
+      color: var(--muted);
+      text-align: center;
+      margin: -0.5rem 0 1rem;
+    }
+    .read-book-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+      margin-bottom: 0.5rem;
+    }
+    .read-book-card {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      padding: 0.85rem 1rem;
+      border: 2px solid var(--border);
+      border-radius: 10px;
+      background: var(--surface2);
+      cursor: pointer;
+      transition: border-color 0.15s, background 0.15s;
+    }
+    .read-book-card:hover {
+      border-color: var(--accent);
+      background: rgba(192, 132, 252, 0.08);
+    }
+    .read-book-card.selected {
+      border-color: #63b3ed;
+      background: rgba(99, 179, 237, 0.1);
+    }
+    .read-book-card-left {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+    .read-book-icon { font-size: 1.5rem; }
+    .read-book-info { display: flex; flex-direction: column; gap: 2px; }
+    .read-book-name {
+      font-family: 'Cinzel', serif;
+      font-size: 0.9rem;
+      color: var(--text);
+    }
+    .read-book-desc {
+      font-size: 0.75rem;
+      color: var(--muted);
+    }
+    .read-book-reward {
+      font-family: 'Cinzel', serif;
+      font-size: 0.85rem;
+      color: #63b3ed;
+      white-space: nowrap;
+    }
 
     /* Tavern rest progress fill */
     .tavern-progress-fill {

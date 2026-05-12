@@ -327,24 +327,30 @@ async function completeDungeonRun(char, run, forced) {
 
 function applyReadingTick(char) {
   const now = Math.floor(Date.now() / 1000);
-  let { xp, xp_to_next, level, hp, unspent_points } = char;
-  const vitality = Number(char.attr_vitality) || 5;
+  let { xp, xp_to_next, level, hp, unspent_points, stamina } = char;
+  const vitality    = Number(char.attr_vitality) || 5;
+  const attrStamina = Number(char.attr_stamina)  || 5;
   let reading_points_awarded = Number(char.reading_points_awarded) || 0;
   let readingFinished = false;
 
   const totalElapsed = Math.max(0, now - (char.activity_started_at || now));
-  const pointsDue = Math.min(2, Math.floor(totalElapsed / READING_POINT_INTERVAL));
-  const newPoints = pointsDue - reading_points_awarded;
-  if (newPoints > 0) {
-    unspent_points += newPoints;
-    reading_points_awarded = pointsDue;
+
+  // Award 1 stamina after the full hour (tracked via reading_points_awarded)
+  if (totalElapsed >= READING_MAX_DURATION && reading_points_awarded < 1) {
+    const leveled = levelUp({ xp, xp_to_next, level, hp, unspent_points, attr_vitality: vitality, attr_stamina: attrStamina });
+    const maxSt = leveled.max_stamina;
+    stamina = Math.min(maxSt, (Number(stamina) || 0) + 1);
+    reading_points_awarded = 1;
+    readingFinished = true;
+    return { ...leveled, stamina, last_tick_at: now, reading_points_awarded, readingFinished };
   }
+
   if (totalElapsed >= READING_MAX_DURATION) {
     readingFinished = true;
   }
 
-  const leveled = levelUp({ xp, xp_to_next, level, hp, unspent_points, attr_vitality: vitality, attr_stamina: Number(char.attr_stamina) || 5 });
-  return { ...leveled, last_tick_at: now, reading_points_awarded, readingFinished };
+  const leveled = levelUp({ xp, xp_to_next, level, hp, unspent_points, attr_vitality: vitality, attr_stamina: attrStamina });
+  return { ...leveled, stamina: Number(stamina) || 0, last_tick_at: now, reading_points_awarded, readingFinished };
 }
 
 async function ownedChar(req, res) {
@@ -454,7 +460,8 @@ router.post('/:characterId/stop', async (req, res) => {
     });
   } else if (char.activity === 'reading') {
     const upd = applyReadingTick(char);
-    const stAfterRead = upd.leveled ? upd.max_stamina : (Number(char.stamina) || 0);
+    // stamina is only awarded on full hour completion; partial stop gives no stamina
+    const stAfterRead = upd.leveled ? upd.max_stamina : upd.stamina;
     await client.execute({
       sql:  `UPDATE characters SET xp = ?, xp_to_next = ?, level = ?, max_hp = ?, hp = ?,
              unspent_points = ?, stamina = ?, max_stamina = ?,
@@ -499,8 +506,8 @@ router.get('/:characterId/tick', async (req, res) => {
     });
   } else if (char.activity === 'reading') {
     const upd = applyReadingTick(char);
-    const stBase   = stRegen ? stRegen.stamina : (Number(char.stamina) || 0);
-    const newSt    = upd.leveled ? upd.max_stamina : stBase;
+    // upd.stamina already has the +1 stamina applied if the hour completed
+    const newSt    = upd.leveled ? upd.max_stamina : upd.stamina;
     const newMaxSt = upd.max_stamina;
     await client.execute({
       sql:  `UPDATE characters SET xp = ?, xp_to_next = ?, level = ?, max_hp = ?, hp = ?,
