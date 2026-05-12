@@ -496,7 +496,7 @@ input:focus, select:focus {
 .action-grid {
   display: grid;
   grid-template-columns: repeat(5, 100px);
-  grid-template-rows: 120px 200px 100px;
+  grid-template-rows: 120px 200px 120px;
   column-gap: 12px;
   row-gap: 24px;
   align-items: center;

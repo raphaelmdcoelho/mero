@@ -127,26 +127,41 @@
         </div>
 
         <!-- Bottom row: all action buttons in one row (cols 1-6, row 3) -->
-        <div class="action-sq" id="sq-inventory" style="grid-column:1;grid-row:3;" onclick="openPanel('inventory')">
-          <img src="/inventory-icon.png" alt="Inventory" class="sq-icon" />
+        <div class="action-sq-wrap" style="grid-column:1;grid-row:3;">
+          <span class="sq-label" data-i18n="game.inventory">Inventory</span>
+          <div class="action-sq" id="sq-inventory" onclick="openPanel('inventory')">
+            <img src="/inventory-icon.png" alt="Inventory" class="sq-icon" />
+          </div>
         </div>
 
-        <div class="action-sq" id="sq-attributes" style="grid-column:2;grid-row:3;position:relative;" onclick="openPanel('attributes')">
-          <img src="/attributes-icon.png" alt="Attributes" class="sq-icon" />
-          <span id="unspent-badge" class="unspent-badge" style="display:none;"></span>
+        <div class="action-sq-wrap" style="grid-column:2;grid-row:3;">
+          <span class="sq-label" data-i18n="game.attributes">Attributes</span>
+          <div class="action-sq" id="sq-attributes" style="position:relative;" onclick="openPanel('attributes')">
+            <img src="/attributes-icon.png" alt="Attributes" class="sq-icon" />
+            <span id="unspent-badge" class="unspent-badge" style="display:none;"></span>
+          </div>
         </div>
 
-        <div class="action-sq" id="sq-equipment" style="grid-column:3;grid-row:3;" onclick="openPanel('equipment')">
-          <img src="/equipment-icon.png" alt="Equipment" class="sq-icon" />
+        <div class="action-sq-wrap" style="grid-column:3;grid-row:3;">
+          <span class="sq-label" data-i18n="game.equipment">Equipment</span>
+          <div class="action-sq" id="sq-equipment" onclick="openPanel('equipment')">
+            <img src="/equipment-icon.png" alt="Equipment" class="sq-icon" />
+          </div>
         </div>
 
-        <div class="action-sq" id="sq-market" style="grid-column:4;grid-row:3;" onclick="openPanel('market')">
-          <img src="/market-icon.png" alt="Market" class="sq-icon" />
+        <div class="action-sq-wrap" style="grid-column:4;grid-row:3;">
+          <span class="sq-label" data-i18n="game.market">Market</span>
+          <div class="action-sq" id="sq-market" onclick="openPanel('market')">
+            <img src="/market-icon.png" alt="Market" class="sq-icon" />
+          </div>
         </div>
 
-        <div class="action-sq disabled" id="sq-castle" style="grid-column:5;grid-row:3;position:relative;">
-          <img src="/castle-icon.png" alt="Castle" class="sq-icon" />
-          <span class="unspent-badge" style="font-size:0.5rem;" data-i18n="game.coming_soon">Soon</span>
+        <div class="action-sq-wrap" style="grid-column:5;grid-row:3;">
+          <span class="sq-label" data-i18n="game.castle">Castle</span>
+          <div class="action-sq disabled" id="sq-castle" style="position:relative;">
+            <img src="/castle-icon.png" alt="Castle" class="sq-icon" />
+            <span class="unspent-badge" style="font-size:0.5rem;" data-i18n="game.coming_soon">Soon</span>
+          </div>
         </div>
       </div>
     </div>
