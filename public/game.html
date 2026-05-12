@@ -472,18 +472,21 @@
     .farm-hint { font-size: 0.72rem; color: var(--muted); text-align: center; margin: 0; }
     .farm-grid-wrapper { position: relative; width: 100%; }
     .farm-bg-img { width: 100%; display: block; border-radius: 8px; }
-    /* Overlay sits exactly over the 4×3 soil squares in farm_background_1.png.
-       Percentages are relative to the rendered image size (top/bottom → height, left/right → width). */
+    /* Overlay sits exactly over the 4×3 soil squares in farm_background_1.png (1402×1122px).
+       Measured from pixel scan: soil grid x=308–1108 (22%–79%), y=325–762 (29%–68%).
+       column-gap/row-gap are % of grid container width (CSS always uses inline-size for % gaps).
+       column-gap: 33px/800px = 4.1%;  row-gap: 22px/800px = 2.75% (keeps correct aspect). */
     .farm-slots {
       position: absolute;
-      top: 27%;
-      left: 21%;
-      right: 17%;
-      bottom: 25%;
+      top: 29%;
+      left: 22%;
+      right: 21%;
+      bottom: 32%;
       display: grid;
       grid-template-columns: repeat(4, 1fr);
       grid-template-rows: repeat(3, 1fr);
-      gap: 12px;
+      column-gap: 4.1%;
+      row-gap: 2.75%;
     }
     .farm-slot {
       position: relative;
