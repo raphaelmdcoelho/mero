@@ -714,11 +714,22 @@ router.post('/:characterId/dungeon/stop', async (req, res) => {
     return res.status(400).json({ error: 'No active dungeon run' });
   }
 
-  const summary = await completeDungeonRun(char, run, true);
+  // Manual stop: no XP, no loot, no gold — just cancel the run
+  const nowSec = Math.floor(Date.now() / 1000);
+  await client.batch([
+    { sql: 'DELETE FROM dungeon_run WHERE character_id = ?', args: [char.id] },
+    {
+      sql: `UPDATE characters SET activity = NULL, activity_started_at = NULL, last_tick_at = ? WHERE id = ?`,
+      args: [nowSec, char.id],
+    },
+  ], 'write');
+
   return res.json({
     done: true,
     forced: true,
-    ...summary,
+    gainedXp: 0,
+    gainedGold: 0,
+    loot: [],
     char: await fullChar(char.id),
   });
 });
