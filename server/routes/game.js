@@ -543,6 +543,90 @@ router.get('/:characterId/tick', async (req, res) => {
   res.json(await fullChar(char.id));
 });
 
+// ── Fishing ─────────────────────────────────────────────────────────────────
+
+const FISHING_STAMINA_COST = 1;
+const FISHING_BASE_XP      = 5;
+// item_id → XP bonus
+const FISHING_BAIT_BONUS   = { 37: 0, 38: 2, 39: 5, 40: 2 };
+const FISH_ITEM_ID         = 41;
+
+// POST /api/game/:characterId/fish
+// Body: { baitItemId: number, caught: boolean }
+// Always consumes 1 bait. Adds fish + XP only when caught=true.
+router.post('/:characterId/fish', async (req, res) => {
+  const char = await ownedChar(req, res);
+  if (!char) return;
+
+  if (char.activity) {
+    return res.status(400).json({ error: 'Cannot fish during another activity' });
+  }
+
+  const { baitItemId, caught } = req.body;
+  const validBaits = Object.keys(FISHING_BAIT_BONUS).map(Number);
+  if (!validBaits.includes(Number(baitItemId))) {
+    return res.status(400).json({ error: 'Invalid bait item' });
+  }
+
+  // Verify bait is in inventory
+  const invRow = await client.execute({
+    sql:  'SELECT id, quantity FROM inventory WHERE character_id = ? AND item_id = ?',
+    args: [char.id, baitItemId],
+  });
+  if (!invRow.rows.length || Number(invRow.rows[0].quantity) < 1) {
+    return res.status(400).json({ error: 'Bait not found in inventory' });
+  }
+
+  const stamina = Number(char.stamina) || 0;
+  if (caught && stamina < FISHING_STAMINA_COST) {
+    return res.status(400).json({ error: `Not enough stamina to fish (need ${FISHING_STAMINA_COST})` });
+  }
+
+  const baitInvId  = invRow.rows[0].id;
+  const baitQty    = Number(invRow.rows[0].quantity);
+
+  // Consume 1 bait
+  const consumeBait = baitQty > 1
+    ? { sql: 'UPDATE inventory SET quantity = quantity - 1 WHERE id = ?', args: [baitInvId] }
+    : { sql: 'DELETE FROM inventory WHERE id = ?',                        args: [baitInvId] };
+
+  let fishXp = 0;
+  const ops = [consumeBait];
+
+  if (caught) {
+    fishXp = FISHING_BASE_XP + (FISHING_BAIT_BONUS[baitItemId] ?? 0);
+    const updated = levelUp({ ...char, xp: Number(char.xp) + fishXp });
+
+    ops.push({
+      sql:  `UPDATE characters SET xp = ?, xp_to_next = ?, level = ?, max_hp = ?, hp = ?,
+             unspent_points = ?, stamina = ?, max_stamina = ? WHERE id = ?`,
+      args: [updated.xp, updated.xp_to_next, updated.level, updated.max_hp, updated.hp,
+             updated.unspent_points, stamina - FISHING_STAMINA_COST, updated.max_stamina, char.id],
+    });
+
+    // Add fish to inventory (upsert)
+    const fishRow = await client.execute({
+      sql:  'SELECT id FROM inventory WHERE character_id = ? AND item_id = ?',
+      args: [char.id, FISH_ITEM_ID],
+    });
+    if (fishRow.rows.length) {
+      ops.push({
+        sql:  'UPDATE inventory SET quantity = quantity + 1 WHERE id = ?',
+        args: [fishRow.rows[0].id],
+      });
+    } else {
+      ops.push({
+        sql:  'INSERT INTO inventory (character_id, item_id, quantity) VALUES (?, ?, 1)',
+        args: [char.id, FISH_ITEM_ID],
+      });
+    }
+  }
+
+  await client.batch(ops, 'write');
+
+  res.json({ ...await fullChar(char.id), fishXp });
+});
+
 // ── Dungeon System ──────────────────────────────────────────────────────────
 
 // GET /api/game/:characterId/stats

@@ -69,8 +69,16 @@
           </div>
         </div>
 
-        <!-- Row 1 far-right: Research (coming soon) -->
+        <!-- Row 1 col 5: Fishing -->
         <div class="action-sq-wrap" style="grid-column:5;grid-row:1;">
+          <span id="fishing-label" class="sq-label" data-i18n="game.fishing">Fishing</span>
+          <div class="action-sq" id="sq-fishing" onclick="handleFishing()">
+            <img src="/fishing.png" alt="Fishing" class="sq-icon" />
+          </div>
+        </div>
+
+        <!-- Row 1 col 6: Research (coming soon) -->
+        <div class="action-sq-wrap" style="grid-column:6;grid-row:1;">
           <span id="research-label" class="sq-label" data-i18n="game.research">Research</span>
           <div class="action-sq disabled" id="sq-research">
             <img src="/research-icon.png" alt="Research" class="sq-icon" />
@@ -78,8 +86,8 @@
           </div>
         </div>
 
-        <!-- Center: Avatar (spans columns 2-5 to stay centered in 6-col grid) -->
-        <div class="avatar-cell" style="grid-column:1/6;grid-row:2;justify-self:center;">
+        <!-- Center: Avatar (spans all 6 columns) -->
+        <div class="avatar-cell" style="grid-column:1/7;grid-row:2;justify-self:center;">
           <div class="avatar-display" id="avatar-display"></div>
 
           <!-- Pixel art pickaxe — appears on the right of the avatar when an activity is active -->
@@ -271,6 +279,35 @@
       <div class="modal-footer">
         <button class="btn btn-outline" onclick="closeReadModal()">Cancel</button>
         <button class="btn btn-primary" id="start-read-btn" onclick="confirmStartReading()">Start Reading</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Fishing Modal -->
+  <div class="modal-overlay" id="fishing-modal">
+    <div class="modal">
+      <h2 class="modal-title">Go Fishing</h2>
+      <p class="fishing-modal-subtitle">Choose your bait</p>
+      <div class="fishing-bait-grid" id="fishing-bait-grid">
+        <!-- populated by JS -->
+      </div>
+      <!-- Phase 2: timing minigame — shown after bait is selected -->
+      <div class="fishing-minigame" id="fishing-minigame" style="display:none;">
+        <div class="fishing-minigame-header">
+          <p class="fishing-minigame-hint">Click 🪝 when the bobber hits the <span class="fishing-zone-label">green zone</span>!</p>
+          <span class="fishing-attempts-badge" id="fish-attempts">3 tries left</span>
+        </div>
+        <div class="fishing-track-wrap">
+          <div class="fishing-track" id="fish-track">
+            <div class="fishing-green-zone"></div>
+            <div class="fishing-slider" id="fish-slider"></div>
+          </div>
+          <button type="button" class="fishing-hook-btn" id="fish-hook-btn" onclick="clickFishHook()">🪝</button>
+        </div>
+        <p class="fishing-retry-hint" id="fish-retry-hint" style="display:none;">Missed! Try again…</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline" onclick="closeFishingModal()">Cancel</button>
       </div>
     </div>
   </div>

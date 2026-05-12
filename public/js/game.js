@@ -1294,6 +1294,189 @@ document.getElementById('read-modal').addEventListener('click', function(e) {
   if (e.target === this) closeReadModal();
 });
 
+// ---- Fishing ----
+
+// itemId must match seeds in server/db.js (IDs 37–40 = baits, 41 = fish)
+const FISHING_BAITS = [
+  { itemId: 37, name: 'Worm Bait',    icon: '🪱', desc: 'Basic bait'   },
+  { itemId: 38, name: 'Fly Bait',     icon: '🪰', desc: '+5 bonus XP'  },
+  { itemId: 39, name: 'Fishing Lure', icon: '✨', desc: '+10 bonus XP' },
+  { itemId: 40, name: 'Bread Bait',   icon: '🍞', desc: '+5 bonus XP'  },
+];
+
+const FISH_ZONE_START  = 0.55;   // green zone: 55–75% of track width
+const FISH_ZONE_END    = 0.75;
+const FISH_CYCLE_MS    = 2000;
+const FISH_MAX_TRIES   = 3;
+
+let selectedBait    = null;
+let fishAttempts    = 0;
+let fishAnimId      = null;
+let fishAnimActive  = false;
+let fishAnimStart   = null;
+
+function handleFishing() {
+  if (!charState) return;
+  if (charState.activity) return;
+  openFishingModal();
+}
+
+function openFishingModal() {
+  selectedBait = null;
+  fishAttempts = 0;
+  renderFishingBaitGrid();
+  document.getElementById('fishing-minigame').style.display = 'none';
+  document.getElementById('fishing-modal').classList.add('open');
+}
+
+function closeFishingModal() {
+  stopFishingAnimation();
+  selectedBait = null;
+  fishAttempts = 0;
+  document.getElementById('fishing-modal').classList.remove('open');
+}
+
+function fishingBaitQty(itemId) {
+  if (!charState) return 0;
+  return charState.inventory.find(i => i.item_id === itemId)?.quantity ?? 0;
+}
+
+function renderFishingBaitGrid() {
+  const container = document.getElementById('fishing-bait-grid');
+  container.innerHTML = FISHING_BAITS.map(b => {
+    const qty     = fishingBaitQty(b.itemId);
+    const isSelected = selectedBait && selectedBait.itemId === b.itemId;
+    const disabled   = qty === 0;
+    return `
+      <div class="fishing-bait-card${isSelected ? ' selected' : ''}${disabled ? ' disabled' : ''}"
+           onclick="${disabled ? `openMarketFromFishing()` : `selectFishingBait(${b.itemId})`}">
+        <span class="fishing-bait-icon">${b.icon}</span>
+        <span class="fishing-bait-name">${escHtml(b.name)}</span>
+        <span class="fishing-bait-desc">${disabled ? '🛒 Buy at market' : escHtml(b.desc)}</span>
+        ${qty > 0 ? `<span class="fishing-bait-qty">×${qty}</span>` : ''}
+      </div>
+    `;
+  }).join('');
+}
+
+function openMarketFromFishing() {
+  closeFishingModal();
+  openPanel('market');
+  switchMarketTab('buy');
+}
+
+function selectFishingBait(itemId) {
+  selectedBait = FISHING_BAITS.find(b => b.itemId === itemId) || null;
+  fishAttempts = 0;
+  renderFishingBaitGrid();
+
+  const minigame  = document.getElementById('fishing-minigame');
+  const retryHint = document.getElementById('fish-retry-hint');
+  const track     = document.getElementById('fish-track');
+  const attemptsEl = document.getElementById('fish-attempts');
+
+  minigame.style.display = 'block';
+  retryHint.style.display = 'none';
+  track.classList.remove('fish-success', 'fish-fail');
+  if (attemptsEl) attemptsEl.textContent = `${FISH_MAX_TRIES - fishAttempts} tries left`;
+
+  stopFishingAnimation();
+  startFishingAnimation();
+}
+
+function startFishingAnimation() {
+  fishAnimActive = true;
+  fishAnimStart  = null;
+  fishAnimId     = requestAnimationFrame(tickFishingAnimation);
+}
+
+function stopFishingAnimation() {
+  fishAnimActive = false;
+  if (fishAnimId) { cancelAnimationFrame(fishAnimId); fishAnimId = null; }
+}
+
+function tickFishingAnimation(ts) {
+  if (!fishAnimActive) return;
+  if (!fishAnimStart) fishAnimStart = ts;
+
+  const phase = ((ts - fishAnimStart) % FISH_CYCLE_MS) / FISH_CYCLE_MS;
+  const pos   = phase < 0.5 ? phase * 2 : (1 - phase) * 2;
+
+  const slider = document.getElementById('fish-slider');
+  const track  = document.getElementById('fish-track');
+  if (!slider || !track) { fishAnimActive = false; return; }
+
+  slider.style.left = (pos * (track.offsetWidth - slider.offsetWidth)) + 'px';
+
+  const hookBtn = document.getElementById('fish-hook-btn');
+  if (hookBtn) hookBtn.classList.toggle('in-zone', pos >= FISH_ZONE_START && pos <= FISH_ZONE_END);
+
+  fishAnimId = requestAnimationFrame(tickFishingAnimation);
+}
+
+function clickFishHook() {
+  if (!fishAnimActive || !selectedBait) return;
+
+  const slider = document.getElementById('fish-slider');
+  const track  = document.getElementById('fish-track');
+  if (!slider || !track) return;
+
+  const trackRect    = track.getBoundingClientRect();
+  const sliderRect   = slider.getBoundingClientRect();
+  const sliderCenter = sliderRect.left - trackRect.left + sliderRect.width / 2;
+  const hit = sliderCenter >= trackRect.width * FISH_ZONE_START &&
+              sliderCenter <= trackRect.width * FISH_ZONE_END;
+
+  stopFishingAnimation();
+
+  if (hit) {
+    track.classList.add('fish-success');
+    setTimeout(() => submitFishingResult(true), 600);
+  } else {
+    fishAttempts++;
+    const triesLeft = FISH_MAX_TRIES - fishAttempts;
+
+    if (triesLeft <= 0) {
+      // Out of attempts — consume bait, no fish
+      track.classList.add('fish-fail');
+      const retryHint = document.getElementById('fish-retry-hint');
+      retryHint.textContent = 'The fish got away! Bait used up.';
+      retryHint.style.display = 'block';
+      setTimeout(() => submitFishingResult(false), 1000);
+    } else {
+      track.classList.add('fish-fail');
+      const attemptsEl = document.getElementById('fish-attempts');
+      if (attemptsEl) attemptsEl.textContent = `${triesLeft} ${triesLeft === 1 ? 'try' : 'tries'} left`;
+      setTimeout(() => {
+        track.classList.remove('fish-fail');
+        document.getElementById('fish-retry-hint').textContent = 'Missed! Try again…';
+        document.getElementById('fish-retry-hint').style.display = 'block';
+        startFishingAnimation();
+      }, 900);
+    }
+  }
+}
+
+async function submitFishingResult(caught) {
+  const baitItemId = selectedBait ? selectedBait.itemId : null;
+  closeFishingModal();
+  if (!baitItemId) return;
+
+  const res = await api.post(`/api/game/${charId}/fish`, { baitItemId, caught });
+  if (!res) return;
+  const data = await res.json();
+  if (!res.ok) { showToast(data.error || t('game.js.failed'), 'danger'); return; }
+  charState = data;
+  renderAll(data);
+  if (caught) {
+    showToast(t('game.js.fishing_success').replace('{xp}', data.fishXp), 'success');
+  }
+}
+
+document.getElementById('fishing-modal').addEventListener('click', function(e) {
+  if (e.target === this) closeFishingModal();
+});
+
 const FARM_PLANTS = [
   { type: 'carrot', label: 'Carrot', img: '/img/carrot.png' },
   { type: 'apple',  label: 'Apple',  img: '/img/apple.png'  },
