@@ -155,11 +155,7 @@ function renderAll(char) {
   document.getElementById('char-class-header').textContent =
     `${CLASS_ICONS[char.class] || ''} ${char.class || ''} · ${t('game.js.level', { n: char.level })}`;
 
-  if (char.avatar_path) {
-    const img = document.getElementById('avatar-img');
-    img.src = char.avatar_path;
-    img.style.display = 'block';
-  }
+  renderCharAvatar(document.getElementById('avatar-display'), char);
 
   const xpPct = char.xp_to_next > 0 ? Math.min(100, (char.xp / char.xp_to_next) * 100) : 100;
   document.getElementById('xp-fill').style.width = xpPct + '%';
@@ -242,22 +238,19 @@ function renderAll(char) {
   renderBattlePanel(char);
   renderMarketPanel(char);
   refreshCombatStats();
-  renderEquipOverlay(char);
 }
 
-function renderEquipOverlay(char) {
-  const overlay = document.getElementById('equip-overlay');
-  const armor = char.equippedArmor;
-  if (armor) {
-    const img = getItemImage(armor.id, char.gender);
-    if (img) {
-      overlay.src = img;
-      overlay.style.display = 'block';
-      return;
-    }
+// Shared avatar renderer — used by the game screen and the equipment modal
+function renderCharAvatar(containerEl, char) {
+  if (!containerEl || !char) return;
+  const overlayImg = char.equippedArmor ? getItemImage(char.equippedArmor.id, char.gender) : null;
+  const overlay = overlayImg ? `<img class="equip-overlay" src="${escHtml(overlayImg)}" alt="" />` : '';
+  if (char.avatar_path) {
+    containerEl.innerHTML = `<img class="char-avatar-img" src="${escHtml(char.avatar_path)}" alt="Avatar" />${overlay}`;
+  } else {
+    const icon = CLASS_ICONS[char.class] || '🧍';
+    containerEl.innerHTML = `<span class="char-avatar-icon">${icon}</span>${overlay}`;
   }
-  overlay.style.display = 'none';
-  overlay.src = '';
 }
 
 function updateActionSquares(activity, isFarming = false) {
@@ -753,11 +746,17 @@ function openPanel(type) {
   const panelId = PANEL_MAP[type];
   if (panelId) document.getElementById(panelId).classList.add('open');
   if (type === 'attributes') { pendingAttrs = {}; renderAttributes(charState); refreshCombatStats(); }
+  if (type === 'equipment') renderEquipment(charState);
+  if (type === 'farm')   renderFarmPanel();
   if (type === 'market') { switchMarketTab('sell'); renderMarketPanel(charState); }
   if (type === 'battle') {
     renderBattlePanel(charState);
     if (dungeonEndsAt) updateTimerDisplay();
   }
+}
+
+function eqOverlayClick(e) {
+  if (e.target === document.getElementById('eq-panel')) closePanel('equipment');
 }
 
 function closePanel(type) {
@@ -769,14 +768,22 @@ function itemEquipSlot(item) {
   if (!item) return null;
   if (item.type === 'weapon') return 'weapon';
   if (item.type !== 'armor') return null;
-  return item.armor_slot === 'shield' ? 'shield' : 'armor';
+  const s = item.armor_slot;
+  if (s === 'shield') return 'shield';
+  if (s === 'arm')    return 'arm';
+  if (s === 'boots')  return 'boots';
+  if (s === 'helmet') return 'helmet';
+  return 'armor';
 }
 
 function equippedSlotMap(char) {
   return {
     weapon: char.weapon_id || null,
-    armor: char.armor_id || null,
+    armor:  char.armor_id  || null,
     shield: char.shield_id || null,
+    arm:    char.arm_id    || null,
+    boots:  char.boots_id  || null,
+    helmet: char.helmet_id || null,
   };
 }
 
@@ -827,53 +834,223 @@ function showItemInfo(idx) {
       : ''}`;
 }
 
-// ---- Equipment ----
+// ---- Equipment Modal ----
+
+function _eqFillSlot(slotName, item, defaultIcon) {
+  const slotEl = document.getElementById(`eq-slot-${slotName}`);
+  const iconEl = document.getElementById(`eq-doll-${slotName}-icon`);
+  const nameEl = document.getElementById(`eq-doll-${slotName}-name`);
+  const statEl = document.getElementById(`eq-doll-${slotName}-stat`);
+  if (item) {
+    iconEl.innerHTML = itemIconHtml(item.id, item.icon, tItemName(item), charState?.gender, 'eq-slot-icon-img');
+    nameEl.textContent = tItemName(item);
+    if (slotName === 'weapon' && item.damage) {
+      statEl.textContent = `⚔️ ${item.damage} ${t('game.js.dmg_unit')}`;
+    } else if (item.defense) {
+      statEl.textContent = `🛡️ ${item.defense} ${t('game.js.def_unit')}`;
+    } else {
+      statEl.textContent = '';
+    }
+    slotEl.classList.add('has-item');
+    slotEl.onclick = () => unequipItem(slotName);
+    slotEl.title = t('game.js.unequip_btn');
+  } else {
+    iconEl.textContent = defaultIcon;
+    nameEl.textContent = '—';
+    statEl.textContent = '';
+    slotEl.classList.remove('has-item');
+    slotEl.onclick = null;
+    slotEl.title = '';
+  }
+}
+
 function renderEquipment(char) {
   if (!char) return;
-  const w = char.equippedWeapon;
-  const a = char.equippedArmor;
-  const s = char.equippedShield;
 
-  document.getElementById('eq-weapon-name').textContent = w ? `${w.icon} ${tItemName(w)}` : '—';
-  document.getElementById('eq-weapon-stat').textContent =
-    w && w.damage ? `⚔️ ${w.damage} ${t('game.js.dmg_unit')} · ${t('item.wtype.' + w.weapon_type) || w.weapon_type}` : '';
+  // Fill all five doll slots
+  _eqFillSlot('weapon', char.equippedWeapon, '🗡️');
+  _eqFillSlot('armor',  char.equippedArmor,  '🥋');
+  _eqFillSlot('shield', char.equippedShield, '🛡️');
+  _eqFillSlot('arm',    char.equippedArm,    '🥊');
+  _eqFillSlot('boots',  char.equippedBoots,  '👢');
+  _eqFillSlot('helmet', char.equippedHelmet, '🪖');
 
-  document.getElementById('eq-armor-name').textContent = a ? `${a.icon} ${tItemName(a)}` : '—';
-  document.getElementById('eq-armor-stat').textContent =
-    a && a.defense ? `🛡️ ${a.defense} ${t('game.js.def_unit')}` : '';
+  // Avatar in the center — shared renderer, same as main game screen
+  renderCharAvatar(document.getElementById('eq-doll-avatar'), char);
 
-  document.getElementById('eq-shield-name').textContent = s ? `${s.icon} ${tItemName(s)}` : '—';
-  document.getElementById('eq-shield-stat').textContent =
-    s && s.defense ? `🛡️ ${s.defense} ${t('game.js.def_unit')}` : '';
-
-  document.getElementById('eq-weapon-action').innerHTML =
-    w ? `<button type="button" class="btn btn-outline btn-sm" onclick="unequipItem('weapon')">${t('game.js.unequip_btn')}</button>` : '';
-  document.getElementById('eq-armor-action').innerHTML =
-    a ? `<button type="button" class="btn btn-outline btn-sm" onclick="unequipItem('armor')">${t('game.js.unequip_btn')}</button>` : '';
-  document.getElementById('eq-shield-action').innerHTML =
-    s ? `<button type="button" class="btn btn-outline btn-sm" onclick="unequipItem('shield')">${t('game.js.unequip_btn')}</button>` : '';
-
-  const inv = (char.inventory || []).filter(i => itemEquipSlot(i));
+  // Inventory grid — equippable items only
   const equippedBySlot = equippedSlotMap(char);
-  const list = document.getElementById('eq-list');
-  if (!inv.length) { list.innerHTML = `<p class="muted-sm">${t('game.js.no_equippable')}</p>`; return; }
-  list.innerHTML = inv.map(item => {
-    const statLine = item.damage ? `⚔️ ${item.damage} ${t('game.js.dmg_unit')}` : item.defense ? `🛡️ ${item.defense} ${t('game.js.def_unit')}` : '';
+  const gender = char.gender || 'male';
+  const inv = (char.inventory || []).filter(i => itemEquipSlot(i));
+  const grid = document.getElementById('eq-inv-grid');
+  if (!inv.length) {
+    grid.innerHTML = `<p class="muted-sm">${t('game.js.no_equippable')}</p>`;
+    return;
+  }
+
+  grid.innerHTML = inv.map((item, idx) => {
     const slot = itemEquipSlot(item);
-    const equipped = slot ? equippedBySlot[slot] === item.item_id : false;
-    return `
-    <div class="equip-list-row">
-      <span class="equip-list-icon">${item.icon}</span>
-      <span class="equip-list-name">
-        ${escHtml(tItemName(item))}
-        <span class="equip-list-type">${tItemType(item)}</span>
-        ${statLine ? `<span class="equip-list-type"> · ${statLine}</span>` : ''}
-      </span>
-      ${equipped
-        ? `<button type="button" class="btn btn-outline btn-sm" onclick="unequipItem('${slot}')">${t('game.js.unequip_btn')}</button>`
-        : `<button type="button" class="btn btn-outline btn-sm" onclick="equipItem('${slot}',${item.item_id})">${t('game.js.equip_btn')}</button>`}
+    const isEq = slot && equippedBySlot[slot] === item.item_id;
+    const statLine = item.damage
+      ? `⚔️ ${item.damage} ${t('game.js.dmg_unit')}`
+      : item.defense ? `🛡️ ${item.defense} ${t('game.js.def_unit')}` : '';
+    const label = `${tItemName(item)}${statLine ? ' · ' + statLine : ''}`;
+    return `<div class="eq-inv-slot${isEq ? ' equipped' : ''}"
+               draggable="true"
+               data-idx="${idx}"
+               data-item-id="${item.item_id}"
+               data-slot="${slot}"
+               title="${escHtml(label)}"
+               onclick="eqInvSlotClick(${idx})">
+      ${itemIconHtml(item.item_id, item.icon, tItemName(item), gender, 'inv-item-img')}
     </div>`;
   }).join('');
+
+  _eqAttachDragListeners(char);
+}
+
+function eqInvSlotClick(idx) {
+  if (!charState) return;
+  const inv = (charState.inventory || []).filter(i => itemEquipSlot(i));
+  const item = inv[idx];
+  if (!item) return;
+  const slot = itemEquipSlot(item);
+  const equippedBySlot = equippedSlotMap(charState);
+  if (equippedBySlot[slot] === item.item_id) {
+    unequipItem(slot);
+  } else {
+    equipItem(slot, item.item_id);
+  }
+}
+
+// ---- Drag & drop ----
+let _dragItem = null;   // { itemId, slot }
+let _touchGhost = null;
+
+function _eqAttachDragListeners(char) {
+  const inv = (char.inventory || []).filter(i => itemEquipSlot(i));
+  const slots = ['weapon', 'armor', 'shield', 'arm', 'boots', 'helmet'];
+
+  // Draggable inventory cells
+  document.querySelectorAll('#eq-inv-grid .eq-inv-slot').forEach((el, idx) => {
+    const item = inv[idx];
+    if (!item) return;
+    const itemSlot = itemEquipSlot(item);
+
+    el.addEventListener('dragstart', e => {
+      _dragItem = { itemId: item.item_id, slot: itemSlot };
+      e.dataTransfer.setData('text/plain', JSON.stringify(_dragItem));
+      e.dataTransfer.effectAllowed = 'move';
+      // Custom drag image: clone the cell
+      const ghost = el.cloneNode(true);
+      ghost.style.cssText = 'position:fixed;top:-200px;left:-200px;width:60px;height:60px;';
+      document.body.appendChild(ghost);
+      e.dataTransfer.setDragImage(ghost, 30, 30);
+      requestAnimationFrame(() => document.body.removeChild(ghost));
+      el.classList.add('dragging');
+    });
+
+    el.addEventListener('dragend', () => {
+      el.classList.remove('dragging');
+      _dragItem = null;
+      _eqClearDropHighlights();
+    });
+
+    // Touch events
+    el.addEventListener('touchstart', e => _eqTouchStart(e, item, itemSlot), { passive: true });
+    el.addEventListener('touchmove',  _eqTouchMove, { passive: true });
+    el.addEventListener('touchend',   _eqTouchEnd);
+  });
+
+  // Drop targets: the three doll slots
+  slots.forEach(slotName => {
+    const el = document.getElementById(`eq-slot-${slotName}`);
+    if (!el) return;
+
+    el.addEventListener('dragover', e => {
+      e.preventDefault();
+      if (!_dragItem) return;
+      if (_dragItem.slot === slotName) {
+        e.dataTransfer.dropEffect = 'move';
+        el.classList.add('drop-target-valid');
+        el.classList.remove('drop-target-invalid');
+      } else {
+        e.dataTransfer.dropEffect = 'none';
+        el.classList.add('drop-target-invalid');
+        el.classList.remove('drop-target-valid');
+      }
+    });
+
+    el.addEventListener('dragenter', e => { e.preventDefault(); });
+
+    el.addEventListener('dragleave', () => {
+      el.classList.remove('drop-target-valid', 'drop-target-invalid');
+    });
+
+    el.addEventListener('drop', e => {
+      e.preventDefault();
+      el.classList.remove('drop-target-valid', 'drop-target-invalid');
+      let data;
+      try { data = JSON.parse(e.dataTransfer.getData('text/plain')); } catch { return; }
+      if (!data || data.slot !== slotName) return;
+      equipItem(slotName, data.itemId);
+    });
+  });
+}
+
+function _eqClearDropHighlights() {
+  ['weapon', 'armor', 'shield', 'arm', 'boots', 'helmet'].forEach(s => {
+    const el = document.getElementById(`eq-slot-${s}`);
+    if (el) el.classList.remove('drop-target-valid', 'drop-target-invalid');
+  });
+}
+
+// Touch drag helpers
+function _eqTouchStart(e, item, itemSlot) {
+  _dragItem = { itemId: item.item_id, slot: itemSlot };
+  const touch = e.touches[0];
+  _touchGhost = document.createElement('div');
+  _touchGhost.className = 'drag-ghost';
+  _touchGhost.textContent = item.icon || '📦';
+  _touchGhost.style.left = touch.clientX + 'px';
+  _touchGhost.style.top  = touch.clientY + 'px';
+  document.body.appendChild(_touchGhost);
+}
+
+function _eqTouchMove(e) {
+  if (!_touchGhost || !_dragItem) return;
+  const touch = e.touches[0];
+  _touchGhost.style.left = touch.clientX + 'px';
+  _touchGhost.style.top  = touch.clientY + 'px';
+
+  // Highlight slots under finger
+  _eqClearDropHighlights();
+  const target = _eqSlotUnderPoint(touch.clientX, touch.clientY);
+  if (target) {
+    const slotName = target.dataset.slot;
+    target.classList.add(_dragItem.slot === slotName ? 'drop-target-valid' : 'drop-target-invalid');
+  }
+}
+
+function _eqTouchEnd(e) {
+  if (!_touchGhost) return;
+  document.body.removeChild(_touchGhost);
+  _touchGhost = null;
+  _eqClearDropHighlights();
+
+  if (!_dragItem) return;
+  const touch = e.changedTouches[0];
+  const target = _eqSlotUnderPoint(touch.clientX, touch.clientY);
+  if (target && target.dataset.slot === _dragItem.slot) {
+    equipItem(_dragItem.slot, _dragItem.itemId);
+  }
+  _dragItem = null;
+}
+
+function _eqSlotUnderPoint(x, y) {
+  const el = document.elementFromPoint(x, y);
+  if (!el) return null;
+  return el.closest('.eq-doll-slot[data-slot]');
 }
 
 async function equipItem(slot, itemId) {
@@ -884,6 +1061,7 @@ async function equipItem(slot, itemId) {
   charState = { ...charState, ...data };
   renderEquipment(charState);
   renderInventory(charState);
+  renderCharAvatar(document.getElementById('avatar-display'), charState);
   showToast(t('game.js.item_equipped'), 'success');
   refreshCombatStats();
 }
@@ -896,6 +1074,7 @@ async function unequipItem(slot) {
   charState = { ...charState, ...data };
   renderEquipment(charState);
   renderInventory(charState);
+  renderCharAvatar(document.getElementById('avatar-display'), charState);
   showToast(t('game.js.item_unequipped'), 'success');
   refreshCombatStats();
 }
