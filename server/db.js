@@ -155,6 +155,7 @@ async function initDb() {
     'ALTER TABLE characters ADD COLUMN arm_id    INTEGER REFERENCES items(id)',
     'ALTER TABLE characters ADD COLUMN boots_id  INTEGER REFERENCES items(id)',
     'ALTER TABLE characters ADD COLUMN helmet_id INTEGER REFERENCES items(id)',
+    "ALTER TABLE characters ADD COLUMN rest_type   TEXT    DEFAULT NULL",
   ];
 
   for (const sql of additiveMigrations) {

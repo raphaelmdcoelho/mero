@@ -6,8 +6,13 @@ const { fullChar } = require('../helpers');
 
 // item_id -> HP restored (farm plants)
 const PLANT_ITEM_HP = { 6: 2, 7: 1 };
-const TAVERN_STAMINA_RATE = 1; // ST/min (faster than idle regen)
 const POINTS_PER_LEVEL = 5;
+
+const TAVERN_REST_TYPES = {
+  relax:    { staminaRate: 1, cost: 10 },
+  break:    { staminaRate: 3, cost: 30 },
+  recovery: { staminaRate: 6, cost: 70 },
+};
 
 const SET_UNLOCK_LEVEL = { 1: 1, 2: 20, 3: 30, 4: 40, 5: 50, 6: 5, 7: 10, 8: 15 };
 const MASTERY_COL = {
@@ -366,10 +371,11 @@ function applyTavernTick(char) {
 
   const upd         = levelUp({ xp, xp_to_next, level, hp, unspent_points, attr_vitality: vitality, attr_stamina: attrStamina });
   const max_stamina = upd.max_stamina;
+  const restType    = TAVERN_REST_TYPES[char.rest_type] || TAVERN_REST_TYPES.relax;
   // Restore to full on level-up; otherwise accumulate regen
   const stamina     = upd.leveled
     ? max_stamina
-    : Math.min(max_stamina, (Number(char.stamina) || 0) + (TAVERN_STAMINA_RATE * elapsed) / 60);
+    : Math.min(max_stamina, (Number(char.stamina) || 0) + (restType.staminaRate * elapsed) / 60);
   return { ...upd, stamina, max_stamina, last_tick_at: now };
 }
 
@@ -389,7 +395,7 @@ router.post('/:characterId/start', async (req, res) => {
   const char = await ownedChar(req, res);
   if (!char) return;
 
-  const { action } = req.body;
+  const { action, restType } = req.body;
   if (!['tavern', 'farm', 'reading'].includes(action)) {
     return res.status(400).json({ error: 'Use /dungeon/enter to start a dungeon run' });
   }
@@ -398,6 +404,26 @@ router.post('/:characterId/start', async (req, res) => {
   }
   if (char.activity) {
     return res.status(400).json({ error: 'Already in an activity' });
+  }
+
+  let resolvedRestType = null;
+  if (action === 'tavern') {
+    if (!restType || !TAVERN_REST_TYPES[restType]) {
+      return res.status(400).json({ error: 'restType must be relax, break, or recovery' });
+    }
+    const cost = TAVERN_REST_TYPES[restType].cost;
+    const gold = Number(char.gold) || 0;
+    if (gold < cost) {
+      return res.status(400).json({ error: `Not enough gold (need ${cost}g, have ${gold}g)` });
+    }
+    resolvedRestType = restType;
+    const now = Math.floor(Date.now() / 1000);
+    await client.execute({
+      sql:  `UPDATE characters SET activity = ?, activity_started_at = ?, last_tick_at = ?,
+             reading_points_awarded = 0, rest_type = ?, gold = gold - ? WHERE id = ?`,
+      args: [action, now, now, resolvedRestType, cost, char.id],
+    });
+    return res.json(await fullChar(char.id));
   }
 
   const now = Math.floor(Date.now() / 1000);
@@ -421,7 +447,7 @@ router.post('/:characterId/stop', async (req, res) => {
       sql:  `UPDATE characters SET xp = ?, xp_to_next = ?, level = ?, max_hp = ?, hp = ?,
              unspent_points = ?, stamina = ?, max_stamina = ?,
              activity = NULL, activity_started_at = NULL,
-             reading_points_awarded = 0, last_tick_at = ? WHERE id = ?`,
+             reading_points_awarded = 0, rest_type = NULL, last_tick_at = ? WHERE id = ?`,
       args: [upd.xp, upd.xp_to_next, upd.level, upd.max_hp, upd.hp,
              upd.unspent_points, upd.stamina, upd.max_stamina,
              upd.last_tick_at, char.id],

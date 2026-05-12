@@ -278,6 +278,16 @@
       'game.js.plant_consumed':     '{icon} A {plant} was consumed to keep you alive!',
       'game.js.reading_done':       '📖 Reading session complete! Check your attribute points.',
       'game.js.resting_start':      'Resting at the tavern…',
+
+      // Tavern rest modal
+      'tavern.modal.title':         'Rest at the Tavern',
+      'tavern.modal.subtitle':      'Choose your rest type',
+      'tavern.rest.relax':          'Relax',
+      'tavern.rest.relax_desc':     'Light rest · +1 ST/min',
+      'tavern.rest.break':          'Break Time',
+      'tavern.rest.break_desc':     'Comfortable rest · +3 ST/min',
+      'tavern.rest.recovery':       'Recovery',
+      'tavern.rest.recovery_desc':  'Deep rest · +6 ST/min',
       'game.js.activity_stopped':   'Activity stopped.',
       'game.js.entered_dungeon':    'Entered Dungeon Level {n}!',
       'game.js.boss_defeated':      '🏆 Boss defeated! Dungeon mastery is now {n}!',
@@ -630,6 +640,17 @@
       'game.js.plant_consumed':     '{icon} Um(a) {plant} foi consumido(a) para mantê-lo vivo!',
       'game.js.reading_done':       '📖 Sessão de leitura concluída! Verifique seus pontos de atributo.',
       'game.js.resting_start':      'Descansando na taverna…',
+
+      // Tavern rest modal
+      'tavern.modal.title':         'Descansar na Taverna',
+      'tavern.modal.subtitle':      'Escolha o tipo de descanso',
+      'tavern.rest.relax':          'Relaxar',
+      'tavern.rest.relax_desc':     'Descanso leve · +1 ST/min',
+      'tavern.rest.break':          'Pausa',
+      'tavern.rest.break_desc':     'Descanso confortável · +3 ST/min',
+      'tavern.rest.recovery':       'Recuperação',
+      'tavern.rest.recovery_desc':  'Descanso profundo · +6 ST/min',
+
       'game.js.activity_stopped':   'Atividade encerrada.',
       'game.js.entered_dungeon':    'Entrou na Masmorra Nível {n}!',
       'game.js.boss_defeated':      '🏆 Chefe derrotado! Domínio da masmorra agora é {n}!',
