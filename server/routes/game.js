@@ -546,9 +546,9 @@ router.get('/:characterId/tick', async (req, res) => {
 // ── Fishing ─────────────────────────────────────────────────────────────────
 
 const FISHING_STAMINA_COST = 1;
-const FISHING_BASE_XP      = 20;
+const FISHING_BASE_XP      = 5;
 // item_id → XP bonus
-const FISHING_BAIT_BONUS   = { 37: 0, 38: 5, 39: 10, 40: 5 };
+const FISHING_BAIT_BONUS   = { 37: 0, 38: 2, 39: 5, 40: 2 };
 const FISH_ITEM_ID         = 41;
 
 // POST /api/game/:characterId/fish
