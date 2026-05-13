@@ -10,8 +10,16 @@ const ITEM_IMAGES = {
   3: '/items/leather_armor', // Leather Armor
 };
 
+const ITEM_IMAGES_STATIC = {
+  6:  '/img/carrot_icon.png', // Carrot
+  7:  '/img/apple_icon.png',  // Apple
+  29: '/img/onion_icon.png',  // Onion
+};
+
 function getItemImage(itemId, gender) {
-  const base = ITEM_IMAGES[Number(itemId)];
+  const id = Number(itemId);
+  if (ITEM_IMAGES_STATIC[id]) return ITEM_IMAGES_STATIC[id];
+  const base = ITEM_IMAGES[id];
   if (!base) return null;
   return `${base}_${gender || 'male'}.png`;
 }
@@ -1478,9 +1486,9 @@ document.getElementById('fishing-modal').addEventListener('click', function(e) {
 });
 
 const FARM_PLANTS = [
-  { type: 'carrot', label: 'Carrot', img: '/img/carrot.png' },
-  { type: 'apple',  label: 'Apple',  img: '/img/apple.png'  },
-  { type: 'onion',  label: 'Onion',  img: '/img/onion.png'  },
+  { type: 'carrot', label: 'Carrot', img: '/img/carrot_icon.png' },
+  { type: 'apple',  label: 'Apple',  img: '/img/apple_icon.png'  },
+  { type: 'onion',  label: 'Onion',  img: '/img/onion_icon.png'  },
   { type: 'corn',   label: 'Corn',   img: '/img/corn.png'   },
 ];
 const FARM_MAX_SLOTS = 12;
