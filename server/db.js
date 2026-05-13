@@ -294,6 +294,27 @@ async function initDb() {
       )
   `);
 
+  // Safety migration: move items that landed in the wrong equipment column
+  // (caused by a client-side index bug that could send the wrong slot to the server).
+  await client.batch([
+    // boots item in arm_id → move to boots_id if boots_id is free
+    { sql: `UPDATE characters SET boots_id = arm_id, arm_id = NULL
+            WHERE arm_id IS NOT NULL AND boots_id IS NULL
+              AND arm_id IN (SELECT id FROM items WHERE armor_slot = 'boots')` },
+    // arm item in boots_id → move to arm_id if arm_id is free
+    { sql: `UPDATE characters SET arm_id = boots_id, boots_id = NULL
+            WHERE boots_id IS NOT NULL AND arm_id IS NULL
+              AND boots_id IN (SELECT id FROM items WHERE armor_slot = 'arm')` },
+    // boots item in helmet_id → move to boots_id if boots_id is free
+    { sql: `UPDATE characters SET boots_id = helmet_id, helmet_id = NULL
+            WHERE helmet_id IS NOT NULL AND boots_id IS NULL
+              AND helmet_id IN (SELECT id FROM items WHERE armor_slot = 'boots')` },
+    // helmet item in boots_id → move to helmet_id if helmet_id is free
+    { sql: `UPDATE characters SET helmet_id = boots_id, boots_id = NULL
+            WHERE boots_id IS NOT NULL AND helmet_id IS NULL
+              AND boots_id IN (SELECT id FROM items WHERE armor_slot = 'helmet')` },
+  ], 'write');
+
   // ── Seed monsters ───────────────────────────────────────────────────────────
   // format per row: [dungeon_level, name, icon, hp, dmg, hit%, dodge%, def, xp, is_boss, drop_item_id, drop%]
   const monsterSql = `
