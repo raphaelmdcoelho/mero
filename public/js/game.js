@@ -7,7 +7,8 @@ const CLASS_ICONS = { Warrior: '⚔️', Mage: '🔮', Rogue: '🗡️', Cleric:
 
 // Item image map: item_id → base path (gender suffix + .png appended at runtime)
 const ITEM_IMAGES = {
-  3: '/items/leather_armor', // Leather Armor
+  3:  '/items/leather_armor', // Leather Armor
+  33: '/items/boot_leather',  // Leather Boots
 };
 
 function getItemImage(itemId, gender) {
@@ -978,7 +979,7 @@ function renderEquipment(char) {
                data-item-id="${item.item_id}"
                data-slot="${slot}"
                title="${escHtml(label)}"
-               onclick="eqInvSlotClick(${idx})">
+               onclick="eqInvSlotClick(${item.item_id}, '${slot}')">
       ${itemIconHtml(item.item_id, item.icon, tItemName(item), gender, 'inv-item-img')}
     </div>`;
   }).join('');
@@ -986,17 +987,13 @@ function renderEquipment(char) {
   _eqAttachDragListeners(char);
 }
 
-function eqInvSlotClick(idx) {
+function eqInvSlotClick(itemId, slot) {
   if (!charState) return;
-  const inv = (charState.inventory || []).filter(i => itemEquipSlot(i));
-  const item = inv[idx];
-  if (!item) return;
-  const slot = itemEquipSlot(item);
   const equippedBySlot = equippedSlotMap(charState);
-  if (equippedBySlot[slot] === item.item_id) {
+  if (equippedBySlot[slot] === itemId) {
     unequipItem(slot);
   } else {
-    equipItem(slot, item.item_id);
+    equipItem(slot, itemId);
   }
 }
 
