@@ -729,8 +729,8 @@ input:focus, select:focus {
 
 .equip-overlay-boots {
   top: 75%;
-  width: 55%;
-  height: 35%;
+  width: 80%;
+  height: 50%;
 }
 
 /* Status bar */
