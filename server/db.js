@@ -272,9 +272,9 @@ async function initDb() {
       sql:  'INSERT OR IGNORE INTO items (id, name, type, description, icon) VALUES (?, ?, ?, ?, ?)',
       args: [id, name, type, desc, icon],
     })),
-    ...itemData.map(([id, , , , , dmg, def, wt, as, sp, bp]) => ({
-      sql:  'UPDATE items SET damage = ?, defense = ?, weapon_type = ?, armor_slot = ?, sell_price = ?, buy_price = ? WHERE id = ?',
-      args: [dmg, def, wt, as, sp, bp, id],
+    ...itemData.map(([id, name, type, desc, icon, dmg, def, wt, as, sp, bp]) => ({
+      sql:  'UPDATE items SET name=?, type=?, description=?, icon=?, damage=?, defense=?, weapon_type=?, armor_slot=?, sell_price=?, buy_price=? WHERE id=?',
+      args: [name, type, desc, icon, dmg, def, wt, as, sp, bp, id],
     })),
     ...itemData.filter(([id]) => POTION_META[id]).map(([id]) => ({
       sql:  'UPDATE items SET item_subtype = ?, buff_effect = ? WHERE id = ?',
@@ -315,21 +315,6 @@ async function initDb() {
               AND boots_id IN (SELECT id FROM items WHERE armor_slot = 'helmet')` },
   ], 'write');
 
-  // Ensure armor_slot is set correctly for items that may have been seeded without it.
-  // Runs as individual statements (not batch) to guarantee execution in Turso.
-  await client.execute("UPDATE items SET armor_slot = 'arm'    WHERE id IN (31,32) AND (armor_slot IS NULL OR armor_slot != 'arm')");
-  await client.execute("UPDATE items SET armor_slot = 'boots'  WHERE id IN (33,34) AND (armor_slot IS NULL OR armor_slot != 'boots')");
-  await client.execute("UPDATE items SET armor_slot = 'helmet' WHERE id IN (35,36) AND (armor_slot IS NULL OR armor_slot != 'helmet')");
-
-  // Re-run character slot migration now that armor_slot values are guaranteed.
-  await client.batch([
-    { sql: `UPDATE characters SET boots_id = arm_id, arm_id = NULL
-            WHERE arm_id IS NOT NULL AND boots_id IS NULL
-              AND arm_id IN (SELECT id FROM items WHERE armor_slot = 'boots')` },
-    { sql: `UPDATE characters SET arm_id = boots_id, boots_id = NULL
-            WHERE boots_id IS NOT NULL AND arm_id IS NULL
-              AND boots_id IN (SELECT id FROM items WHERE armor_slot = 'arm')` },
-  ], 'write');
 
   // ── Seed monsters ───────────────────────────────────────────────────────────
   // format per row: [dungeon_level, name, icon, hp, dmg, hit%, dodge%, def, xp, is_boss, drop_item_id, drop%]
