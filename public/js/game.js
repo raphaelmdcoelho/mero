@@ -266,13 +266,15 @@ function renderAll(char) {
 // Shared avatar renderer — used by the game screen and the equipment modal
 function renderCharAvatar(containerEl, char) {
   if (!containerEl || !char) return;
-  const overlayImg = char.equippedArmor ? getItemImage(char.equippedArmor.id, char.gender) : null;
-  const overlay = overlayImg ? `<img class="equip-overlay" src="${escHtml(overlayImg)}" alt="" />` : '';
+  const armorImg = char.equippedArmor ? getItemImage(char.equippedArmor.id, char.gender) : null;
+  const bootsImg = char.equippedBoots ? getItemImage(char.equippedBoots.id, char.gender) : null;
+  const armorOverlay = armorImg ? `<img class="equip-overlay" src="${escHtml(armorImg)}" alt="" />` : '';
+  const bootsOverlay = bootsImg ? `<img class="equip-overlay equip-overlay-boots" src="${escHtml(bootsImg)}" alt="" />` : '';
   if (char.avatar_path) {
-    containerEl.innerHTML = `<img class="char-avatar-img" src="${escHtml(char.avatar_path)}" alt="Avatar" />${overlay}`;
+    containerEl.innerHTML = `<img class="char-avatar-img" src="${escHtml(char.avatar_path)}" alt="Avatar" />${armorOverlay}${bootsOverlay}`;
   } else {
     const icon = CLASS_ICONS[char.class] || '🧍';
-    containerEl.innerHTML = `<span class="char-avatar-icon">${icon}</span>${overlay}`;
+    containerEl.innerHTML = `<span class="char-avatar-icon">${icon}</span>${armorOverlay}${bootsOverlay}`;
   }
 }
 
