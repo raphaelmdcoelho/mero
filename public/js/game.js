@@ -848,6 +848,7 @@ function itemEquipSlot(item) {
   if (item.type !== 'armor') return null;
   const s = item.armor_slot;
   if (s === 'shield') return 'shield';
+  if (s === 'arm')    return 'arm';
   if (s === 'boots')  return 'boots';
   if (s === 'helmet') return 'helmet';
   return 'armor';
@@ -858,6 +859,7 @@ function equippedSlotMap(char) {
     weapon: char.weapon_id || null,
     armor:  char.armor_id  || null,
     shield: char.shield_id || null,
+    arm:    char.arm_id    || null,
     boots:  char.boots_id  || null,
     helmet: char.helmet_id || null,
   };
@@ -947,6 +949,7 @@ function renderEquipment(char) {
   _eqFillSlot('weapon', char.equippedWeapon, '🗡️');
   _eqFillSlot('armor',  char.equippedArmor,  '🥋');
   _eqFillSlot('shield', char.equippedShield, '🛡️');
+  _eqFillSlot('arm',    char.equippedArm,    '🥊');
   _eqFillSlot('boots',  char.equippedBoots,  '👢');
   _eqFillSlot('helmet', char.equippedHelmet, '🪖');
 
@@ -1000,7 +1003,7 @@ let _touchGhost = null;
 
 function _eqAttachDragListeners(char) {
   const inv = (char.inventory || []).filter(i => itemEquipSlot(i));
-  const slots = ['weapon', 'armor', 'shield', 'boots', 'helmet'];
+  const slots = ['weapon', 'armor', 'shield', 'arm', 'boots', 'helmet'];
 
   // Draggable inventory cells
   document.querySelectorAll('#eq-inv-grid .eq-inv-slot').forEach((el, idx) => {
@@ -1070,7 +1073,7 @@ function _eqAttachDragListeners(char) {
 }
 
 function _eqClearDropHighlights() {
-  ['weapon', 'armor', 'shield', 'boots', 'helmet'].forEach(s => {
+  ['weapon', 'armor', 'shield', 'arm', 'boots', 'helmet'].forEach(s => {
     const el = document.getElementById(`eq-slot-${s}`);
     if (el) el.classList.remove('drop-target-valid', 'drop-target-invalid');
   });
