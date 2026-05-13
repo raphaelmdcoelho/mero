@@ -310,14 +310,15 @@ async function completeDungeonRun(char, run, forced) {
               unspent_points = ?, ${masteryCol} = ?,
               stamina = ?, max_stamina = ?,
               gold = gold + ?,
-              activity = NULL, activity_started_at = NULL, last_tick_at = ?
+              activity = NULL, activity_started_at = NULL, last_tick_at = ?,
+              stamina_regen_at = ?
             WHERE id = ?`,
       args: [
         afterXp.xp, afterXp.xp_to_next, afterXp.level, afterXp.max_hp, afterXp.hp,
         afterXp.unspent_points, newMastery,
         newStamina, afterXp.max_stamina,
         gainedGold,
-        nowSec, char.id,
+        nowSec, nowSec, char.id,
       ],
     },
   ], 'write');
@@ -385,15 +386,25 @@ function applyTavernTick(char) {
   return { ...upd, stamina, max_stamina, last_tick_at: now };
 }
 
-// Compute stamina regen based on elapsed time since last tick
+// Compute stamina regen based on elapsed time since last regen point was awarded.
+// Uses stamina_regen_at (not last_tick_at) so the 10-min window survives frequent ticks.
 function applyStaminaRegen(char, nowSec) {
-  const lastTick    = Number(char.last_tick_at) || nowSec;
-  const elapsed     = Math.max(0, nowSec - lastTick);
-  const attrStamina = Number(char.attr_stamina) || 5;
-  const maxSt       = calcMaxStamina(Number(char.level) || 1, attrStamina);
-  const regenPoints = Math.floor(elapsed / STAMINA_REGEN_INTERVAL);
-  const newStamina  = Math.min(maxSt, (Number(char.stamina) || 0) + regenPoints);
-  return { stamina: newStamina, max_stamina: maxSt };
+  const attrStamina   = Number(char.attr_stamina) || 5;
+  const maxSt         = calcMaxStamina(Number(char.level) || 1, attrStamina);
+  const currentStamina = Number(char.stamina) || 0;
+  // Fall back to nowSec (start countdown from this tick) if column not yet populated
+  const regenAt       = Number(char.stamina_regen_at) || nowSec;
+  const elapsed       = Math.max(0, nowSec - regenAt);
+  const regenPoints   = Math.floor(elapsed / STAMINA_REGEN_INTERVAL);
+
+  if (regenPoints === 0 || currentStamina >= maxSt) {
+    return { stamina: currentStamina, max_stamina: maxSt, stamina_regen_at: regenAt };
+  }
+
+  const newStamina  = Math.min(maxSt, currentStamina + regenPoints);
+  // Advance the reference by the exact intervals consumed; don't lose partial progress
+  const newRegenAt  = regenAt + regenPoints * STAMINA_REGEN_INTERVAL;
+  return { stamina: newStamina, max_stamina: maxSt, stamina_regen_at: newRegenAt };
 }
 
 // POST /api/game/:characterId/start  (tavern or farm)
@@ -447,16 +458,18 @@ router.post('/:characterId/stop', async (req, res) => {
   const char = await ownedChar(req, res);
   if (!char) return;
 
+  const stopNow = Math.floor(Date.now() / 1000);
   if (char.activity === 'tavern') {
     const upd = applyTavernTick(char);
     await client.execute({
       sql:  `UPDATE characters SET xp = ?, xp_to_next = ?, level = ?, max_hp = ?, hp = ?,
              unspent_points = ?, stamina = ?, max_stamina = ?,
              activity = NULL, activity_started_at = NULL,
-             reading_points_awarded = 0, rest_type = NULL, last_tick_at = ? WHERE id = ?`,
+             reading_points_awarded = 0, rest_type = NULL, last_tick_at = ?,
+             stamina_regen_at = ? WHERE id = ?`,
       args: [upd.xp, upd.xp_to_next, upd.level, upd.max_hp, upd.hp,
              upd.unspent_points, upd.stamina, upd.max_stamina,
-             upd.last_tick_at, char.id],
+             upd.last_tick_at, stopNow, char.id],
     });
   } else if (char.activity === 'reading') {
     const upd = applyReadingTick(char);
@@ -466,16 +479,17 @@ router.post('/:characterId/stop', async (req, res) => {
       sql:  `UPDATE characters SET xp = ?, xp_to_next = ?, level = ?, max_hp = ?, hp = ?,
              unspent_points = ?, stamina = ?, max_stamina = ?,
              activity = NULL, activity_started_at = NULL,
-             reading_points_awarded = 0, last_tick_at = ? WHERE id = ?`,
+             reading_points_awarded = 0, last_tick_at = ?,
+             stamina_regen_at = ? WHERE id = ?`,
       args: [upd.xp, upd.xp_to_next, upd.level, upd.max_hp, upd.hp,
              upd.unspent_points, stAfterRead, upd.max_stamina,
-             upd.last_tick_at, char.id],
+             upd.last_tick_at, stopNow, char.id],
     });
   } else {
     await client.execute({
       sql:  `UPDATE characters SET activity = NULL, activity_started_at = NULL,
-             reading_points_awarded = 0, last_tick_at = ? WHERE id = ?`,
-      args: [Math.floor(Date.now() / 1000), char.id],
+             reading_points_awarded = 0, last_tick_at = ?, stamina_regen_at = ? WHERE id = ?`,
+      args: [stopNow, stopNow, char.id],
     });
   }
 
@@ -523,19 +537,21 @@ router.get('/:characterId/tick', async (req, res) => {
     return res.json({ ...await fullChar(char.id), readingFinished: upd.readingFinished });
   } else if (char.activity === 'farm') {
     await client.execute({
-      sql:  'UPDATE characters SET last_tick_at = ?, stamina = ?, max_stamina = ? WHERE id = ?',
+      sql:  'UPDATE characters SET last_tick_at = ?, stamina = ?, max_stamina = ?, stamina_regen_at = ? WHERE id = ?',
       args: [now,
-             stRegen ? stRegen.stamina : char.stamina,
+             stRegen ? stRegen.stamina     : char.stamina,
              stRegen ? stRegen.max_stamina : char.max_stamina,
+             stRegen ? stRegen.stamina_regen_at : (Number(char.stamina_regen_at) || now),
              char.id],
     });
   } else {
     // Idle or dungeon — update stamina and timestamp
     await client.execute({
-      sql:  'UPDATE characters SET last_tick_at = ?, stamina = ?, max_stamina = ? WHERE id = ?',
+      sql:  'UPDATE characters SET last_tick_at = ?, stamina = ?, max_stamina = ?, stamina_regen_at = ? WHERE id = ?',
       args: [now,
-             stRegen ? stRegen.stamina : char.stamina,
+             stRegen ? stRegen.stamina     : char.stamina,
              stRegen ? stRegen.max_stamina : char.max_stamina,
+             stRegen ? stRegen.stamina_regen_at : (Number(char.stamina_regen_at) || now),
              char.id],
     });
   }
@@ -810,8 +826,8 @@ router.post('/:characterId/dungeon/stop', async (req, res) => {
   await client.batch([
     { sql: 'DELETE FROM dungeon_run WHERE character_id = ?', args: [char.id] },
     {
-      sql: `UPDATE characters SET activity = NULL, activity_started_at = NULL, last_tick_at = ? WHERE id = ?`,
-      args: [nowSec, char.id],
+      sql: `UPDATE characters SET activity = NULL, activity_started_at = NULL, last_tick_at = ?, stamina_regen_at = ? WHERE id = ?`,
+      args: [nowSec, nowSec, char.id],
     },
   ], 'write');
 
