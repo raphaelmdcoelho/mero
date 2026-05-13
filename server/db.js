@@ -272,9 +272,9 @@ async function initDb() {
       sql:  'INSERT OR IGNORE INTO items (id, name, type, description, icon) VALUES (?, ?, ?, ?, ?)',
       args: [id, name, type, desc, icon],
     })),
-    ...itemData.map(([id, , , , , dmg, def, wt, as, sp, bp]) => ({
-      sql:  'UPDATE items SET damage = ?, defense = ?, weapon_type = ?, armor_slot = ?, sell_price = ?, buy_price = ? WHERE id = ?',
-      args: [dmg, def, wt, as, sp, bp, id],
+    ...itemData.map(([id, name, type, desc, icon, dmg, def, wt, as, sp, bp]) => ({
+      sql:  'UPDATE items SET name=?, type=?, description=?, icon=?, damage=?, defense=?, weapon_type=?, armor_slot=?, sell_price=?, buy_price=? WHERE id=?',
+      args: [name, type, desc, icon, dmg, def, wt, as, sp, bp, id],
     })),
     ...itemData.filter(([id]) => POTION_META[id]).map(([id]) => ({
       sql:  'UPDATE items SET item_subtype = ?, buff_effect = ? WHERE id = ?',
@@ -293,6 +293,28 @@ async function initDb() {
         WHERE type = 'armor' AND COALESCE(armor_slot, 'body') = 'shield'
       )
   `);
+
+  // Safety migration: move items that landed in the wrong equipment column
+  // (caused by a client-side index bug that could send the wrong slot to the server).
+  await client.batch([
+    // boots item in arm_id → move to boots_id if boots_id is free
+    { sql: `UPDATE characters SET boots_id = arm_id, arm_id = NULL
+            WHERE arm_id IS NOT NULL AND boots_id IS NULL
+              AND arm_id IN (SELECT id FROM items WHERE armor_slot = 'boots')` },
+    // arm item in boots_id → move to arm_id if arm_id is free
+    { sql: `UPDATE characters SET arm_id = boots_id, boots_id = NULL
+            WHERE boots_id IS NOT NULL AND arm_id IS NULL
+              AND boots_id IN (SELECT id FROM items WHERE armor_slot = 'arm')` },
+    // boots item in helmet_id → move to boots_id if boots_id is free
+    { sql: `UPDATE characters SET boots_id = helmet_id, helmet_id = NULL
+            WHERE helmet_id IS NOT NULL AND boots_id IS NULL
+              AND helmet_id IN (SELECT id FROM items WHERE armor_slot = 'boots')` },
+    // helmet item in boots_id → move to helmet_id if helmet_id is free
+    { sql: `UPDATE characters SET helmet_id = boots_id, boots_id = NULL
+            WHERE boots_id IS NOT NULL AND helmet_id IS NULL
+              AND boots_id IN (SELECT id FROM items WHERE armor_slot = 'helmet')` },
+  ], 'write');
+
 
   // ── Seed monsters ───────────────────────────────────────────────────────────
   // format per row: [dungeon_level, name, icon, hp, dmg, hit%, dodge%, def, xp, is_boss, drop_item_id, drop%]

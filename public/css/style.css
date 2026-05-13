@@ -727,6 +727,12 @@ input:focus, select:focus {
   pointer-events: none;
 }
 
+.equip-overlay-boots {
+  top: 74%;
+  width: 73%;
+  height: 48%;
+}
+
 /* Status bar */
 .status-bar {
   background: var(--surface);

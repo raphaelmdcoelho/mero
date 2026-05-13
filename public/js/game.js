@@ -9,6 +9,7 @@ const CLASS_ICONS = { Warrior: '⚔️', Mage: '🔮', Rogue: '🗡️', Cleric:
 const ITEM_IMAGES = {
   3:  '/items/leather_armor', // Leather Armor
   15: '/items/hunter_armor',  // Hunter Armor
+  33: '/items/boot_leather',  // Leather Boots
 };
 
 const ITEM_IMAGES_STATIC = {
@@ -280,18 +281,20 @@ function renderAll(char) {
 // Shared avatar renderer — used by the game screen and the equipment modal
 function renderCharAvatar(containerEl, char) {
   if (!containerEl || !char) return;
-  const overlayImg = char.equippedArmor ? getItemImage(char.equippedArmor.id, char.gender) : null;
-  let overlay = '';
-  if (overlayImg) {
+  const armorImg = char.equippedArmor ? getItemImage(char.equippedArmor.id, char.gender) : null;
+  const bootsImg = char.equippedBoots ? getItemImage(char.equippedBoots.id, char.gender) : null;
+  let armorOverlay = '';
+  if (armorImg) {
     const size = ITEM_OVERLAY_SIZE[Number(char.equippedArmor.id)];
     const style = size ? ` style="width:${size};height:${size}"` : '';
-    overlay = `<img class="equip-overlay"${style} src="${escHtml(overlayImg)}" alt="" />`;
+    armorOverlay = `<img class="equip-overlay"${style} src="${escHtml(armorImg)}" alt="" />`;
   }
+  const bootsOverlay = bootsImg ? `<img class="equip-overlay equip-overlay-boots" src="${escHtml(bootsImg)}" alt="" />` : '';
   if (char.avatar_path) {
-    containerEl.innerHTML = `<img class="char-avatar-img" src="${escHtml(char.avatar_path)}" alt="Avatar" />${overlay}`;
+    containerEl.innerHTML = `<img class="char-avatar-img" src="${escHtml(char.avatar_path)}" alt="Avatar" />${armorOverlay}${bootsOverlay}`;
   } else {
     const icon = CLASS_ICONS[char.class] || '🧍';
-    containerEl.innerHTML = `<span class="char-avatar-icon">${icon}</span>${overlay}`;
+    containerEl.innerHTML = `<span class="char-avatar-icon">${icon}</span>${armorOverlay}${bootsOverlay}`;
   }
 }
 
@@ -995,7 +998,7 @@ function renderEquipment(char) {
                data-item-id="${item.item_id}"
                data-slot="${slot}"
                title="${escHtml(label)}"
-               onclick="eqInvSlotClick(${idx})">
+               onclick="eqInvSlotClick(${item.item_id}, '${slot}')">
       ${itemIconHtml(item.item_id, item.icon, tItemName(item), gender, 'inv-item-img')}
     </div>`;
   }).join('');
@@ -1003,17 +1006,13 @@ function renderEquipment(char) {
   _eqAttachDragListeners(char);
 }
 
-function eqInvSlotClick(idx) {
+function eqInvSlotClick(itemId, slot) {
   if (!charState) return;
-  const inv = (charState.inventory || []).filter(i => itemEquipSlot(i));
-  const item = inv[idx];
-  if (!item) return;
-  const slot = itemEquipSlot(item);
   const equippedBySlot = equippedSlotMap(charState);
-  if (equippedBySlot[slot] === item.item_id) {
+  if (equippedBySlot[slot] === itemId) {
     unequipItem(slot);
   } else {
-    equipItem(slot, item.item_id);
+    equipItem(slot, itemId);
   }
 }
 

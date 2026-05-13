@@ -26,7 +26,7 @@ async function fullChar(charId) {
   const farmQueue = farmR.rows.map(r => Object.assign({}, r));
   const runRow    = runR.rows[0] ?? null;
 
-  const [weapR, armR, shieldR, monR] = await Promise.all([
+  const [weapR, armR, shieldR, armGlovesR, bootsR, helmetR, monR] = await Promise.all([
     char.weapon_id
       ? client.execute({ sql: 'SELECT * FROM items WHERE id = ?', args: [char.weapon_id] })
       : Promise.resolve({ rows: [null] }),
@@ -36,14 +36,26 @@ async function fullChar(charId) {
     char.shield_id
       ? client.execute({ sql: 'SELECT * FROM items WHERE id = ?', args: [char.shield_id] })
       : Promise.resolve({ rows: [null] }),
+    char.arm_id
+      ? client.execute({ sql: 'SELECT * FROM items WHERE id = ?', args: [char.arm_id] })
+      : Promise.resolve({ rows: [null] }),
+    char.boots_id
+      ? client.execute({ sql: 'SELECT * FROM items WHERE id = ?', args: [char.boots_id] })
+      : Promise.resolve({ rows: [null] }),
+    char.helmet_id
+      ? client.execute({ sql: 'SELECT * FROM items WHERE id = ?', args: [char.helmet_id] })
+      : Promise.resolve({ rows: [null] }),
     runRow?.monster_id
       ? client.execute({ sql: 'SELECT * FROM monsters WHERE id = ?', args: [runRow.monster_id] })
       : Promise.resolve({ rows: [null] }),
   ]);
 
-  const equippedWeapon = weapR.rows[0] ? Object.assign({}, weapR.rows[0]) : null;
-  const equippedArmor  = armR.rows[0]  ? Object.assign({}, armR.rows[0])  : null;
-  const equippedShield = shieldR.rows[0] ? Object.assign({}, shieldR.rows[0]) : null;
+  const equippedWeapon = weapR.rows[0]      ? Object.assign({}, weapR.rows[0])      : null;
+  const equippedArmor  = armR.rows[0]       ? Object.assign({}, armR.rows[0])       : null;
+  const equippedShield = shieldR.rows[0]    ? Object.assign({}, shieldR.rows[0])    : null;
+  const equippedArm    = armGlovesR.rows[0] ? Object.assign({}, armGlovesR.rows[0]) : null;
+  const equippedBoots  = bootsR.rows[0]     ? Object.assign({}, bootsR.rows[0])     : null;
+  const equippedHelmet = helmetR.rows[0]    ? Object.assign({}, helmetR.rows[0])    : null;
 
   let dungeonRun = null;
   if (runRow) {
@@ -55,7 +67,7 @@ async function fullChar(charId) {
   const farmXp      = Number(char.farm_xp)    || 0;
   const farmXpToNext = farmLevel * 5;
 
-  return { ...char, inventory, equippedWeapon, equippedArmor, equippedShield, farmQueue, dungeonRun, farmLevel, farmXp, farmXpToNext };
+  return { ...char, inventory, equippedWeapon, equippedArmor, equippedShield, equippedArm, equippedBoots, equippedHelmet, farmQueue, dungeonRun, farmLevel, farmXp, farmXpToNext };
 }
 
 module.exports = { fullChar };
