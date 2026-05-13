@@ -8,6 +8,8 @@ const CLASS_ICONS = { Warrior: '⚔️', Mage: '🔮', Rogue: '🗡️', Cleric:
 // Item image map: item_id → base path (gender suffix + .png appended at runtime)
 const ITEM_IMAGES = {
   3:  '/items/leather_armor', // Leather Armor
+  4:  '/items/iron_shield',   // Iron Shield
+  12: '/items/oak_shield',    // Oak Shield
   33: '/items/boot_leather',  // Leather Boots
 };
 
@@ -267,15 +269,17 @@ function renderAll(char) {
 // Shared avatar renderer — used by the game screen and the equipment modal
 function renderCharAvatar(containerEl, char) {
   if (!containerEl || !char) return;
-  const armorImg = char.equippedArmor ? getItemImage(char.equippedArmor.id, char.gender) : null;
-  const bootsImg = char.equippedBoots ? getItemImage(char.equippedBoots.id, char.gender) : null;
-  const armorOverlay = armorImg ? `<img class="equip-overlay" src="${escHtml(armorImg)}" alt="" />` : '';
-  const bootsOverlay = bootsImg ? `<img class="equip-overlay equip-overlay-boots" src="${escHtml(bootsImg)}" alt="" />` : '';
+  const armorImg  = char.equippedArmor  ? getItemImage(char.equippedArmor.id,  char.gender) : null;
+  const shieldImg = char.equippedShield ? getItemImage(char.equippedShield.id, char.gender) : null;
+  const bootsImg  = char.equippedBoots  ? getItemImage(char.equippedBoots.id,  char.gender) : null;
+  const armorOverlay  = armorImg  ? `<img class="equip-overlay" src="${escHtml(armorImg)}" alt="" />` : '';
+  const shieldOverlay = shieldImg ? `<img class="equip-overlay equip-overlay-shield" src="${escHtml(shieldImg)}" alt="" />` : '';
+  const bootsOverlay  = bootsImg  ? `<img class="equip-overlay equip-overlay-boots" src="${escHtml(bootsImg)}" alt="" />` : '';
   if (char.avatar_path) {
-    containerEl.innerHTML = `<img class="char-avatar-img" src="${escHtml(char.avatar_path)}" alt="Avatar" />${armorOverlay}${bootsOverlay}`;
+    containerEl.innerHTML = `<img class="char-avatar-img" src="${escHtml(char.avatar_path)}" alt="Avatar" />${armorOverlay}${shieldOverlay}${bootsOverlay}`;
   } else {
     const icon = CLASS_ICONS[char.class] || '🧍';
-    containerEl.innerHTML = `<span class="char-avatar-icon">${icon}</span>${armorOverlay}${bootsOverlay}`;
+    containerEl.innerHTML = `<span class="char-avatar-icon">${icon}</span>${armorOverlay}${shieldOverlay}${bootsOverlay}`;
   }
 }
 
