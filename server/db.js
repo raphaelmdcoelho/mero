@@ -228,7 +228,7 @@ async function initDb() {
     [12, 'Oak Shield',     'armor',      'A sturdy oak shield.',              '🪵',  0,  2, null,    'shield', 12,  24],
     [13, 'Steel Shield',   'armor',      'Balanced defense with steel ribs.', '🛡️', 0,  5, null,    'shield', 34,  68],
     [14, 'Knight Shield',  'armor',      'Towering protection for champions.','🛡️', 0,  8, null,    'shield', 60, 120],
-    [15, 'Hunter Jacket',  'armor',      'Flexible armor for quick skirmish.','🧥', 0,  3, null,    'body',   20,  40],
+    [15, 'Hunter Armor',   'armor',      'Flexible armor for quick skirmish.','🧥', 0,  3, null,    'body',   20,  40],
     [16, 'War Axe',        'weapon',     'A heavy axe built for crushing hits.','🪓',7, 0, 'melee',  null,    40,  80],
     [17, 'Longbow',        'weapon',     'High-tension bow with strong pull.', '🏹', 6,  0, 'ranged', null,   38,  75],
     [18, 'Guardian Armor', 'armor',      'Layered plates for elite guards.',  '🦾', 0,  8, null,    'body',   60, 120],
