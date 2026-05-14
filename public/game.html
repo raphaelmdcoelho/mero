@@ -494,6 +494,12 @@
       </div>
       <div id="market-buy-pane" style="display:none">
         <p class="panel-sub" data-i18n="game.mp.buy_desc">Browse the shop and purchase items.</p>
+        <div class="market-buy-tabs">
+          <button type="button" class="market-buy-tab active" id="market-buy-tab-food"    onclick="switchShopCategory('food')"    data-i18n="game.mp.cat_food">Food</button>
+          <button type="button" class="market-buy-tab"        id="market-buy-tab-potions" onclick="switchShopCategory('potions')" data-i18n="game.mp.cat_potions">Potions</button>
+          <button type="button" class="market-buy-tab"        id="market-buy-tab-armor"   onclick="switchShopCategory('armor')"   data-i18n="game.mp.cat_armor">Armor</button>
+          <button type="button" class="market-buy-tab"        id="market-buy-tab-others"  onclick="switchShopCategory('others')"  data-i18n="game.mp.cat_others">Others</button>
+        </div>
         <div id="market-shop-list"></div>
       </div>
     </div>

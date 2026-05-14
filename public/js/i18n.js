@@ -257,6 +257,10 @@
       'game.mp.tab_buy':         'Buy',
       'game.mp.sell_desc':       'Sell items for gold. Equipped items cannot be sold.',
       'game.mp.buy_desc':        'Browse the shop and purchase items.',
+      'game.mp.cat_food':        'Food',
+      'game.mp.cat_potions':     'Potions',
+      'game.mp.cat_armor':       'Armor',
+      'game.mp.cat_others':      'Others',
 
       // Game JS — activity badge
       'game.js.level':              'Level {n}',
@@ -622,6 +626,10 @@
       'game.mp.tab_buy':         'Comprar',
       'game.mp.sell_desc':       'Venda itens por ouro. Itens equipados não podem ser vendidos.',
       'game.mp.buy_desc':        'Explore a loja e compre itens.',
+      'game.mp.cat_food':        'Comida',
+      'game.mp.cat_potions':     'Poções',
+      'game.mp.cat_armor':       'Armadura',
+      'game.mp.cat_others':      'Outros',
 
       // Game JS — activity badge
       'game.js.level':              'Nível {n}',

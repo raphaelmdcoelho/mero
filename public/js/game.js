@@ -1802,6 +1802,7 @@ function showFarmHarvestModal(harvested) {
 
 // ---- Market ----
 let marketTab = 'sell';
+let shopCategory = 'food';
 
 function switchMarketTab(tab) {
   marketTab = tab;
@@ -1810,6 +1811,22 @@ function switchMarketTab(tab) {
   document.getElementById('market-sell-pane').style.display = tab === 'sell' ? '' : 'none';
   document.getElementById('market-buy-pane').style.display  = tab === 'buy'  ? '' : 'none';
   if (tab === 'buy') renderShopPane();
+}
+
+function switchShopCategory(cat) {
+  shopCategory = cat;
+  ['food', 'potions', 'armor', 'others'].forEach(c => {
+    document.getElementById(`market-buy-tab-${c}`).classList.toggle('active', c === cat);
+  });
+  renderShopPane();
+}
+
+function itemMatchesCategory(item, cat) {
+  const isPotion = item.item_subtype === 'adventure_potion';
+  if (cat === 'potions') return isPotion;
+  if (cat === 'food')    return item.type === 'consumable' && !isPotion;
+  if (cat === 'armor')   return item.type === 'armor';
+  return item.type !== 'consumable' && item.type !== 'armor';
 }
 
 // ---- Global market tooltip (escapes opacity stacking context of cant-afford cells) ----
@@ -1891,7 +1908,8 @@ async function renderShopPane() {
   const data = await res.json();
   if (!res.ok) { shopList.innerHTML = `<p class="muted-sm">${data.error}</p>`; return; }
 
-  const items = data.items || [];
+  const allItems = data.items || [];
+  const items = allItems.filter(i => itemMatchesCategory(i, shopCategory));
   if (!items.length) {
     shopList.innerHTML = `<p class="muted-sm">${t('game.js.shop_empty')}</p>`;
     return;

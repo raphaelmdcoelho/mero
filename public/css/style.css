@@ -1319,6 +1319,30 @@ input:focus, select:focus {
   color: #fff;
 }
 
+.market-buy-tabs {
+  display: flex;
+  gap: 0.25rem;
+  margin-bottom: 0.6rem;
+}
+.market-buy-tab {
+  flex: 1;
+  padding: 0.25rem 0;
+  font-size: 0.72rem;
+  font-family: 'Cinzel', serif;
+  font-weight: 600;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  color: var(--muted);
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+.market-buy-tab.active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+
 .market-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(52px, 1fr));
