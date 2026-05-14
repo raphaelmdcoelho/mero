@@ -290,10 +290,12 @@ function renderCharAvatar(containerEl, char) {
   if (armorImg) {
     const size = ITEM_OVERLAY_SIZE[Number(char.equippedArmor.id)];
     const style = size ? ` style="width:${size};height:${size}"` : '';
-    armorOverlay = `<img class="equip-overlay"${style} src="${escHtml(armorImg)}" alt="" />`;
+    const armorGenderClass = char.gender === 'female' ? ' equip-overlay-armor--female' : '';
+    armorOverlay = `<img class="equip-overlay${armorGenderClass}"${style} src="${escHtml(armorImg)}" alt="" />`;
   }
   const shieldOverlay = shieldImg ? `<img class="equip-overlay equip-overlay-shield" src="${escHtml(shieldImg)}" alt="" />` : '';
-  const bootsOverlay  = bootsImg  ? `<img class="equip-overlay equip-overlay-boots" src="${escHtml(bootsImg)}" alt="" />` : '';
+  const bootsGenderClass = char.gender === 'female' ? ' equip-overlay-boots--female' : '';
+  const bootsOverlay  = bootsImg  ? `<img class="equip-overlay equip-overlay-boots${bootsGenderClass}" src="${escHtml(bootsImg)}" alt="" />` : '';
   if (char.avatar_path) {
     containerEl.innerHTML = `<img class="char-avatar-img" src="${escHtml(char.avatar_path)}" alt="Avatar" />${armorOverlay}${shieldOverlay}${bootsOverlay}`;
   } else {
@@ -311,8 +313,9 @@ function updateActionSquares(activity, isFarming = false) {
   const attrs   = document.getElementById('sq-attributes');
   const stats   = document.getElementById('sq-stats');
   const read    = document.getElementById('sq-read');
+  const fishing = document.getElementById('sq-fishing');
 
-  const resetEls = [dungeon, farm, tavern, inv, eq, attrs, stats, read].filter(Boolean);
+  const resetEls = [dungeon, farm, tavern, inv, eq, attrs, stats, read, fishing].filter(Boolean);
   resetEls.forEach(el => el.classList.remove('active', 'disabled'));
 
   document.getElementById('dungeon-label').textContent = t('game.js.dungeon_lbl');
@@ -324,16 +327,20 @@ function updateActionSquares(activity, isFarming = false) {
     dungeon.classList.add('disabled');
     tavern.classList.add('disabled');
     if (read) read.classList.add('disabled');
+    if (fishing) fishing.classList.add('disabled');
   } else if (activity === 'dungeon') {
     dungeon.classList.add('active');
     tavern.classList.add('disabled');
+    farm.classList.add('disabled');
     if (read) read.classList.add('disabled');
+    if (fishing) fishing.classList.add('disabled');
   } else if (activity === 'tavern') {
     tavern.classList.add('active');
     document.getElementById('tavern-label').textContent = t('game.js.stop_lbl');
     dungeon.classList.add('disabled');
     farm.classList.add('disabled');
     if (read) read.classList.add('disabled');
+    if (fishing) fishing.classList.add('disabled');
   } else if (activity === 'reading') {
     if (read) {
       read.classList.add('active');
@@ -342,6 +349,7 @@ function updateActionSquares(activity, isFarming = false) {
     dungeon.classList.add('disabled');
     tavern.classList.add('disabled');
     farm.classList.add('disabled');
+    if (fishing) fishing.classList.add('disabled');
   }
 
   const pickaxe = document.getElementById('pickaxe-wrap');

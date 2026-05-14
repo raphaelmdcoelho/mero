@@ -727,9 +727,20 @@ input:focus, select:focus {
   pointer-events: none;
 }
 
+.equip-overlay-armor--female {
+  top: 44%;
+}
+
 .equip-overlay-boots {
   top: 75%;
   left: 49.5%;
+  width: 73%;
+  height: 49%;
+}
+
+.equip-overlay-boots--female {
+  top: 83%;
+  left: 49%;
   width: 73%;
   height: 49%;
 }
@@ -1929,14 +1940,12 @@ input:focus, select:focus {
 
 .fishing-slider {
   position: absolute;
-  width: 36px;
-  height: 36px;
+  width: 56px;
+  height: 56px;
   top: 50%;
   transform: translateY(-50%);
   left: 0;
-  border-radius: 50%;
-  background: var(--accent);
-  box-shadow: 0 0 8px rgba(192, 132, 252, 0.55);
+  object-fit: contain;
   pointer-events: none;
 }
 
@@ -1944,8 +1953,8 @@ input:focus, select:focus {
   background: var(--surface);
   border: 2px solid var(--border);
   border-radius: 50%;
-  width: 52px;
-  height: 52px;
+  width: 72px;
+  height: 72px;
   font-size: 1.5rem;
   cursor: pointer;
   display: flex;
@@ -1955,6 +1964,7 @@ input:focus, select:focus {
   transition: border-color 0.15s, box-shadow 0.15s;
   line-height: 1;
 }
+.fishing-hook-btn img { width: 52px; height: 52px; object-fit: contain; }
 .fishing-hook-btn:hover { border-color: var(--accent); }
 .fishing-hook-btn.in-zone {
   border-color: #4ade80;
