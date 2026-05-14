@@ -7,14 +7,32 @@ const CLASS_ICONS = { Warrior: '⚔️', Mage: '🔮', Rogue: '🗡️', Cleric:
 
 // Item image map: item_id → base path (gender suffix + .png appended at runtime)
 const ITEM_IMAGES = {
-  3: '/items/leather_armor', // Leather Armor
+  3:  '/items/leather_armor', // Leather Armor
+  4:  '/items/iron_shield',   // Iron Shield
+  12: '/items/oak_shield',    // Oak Shield
+  15: '/items/hunter_armor',  // Hunter Armor
+  33: '/items/boot_leather',  // Leather Boots
+};
+
+const ITEM_IMAGES_STATIC = {
+  6:  '/img/carrot_icon.png', // Carrot
+  7:  '/img/apple_icon.png',  // Apple
+  29: '/img/onion_icon.png',  // Onion
+  30: '/img/corn.png',        // Corn
 };
 
 function getItemImage(itemId, gender) {
-  const base = ITEM_IMAGES[Number(itemId)];
+  const id = Number(itemId);
+  if (ITEM_IMAGES_STATIC[id]) return ITEM_IMAGES_STATIC[id];
+  const base = ITEM_IMAGES[id];
   if (!base) return null;
   return `${base}_${gender || 'male'}.png`;
 }
+
+// Per-item overlay size overrides (percentage of avatar container)
+const ITEM_OVERLAY_SIZE = {
+  15: '50%', // Hunter Armor — slightly smaller on avatar
+};
 
 function itemIconHtml(itemId, itemIcon, itemName, gender, imgClass) {
   const img = getItemImage(itemId, gender);
@@ -266,13 +284,24 @@ function renderAll(char) {
 // Shared avatar renderer — used by the game screen and the equipment modal
 function renderCharAvatar(containerEl, char) {
   if (!containerEl || !char) return;
-  const overlayImg = char.equippedArmor ? getItemImage(char.equippedArmor.id, char.gender) : null;
-  const overlay = overlayImg ? `<img class="equip-overlay" src="${escHtml(overlayImg)}" alt="" />` : '';
+  const armorImg  = char.equippedArmor  ? getItemImage(char.equippedArmor.id,  char.gender) : null;
+  const shieldImg = char.equippedShield ? getItemImage(char.equippedShield.id, char.gender) : null;
+  const bootsImg  = char.equippedBoots  ? getItemImage(char.equippedBoots.id,  char.gender) : null;
+  let armorOverlay = '';
+  if (armorImg) {
+    const size = ITEM_OVERLAY_SIZE[Number(char.equippedArmor.id)];
+    const style = size ? ` style="width:${size};height:${size}"` : '';
+    const armorGenderClass = char.gender === 'female' ? ' equip-overlay-armor--female' : '';
+    armorOverlay = `<img class="equip-overlay${armorGenderClass}"${style} src="${escHtml(armorImg)}" alt="" />`;
+  }
+  const shieldOverlay = shieldImg ? `<img class="equip-overlay equip-overlay-shield" src="${escHtml(shieldImg)}" alt="" />` : '';
+  const bootsGenderClass = char.gender === 'female' ? ' equip-overlay-boots--female' : '';
+  const bootsOverlay  = bootsImg  ? `<img class="equip-overlay equip-overlay-boots${bootsGenderClass}" src="${escHtml(bootsImg)}" alt="" />` : '';
   if (char.avatar_path) {
-    containerEl.innerHTML = `<img class="char-avatar-img" src="${escHtml(char.avatar_path)}" alt="Avatar" />${overlay}`;
+    containerEl.innerHTML = `<img class="char-avatar-img" src="${escHtml(char.avatar_path)}" alt="Avatar" />${armorOverlay}${shieldOverlay}${bootsOverlay}`;
   } else {
     const icon = CLASS_ICONS[char.class] || '🧍';
-    containerEl.innerHTML = `<span class="char-avatar-icon">${icon}</span>${overlay}`;
+    containerEl.innerHTML = `<span class="char-avatar-icon">${icon}</span>${armorOverlay}${shieldOverlay}${bootsOverlay}`;
   }
 }
 
@@ -285,8 +314,9 @@ function updateActionSquares(activity, isFarming = false) {
   const attrs   = document.getElementById('sq-attributes');
   const stats   = document.getElementById('sq-stats');
   const read    = document.getElementById('sq-read');
+  const fishing = document.getElementById('sq-fishing');
 
-  const resetEls = [dungeon, farm, tavern, inv, eq, attrs, stats, read].filter(Boolean);
+  const resetEls = [dungeon, farm, tavern, inv, eq, attrs, stats, read, fishing].filter(Boolean);
   resetEls.forEach(el => el.classList.remove('active', 'disabled'));
 
   document.getElementById('dungeon-label').textContent = t('game.js.dungeon_lbl');
@@ -298,16 +328,20 @@ function updateActionSquares(activity, isFarming = false) {
     dungeon.classList.add('disabled');
     tavern.classList.add('disabled');
     if (read) read.classList.add('disabled');
+    if (fishing) fishing.classList.add('disabled');
   } else if (activity === 'dungeon') {
     dungeon.classList.add('active');
     tavern.classList.add('disabled');
+    farm.classList.add('disabled');
     if (read) read.classList.add('disabled');
+    if (fishing) fishing.classList.add('disabled');
   } else if (activity === 'tavern') {
     tavern.classList.add('active');
     document.getElementById('tavern-label').textContent = t('game.js.stop_lbl');
     dungeon.classList.add('disabled');
     farm.classList.add('disabled');
     if (read) read.classList.add('disabled');
+    if (fishing) fishing.classList.add('disabled');
   } else if (activity === 'reading') {
     if (read) {
       read.classList.add('active');
@@ -316,6 +350,7 @@ function updateActionSquares(activity, isFarming = false) {
     dungeon.classList.add('disabled');
     tavern.classList.add('disabled');
     farm.classList.add('disabled');
+    if (fishing) fishing.classList.add('disabled');
   }
 
   const pickaxe = document.getElementById('pickaxe-wrap');
@@ -742,7 +777,7 @@ function showLootModal(data, forced) {
   } else {
     lootList.innerHTML = loot.map(item =>
       `<div class="loot-item-row">
-        <span class="loot-item-icon">${item.icon}</span>
+        <span class="loot-item-icon">${itemIconHtml(item.item_id, item.icon, tItemName(item), null, 'loot-item-icon-img')}</span>
         <span class="loot-item-name">${escHtml(tItemName(item))}</span>
         <span class="loot-item-qty">×${item.quantity}</span>
       </div>`
@@ -897,7 +932,7 @@ function showItemInfo(idx) {
   const statLine = item.damage ? `⚔️ ${item.damage} ${t('game.js.dmg_unit')}` : item.defense ? `🛡️ ${item.defense} ${t('game.js.def_unit')}` : '';
   tooltip.style.display = 'block';
   tooltip.innerHTML = `
-    <strong class="item-tt-name">${item.icon} ${escHtml(tItemName(item))}</strong>
+    <strong class="item-tt-name">${itemIconHtml(item.item_id || item.id, item.icon, '', charState?.gender, 'item-tt-icon-img')} ${escHtml(tItemName(item))}</strong>
     <span class="item-tt-type">${tItemType(item)}</span>
     <p class="item-tt-desc">${escHtml(tItemDesc(item))}${statLine ? ' ' + statLine : ''}</p>
     ${canEquip && !isEq
@@ -976,7 +1011,7 @@ function renderEquipment(char) {
                data-item-id="${item.item_id}"
                data-slot="${slot}"
                title="${escHtml(label)}"
-               onclick="eqInvSlotClick(${idx})">
+               onclick="eqInvSlotClick(${item.item_id}, '${slot}')">
       ${itemIconHtml(item.item_id, item.icon, tItemName(item), gender, 'inv-item-img')}
     </div>`;
   }).join('');
@@ -984,17 +1019,13 @@ function renderEquipment(char) {
   _eqAttachDragListeners(char);
 }
 
-function eqInvSlotClick(idx) {
+function eqInvSlotClick(itemId, slot) {
   if (!charState) return;
-  const inv = (charState.inventory || []).filter(i => itemEquipSlot(i));
-  const item = inv[idx];
-  if (!item) return;
-  const slot = itemEquipSlot(item);
   const equippedBySlot = equippedSlotMap(charState);
-  if (equippedBySlot[slot] === item.item_id) {
+  if (equippedBySlot[slot] === itemId) {
     unequipItem(slot);
   } else {
-    equipItem(slot, item.item_id);
+    equipItem(slot, itemId);
   }
 }
 
@@ -1318,6 +1349,7 @@ let fishAnimStart   = null;
 function handleFishing() {
   if (!charState) return;
   if (charState.activity) return;
+  if (charState.farmQueue?.length) return;
   openFishingModal();
 }
 
@@ -1478,9 +1510,9 @@ document.getElementById('fishing-modal').addEventListener('click', function(e) {
 });
 
 const FARM_PLANTS = [
-  { type: 'carrot', label: 'Carrot', img: '/img/carrot.png' },
-  { type: 'apple',  label: 'Apple',  img: '/img/apple.png'  },
-  { type: 'onion',  label: 'Onion',  img: '/img/onion.png'  },
+  { type: 'carrot', label: 'Carrot', img: '/img/carrot_icon.png' },
+  { type: 'apple',  label: 'Apple',  img: '/img/apple_icon.png'  },
+  { type: 'onion',  label: 'Onion',  img: '/img/onion_icon.png'  },
   { type: 'corn',   label: 'Corn',   img: '/img/corn.png'   },
 ];
 const FARM_MAX_SLOTS = 12;
@@ -1770,6 +1802,7 @@ function showFarmHarvestModal(harvested) {
 
 // ---- Market ----
 let marketTab = 'sell';
+let shopCategory = 'food';
 
 function switchMarketTab(tab) {
   marketTab = tab;
@@ -1778,6 +1811,22 @@ function switchMarketTab(tab) {
   document.getElementById('market-sell-pane').style.display = tab === 'sell' ? '' : 'none';
   document.getElementById('market-buy-pane').style.display  = tab === 'buy'  ? '' : 'none';
   if (tab === 'buy') renderShopPane();
+}
+
+function switchShopCategory(cat) {
+  shopCategory = cat;
+  ['food', 'potions', 'armor', 'others'].forEach(c => {
+    document.getElementById(`market-buy-tab-${c}`).classList.toggle('active', c === cat);
+  });
+  renderShopPane();
+}
+
+function itemMatchesCategory(item, cat) {
+  const isPotion = item.item_subtype === 'adventure_potion';
+  if (cat === 'potions') return isPotion;
+  if (cat === 'food')    return item.type === 'consumable' && !isPotion;
+  if (cat === 'armor')   return item.type === 'armor';
+  return item.type !== 'consumable' && item.type !== 'armor';
 }
 
 // ---- Global market tooltip (escapes opacity stacking context of cant-afford cells) ----
@@ -1859,7 +1908,8 @@ async function renderShopPane() {
   const data = await res.json();
   if (!res.ok) { shopList.innerHTML = `<p class="muted-sm">${data.error}</p>`; return; }
 
-  const items = data.items || [];
+  const allItems = data.items || [];
+  const items = allItems.filter(i => itemMatchesCategory(i, shopCategory));
   if (!items.length) {
     shopList.innerHTML = `<p class="muted-sm">${t('game.js.shop_empty')}</p>`;
     return;

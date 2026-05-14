@@ -237,22 +237,28 @@ router.put('/:id/equip', async (req, res) => {
   const parsedItemId = Number(item_id);
   if (!parsedItemId) return res.status(400).json({ error: 'item_id required' });
 
-  const ARMOR_SLOT_MAP = { armor: 'body', shield: 'shield', arm: 'arm', boots: 'boots', helmet: 'helmet' };
-  let invSql = '';
-  let invArgs = [];
+  // Verify item exists and matches the requested slot type.
+  const itemR = await client.execute({ sql: 'SELECT type, armor_slot FROM items WHERE id = ?', args: [parsedItemId] });
+  const item = itemR.rows[0] ?? null;
+  if (!item) return res.status(400).json({ error: 'Item not found' });
+
   if (slot === 'weapon') {
-    invSql = 'SELECT inv.id FROM inventory inv JOIN items i ON i.id = inv.item_id WHERE inv.character_id = ? AND inv.item_id = ? AND i.type = ?';
-    invArgs = [char.id, parsedItemId, 'weapon'];
+    if (item.type !== 'weapon') return res.status(400).json({ error: 'Wrong item type for slot' });
   } else {
-    const armorSlot = ARMOR_SLOT_MAP[slot];
-    invSql = `SELECT inv.id FROM inventory inv JOIN items i ON i.id = inv.item_id
-              WHERE inv.character_id = ? AND inv.item_id = ? AND i.type = 'armor' AND COALESCE(i.armor_slot, 'body') = ?`;
-    invArgs = [char.id, parsedItemId, armorSlot];
+    const ARMOR_SLOT_MAP = { armor: 'body', shield: 'shield', arm: 'arm', boots: 'boots', helmet: 'helmet' };
+    if (item.type !== 'armor') return res.status(400).json({ error: 'Wrong item type for slot' });
+    const expected = ARMOR_SLOT_MAP[slot];
+    const actual   = item.armor_slot || 'body';
+    if (actual !== expected) return res.status(400).json({ error: `This item belongs in the ${actual} slot` });
   }
 
-  const invR = await client.execute({ sql: invSql, args: invArgs });
+  // Verify the item is actually in the character's inventory.
+  const invR = await client.execute({
+    sql:  'SELECT id FROM inventory WHERE character_id = ? AND item_id = ?',
+    args: [char.id, parsedItemId],
+  });
   if (!invR.rows.length) {
-    return res.status(400).json({ error: 'Item not in inventory or wrong slot type' });
+    return res.status(400).json({ error: 'Item not in inventory' });
   }
 
   await client.execute({

@@ -163,7 +163,7 @@
       'item.name.12':            'Oak Shield',
       'item.name.13':            'Steel Shield',
       'item.name.14':            'Knight Shield',
-      'item.name.15':            'Hunter Jacket',
+      'item.name.15':            'Hunter Armor',
       'item.name.16':            'War Axe',
       'item.name.17':            'Longbow',
       'item.name.18':            'Guardian Armor',
@@ -257,6 +257,10 @@
       'game.mp.tab_buy':         'Buy',
       'game.mp.sell_desc':       'Sell items for gold. Equipped items cannot be sold.',
       'game.mp.buy_desc':        'Browse the shop and purchase items.',
+      'game.mp.cat_food':        'Food',
+      'game.mp.cat_potions':     'Potions',
+      'game.mp.cat_armor':       'Armor',
+      'game.mp.cat_others':      'Others',
 
       // Game JS — activity badge
       'game.js.level':              'Level {n}',
@@ -528,7 +532,7 @@
       'item.name.12':            'Escudo de Carvalho',
       'item.name.13':            'Escudo de Aço',
       'item.name.14':            'Escudo do Cavaleiro',
-      'item.name.15':            'Jaqueta de Caçador',
+      'item.name.15':            'Armadura do Caçador',
       'item.name.16':            'Machado de Guerra',
       'item.name.17':            'Arco Longo',
       'item.name.18':            'Armadura do Guardião',
@@ -622,6 +626,10 @@
       'game.mp.tab_buy':         'Comprar',
       'game.mp.sell_desc':       'Venda itens por ouro. Itens equipados não podem ser vendidos.',
       'game.mp.buy_desc':        'Explore a loja e compre itens.',
+      'game.mp.cat_food':        'Comida',
+      'game.mp.cat_potions':     'Poções',
+      'game.mp.cat_armor':       'Armadura',
+      'game.mp.cat_others':      'Outros',
 
       // Game JS — activity badge
       'game.js.level':              'Nível {n}',

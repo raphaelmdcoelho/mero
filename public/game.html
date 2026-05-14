@@ -6,7 +6,7 @@
   <title>Mero — Adventure</title>
   <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
   <script src="https://cdn.tailwindcss.com"></script>
-  <link rel="stylesheet" href="/css/style.css" />
+  <link rel="stylesheet" href="/css/style.css?v=5" />
 </head>
 <body>
 
@@ -300,9 +300,9 @@
         <div class="fishing-track-wrap">
           <div class="fishing-track" id="fish-track">
             <div class="fishing-green-zone"></div>
-            <div class="fishing-slider" id="fish-slider"></div>
+            <img class="fishing-slider" id="fish-slider" src="/img/fish_icon_1.png" alt="fish">
           </div>
-          <button type="button" class="fishing-hook-btn" id="fish-hook-btn" onclick="clickFishHook()">🪝</button>
+          <button type="button" class="fishing-hook-btn" id="fish-hook-btn" onclick="clickFishHook()"><img src="/img/bait.png" alt="hook"></button>
         </div>
         <p class="fishing-retry-hint" id="fish-retry-hint" style="display:none;">Missed! Try again…</p>
       </div>
@@ -494,6 +494,12 @@
       </div>
       <div id="market-buy-pane" style="display:none">
         <p class="panel-sub" data-i18n="game.mp.buy_desc">Browse the shop and purchase items.</p>
+        <div class="market-buy-tabs">
+          <button type="button" class="market-buy-tab active" id="market-buy-tab-food"    onclick="switchShopCategory('food')"    data-i18n="game.mp.cat_food">Food</button>
+          <button type="button" class="market-buy-tab"        id="market-buy-tab-potions" onclick="switchShopCategory('potions')" data-i18n="game.mp.cat_potions">Potions</button>
+          <button type="button" class="market-buy-tab"        id="market-buy-tab-armor"   onclick="switchShopCategory('armor')"   data-i18n="game.mp.cat_armor">Armor</button>
+          <button type="button" class="market-buy-tab"        id="market-buy-tab-others"  onclick="switchShopCategory('others')"  data-i18n="game.mp.cat_others">Others</button>
+        </div>
         <div id="market-shop-list"></div>
       </div>
     </div>
@@ -856,8 +862,8 @@
     <span class="version-badge">Alpha v0.1</span>
   </footer>
 
-  <script src="/js/i18n.js"></script>
-  <script src="/js/api.js"></script>
-  <script src="/js/game.js"></script>
+  <script src="/js/i18n.js?v=4"></script>
+  <script src="/js/api.js?v=4"></script>
+  <script src="/js/game.js?v=5"></script>
 </body>
 </html>

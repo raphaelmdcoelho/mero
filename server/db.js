@@ -155,7 +155,8 @@ async function initDb() {
     'ALTER TABLE characters ADD COLUMN arm_id    INTEGER REFERENCES items(id)',
     'ALTER TABLE characters ADD COLUMN boots_id  INTEGER REFERENCES items(id)',
     'ALTER TABLE characters ADD COLUMN helmet_id INTEGER REFERENCES items(id)',
-    "ALTER TABLE characters ADD COLUMN rest_type   TEXT    DEFAULT NULL",
+    "ALTER TABLE characters ADD COLUMN rest_type        TEXT    DEFAULT NULL",
+    'ALTER TABLE characters ADD COLUMN stamina_regen_at INTEGER DEFAULT NULL',
   ];
 
   for (const sql of additiveMigrations) {
@@ -217,7 +218,7 @@ async function initDb() {
     [1,  'Wooden Sword',   'weapon',     'A basic training sword.',           '🗡️',  2,  0, 'melee',  null,     5,  10],
     [2,  'Iron Sword',     'weapon',     'A sturdy iron blade.',              '⚔️',  4,  0, 'melee',  null,    15,  30],
     [3,  'Leather Armor',  'armor',      'Light but protective.',             '🥋',  0,  2, null,    'body',   10,  20],
-    [4,  'Iron Shield',    'armor',      'Heavy iron shield.',                '🛡️',  0,  3, null,    'shield', 20,  40],
+    [4,  'Iron Shield',    'armor',      'Heavy iron shield.',                '/items/iron_shield.png',  0,  3, null,    'shield', 20,  40],
     [5,  'Health Potion',  'consumable', 'Restores 5 HP.',                    '🧪',  0,  0, null,    null,      8,  15],
     [6,  'Carrot',         'consumable', 'Restores 2 HP.',                    '🥕',  0,  0, null,    null,      3,   5],
     [7,  'Apple',          'consumable', 'Restores 1 HP.',                    '🍎',  0,  0, null,    null,      2,   4],
@@ -225,10 +226,10 @@ async function initDb() {
     [9,  'Steel Sword',    'weapon',     'A finely forged steel blade.',      '🔪',  6,  0, 'melee',  null,    35,  70],
     [10, 'Chainmail',      'armor',      'Linked metal rings for armor.',     '🔗',  0,  4, null,    'body',   30,  60],
     [11, 'Plate Armor',    'armor',      'Heavy full-body plate armor.',      '🛡️',  0,  6, null,    'body',   50, 100],
-    [12, 'Oak Shield',     'armor',      'A sturdy oak shield.',              '🪵',  0,  2, null,    'shield', 12,  24],
+    [12, 'Oak Shield',     'armor',      'A sturdy oak shield.',              '/items/oak_shield.png',  0,  2, null,    'shield', 12,  24],
     [13, 'Steel Shield',   'armor',      'Balanced defense with steel ribs.', '🛡️', 0,  5, null,    'shield', 34,  68],
     [14, 'Knight Shield',  'armor',      'Towering protection for champions.','🛡️', 0,  8, null,    'shield', 60, 120],
-    [15, 'Hunter Jacket',  'armor',      'Flexible armor for quick skirmish.','🧥', 0,  3, null,    'body',   20,  40],
+    [15, 'Hunter Armor',   'armor',      'Flexible armor for quick skirmish.','🧥', 0,  3, null,    'body',   20,  40],
     [16, 'War Axe',        'weapon',     'A heavy axe built for crushing hits.','🪓',7, 0, 'melee',  null,    40,  80],
     [17, 'Longbow',        'weapon',     'High-tension bow with strong pull.', '🏹', 6,  0, 'ranged', null,   38,  75],
     [18, 'Guardian Armor', 'armor',      'Layered plates for elite guards.',  '🦾', 0,  8, null,    'body',   60, 120],
@@ -272,9 +273,9 @@ async function initDb() {
       sql:  'INSERT OR IGNORE INTO items (id, name, type, description, icon) VALUES (?, ?, ?, ?, ?)',
       args: [id, name, type, desc, icon],
     })),
-    ...itemData.map(([id, , , , , dmg, def, wt, as, sp, bp]) => ({
-      sql:  'UPDATE items SET damage = ?, defense = ?, weapon_type = ?, armor_slot = ?, sell_price = ?, buy_price = ? WHERE id = ?',
-      args: [dmg, def, wt, as, sp, bp, id],
+    ...itemData.map(([id, name, type, desc, icon, dmg, def, wt, as, sp, bp]) => ({
+      sql:  'UPDATE items SET name=?, type=?, description=?, icon=?, damage=?, defense=?, weapon_type=?, armor_slot=?, sell_price=?, buy_price=? WHERE id=?',
+      args: [name, type, desc, icon, dmg, def, wt, as, sp, bp, id],
     })),
     ...itemData.filter(([id]) => POTION_META[id]).map(([id]) => ({
       sql:  'UPDATE items SET item_subtype = ?, buff_effect = ? WHERE id = ?',
@@ -293,6 +294,28 @@ async function initDb() {
         WHERE type = 'armor' AND COALESCE(armor_slot, 'body') = 'shield'
       )
   `);
+
+  // Safety migration: move items that landed in the wrong equipment column
+  // (caused by a client-side index bug that could send the wrong slot to the server).
+  await client.batch([
+    // boots item in arm_id → move to boots_id if boots_id is free
+    { sql: `UPDATE characters SET boots_id = arm_id, arm_id = NULL
+            WHERE arm_id IS NOT NULL AND boots_id IS NULL
+              AND arm_id IN (SELECT id FROM items WHERE armor_slot = 'boots')` },
+    // arm item in boots_id → move to arm_id if arm_id is free
+    { sql: `UPDATE characters SET arm_id = boots_id, boots_id = NULL
+            WHERE boots_id IS NOT NULL AND arm_id IS NULL
+              AND boots_id IN (SELECT id FROM items WHERE armor_slot = 'arm')` },
+    // boots item in helmet_id → move to boots_id if boots_id is free
+    { sql: `UPDATE characters SET boots_id = helmet_id, helmet_id = NULL
+            WHERE helmet_id IS NOT NULL AND boots_id IS NULL
+              AND helmet_id IN (SELECT id FROM items WHERE armor_slot = 'boots')` },
+    // helmet item in boots_id → move to helmet_id if helmet_id is free
+    { sql: `UPDATE characters SET helmet_id = boots_id, boots_id = NULL
+            WHERE boots_id IS NOT NULL AND helmet_id IS NULL
+              AND boots_id IN (SELECT id FROM items WHERE armor_slot = 'helmet')` },
+  ], 'write');
+
 
   // ── Seed monsters ───────────────────────────────────────────────────────────
   // format per row: [dungeon_level, name, icon, hp, dmg, hit%, dodge%, def, xp, is_boss, drop_item_id, drop%]
