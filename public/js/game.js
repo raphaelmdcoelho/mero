@@ -18,6 +18,7 @@ const ITEM_IMAGES_STATIC = {
   6:  '/img/carrot_icon.png', // Carrot
   7:  '/img/apple_icon.png',  // Apple
   29: '/img/onion_icon.png',  // Onion
+  30: '/img/corn.png',        // Corn
 };
 
 function getItemImage(itemId, gender) {
@@ -776,7 +777,7 @@ function showLootModal(data, forced) {
   } else {
     lootList.innerHTML = loot.map(item =>
       `<div class="loot-item-row">
-        <span class="loot-item-icon">${item.icon}</span>
+        <span class="loot-item-icon">${itemIconHtml(item.item_id, item.icon, tItemName(item), null, 'loot-item-icon-img')}</span>
         <span class="loot-item-name">${escHtml(tItemName(item))}</span>
         <span class="loot-item-qty">×${item.quantity}</span>
       </div>`
@@ -931,7 +932,7 @@ function showItemInfo(idx) {
   const statLine = item.damage ? `⚔️ ${item.damage} ${t('game.js.dmg_unit')}` : item.defense ? `🛡️ ${item.defense} ${t('game.js.def_unit')}` : '';
   tooltip.style.display = 'block';
   tooltip.innerHTML = `
-    <strong class="item-tt-name">${item.icon} ${escHtml(tItemName(item))}</strong>
+    <strong class="item-tt-name">${itemIconHtml(item.item_id || item.id, item.icon, '', charState?.gender, 'item-tt-icon-img')} ${escHtml(tItemName(item))}</strong>
     <span class="item-tt-type">${tItemType(item)}</span>
     <p class="item-tt-desc">${escHtml(tItemDesc(item))}${statLine ? ' ' + statLine : ''}</p>
     ${canEquip && !isEq
