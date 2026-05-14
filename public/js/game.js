@@ -1349,6 +1349,7 @@ let fishAnimStart   = null;
 function handleFishing() {
   if (!charState) return;
   if (charState.activity) return;
+  if (charState.farmQueue?.length) return;
   openFishingModal();
 }
 
