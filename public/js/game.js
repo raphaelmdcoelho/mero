@@ -931,6 +931,9 @@ const MAX_INVENTORY_SLOTS = 25;
 // ---- Inventory ----
 function renderInventory(char) {
   if (!char) return;
+  selectedInvIdx = null;
+  const tooltip = document.getElementById('item-tooltip');
+  if (tooltip) tooltip.style.display = 'none';
   const grid = document.getElementById('inv-grid');
   const inv  = char.inventory || [];
   const slots = Array(MAX_INVENTORY_SLOTS).fill(null);
@@ -953,24 +956,31 @@ function showItemInfo(idx) {
   if (!charState) return;
   const item = (charState.inventory || [])[idx];
   const tooltip = document.getElementById('item-tooltip');
+
+  // toggle: clicking the same slot again dismisses
+  if (selectedInvIdx === idx && tooltip.style.display !== 'none') {
+    tooltip.style.display = 'none';
+    selectedInvIdx = null;
+    document.querySelectorAll('#inv-grid .inv-slot').forEach(s => s.classList.remove('selected'));
+    return;
+  }
+
+  selectedInvIdx = idx;
+  document.querySelectorAll('#inv-grid .inv-slot').forEach((s, i) => {
+    s.classList.toggle('selected', i === idx);
+  });
+
   if (!item) { tooltip.style.display = 'none'; return; }
-  const slot = itemEquipSlot(item);
-  const equipMap = equippedSlotMap(charState);
-  const isEq = slot ? equipMap[slot] === item.item_id : false;
-  const canEquip = slot !== null;
-  const statLine = item.damage ? `⚔️ ${item.damage} ${t('game.js.dmg_unit')}` : item.defense ? `🛡️ ${item.defense} ${t('game.js.def_unit')}` : '';
+  const statLine = item.damage  ? `⚔️ ${item.damage} ${t('game.js.dmg_unit')}`
+                 : item.defense ? `🛡️ ${item.defense} ${t('game.js.def_unit')}`
+                 : '';
   tooltip.style.display = 'block';
   tooltip.innerHTML = `
     <strong class="item-tt-name">${itemIconHtml(item.item_id || item.id, item.icon, '', charState?.gender, 'item-tt-icon-img')} ${escHtml(tItemName(item))}</strong>
     <span class="item-tt-type">${tItemType(item)}</span>
     <p class="item-tt-desc">${escHtml(tItemDesc(item))}${statLine ? ' ' + statLine : ''}</p>
-    ${canEquip && !isEq
-      ? `<button type="button" class="btn btn-outline btn-sm btn-mt" onclick="equipItem('${slot}',${item.item_id})">${t('game.js.equip_btn')}</button>`
-      : ''}
-    ${canEquip && isEq
-      ? `<span class="item-tt-eq">${t('game.js.equipped_check')}</span>
-         <button type="button" class="btn btn-outline btn-sm btn-mt" onclick="unequipItem('${slot}')">${t('game.js.unequip_btn')}</button>`
-      : ''}`;
+    ${item.quantity > 1 ? `<div class="item-tt-qty">${t('game.js.qty')}: ${item.quantity}</div>` : ''}
+    ${item.sell_price ? `<div class="item-tt-price">🪙 ${item.sell_price}g</div>` : ''}`;
 }
 
 // ---- Equipment Modal ----
@@ -1832,8 +1842,14 @@ function showFarmHarvestModal(harvested) {
 // ---- Market ----
 let marketTab = 'sell';
 let shopCategory = 'food';
+let selectedSellInvId = null;
+let selectedBuyItemId = null;
+let selectedInvIdx    = null;
+let shopItemsCache    = {};
 
 function switchMarketTab(tab) {
+  clearSellSelection();
+  clearBuySelection();
   marketTab = tab;
   document.getElementById('market-tab-sell').classList.toggle('active', tab === 'sell');
   document.getElementById('market-tab-buy').classList.toggle('active', tab === 'buy');
@@ -1843,6 +1859,7 @@ function switchMarketTab(tab) {
 }
 
 function switchShopCategory(cat) {
+  clearBuySelection();
   shopCategory = cat;
   ['food', 'potions', 'armor', 'others'].forEach(c => {
     document.getElementById(`market-buy-tab-${c}`).classList.toggle('active', c === cat);
@@ -1892,6 +1909,7 @@ function attachMarketTooltip(container, getHtml) {
 
 function renderMarketPanel(char) {
   if (!char) return;
+  selectedSellInvId = null;
   const gold = Number(char.gold) || 0;
   document.getElementById('market-gold-amount').textContent = `🪙 ${gold}g`;
 
@@ -1909,7 +1927,7 @@ function renderMarketPanel(char) {
     const equipped  = equippedIds.has(item.item_id);
     const price     = Number(item.sell_price);
     const qtyLabel  = item.quantity > 1 ? `×${item.quantity}` : '';
-    const clickAttr = equipped ? '' : `onclick="sellItem(${item.id},${item.item_id},1)"`;
+    const clickAttr = equipped ? '' : `onclick="selectSellItem(${item.id},${item.item_id})"`;
     const tipHtml   = `
       <div class="market-tooltip-name">${escHtml(tItemName(item))}</div>
       <div class="market-tooltip-meta">
@@ -1920,17 +1938,18 @@ function renderMarketPanel(char) {
         ? `<div class="market-tooltip-equipped">${t('game.js.equipped_tag')}</div>`
         : `<span class="market-tooltip-sell">${t('game.js.click_to_sell')}</span>`}`;
     return `
-      <div class="market-cell${equipped ? ' equipped' : ''}" ${clickAttr} data-tip="${escHtml(tipHtml)}">
+      <div class="market-cell${equipped ? ' equipped' : ''}" ${clickAttr} data-inv-id="${item.id}" data-tip="${escHtml(tipHtml)}">
         ${itemIconHtml(item.item_id, item.icon, tItemName(item), gender, 'market-item-img')}
         ${qtyLabel ? `<span class="market-cell-qty">${qtyLabel}</span>` : ''}
       </div>`;
-  }).join('')}</div>`;
+  }).join('')}</div><div id="sell-detail-panel"></div>`;
 
   attachMarketTooltip(list, cell => cell.dataset.tip || '');
 }
 
 async function renderShopPane() {
   const shopList = document.getElementById('market-shop-list');
+  selectedBuyItemId = null;
   shopList.innerHTML = `<p class="muted-sm">${t('game.js.loading')}</p>`;
   const res = await api.get(`/api/market/${charId}/shop`);
   if (!res) return;
@@ -1939,6 +1958,8 @@ async function renderShopPane() {
 
   const allItems = data.items || [];
   const items = allItems.filter(i => itemMatchesCategory(i, shopCategory));
+  items.forEach(i => { shopItemsCache[i.id] = i; });
+
   if (!items.length) {
     shopList.innerHTML = `<p class="muted-sm">${t('game.js.shop_empty')}</p>`;
     return;
@@ -1975,14 +1996,114 @@ async function renderShopPane() {
       ${canAfford
         ? `<span class="market-tooltip-sell">${t('game.js.click_to_buy')}</span>`
         : `<div class="market-tooltip-equipped">${t('game.js.cant_afford')}</div>`}`;
-    const clickAttr = canAfford ? `onclick="buyItem(${item.id},1)"` : '';
     return `
-      <div class="market-cell${canAfford ? '' : ' cant-afford'}" ${clickAttr} data-tip="${escHtml(tipHtml)}">
+      <div class="market-cell${canAfford ? '' : ' cant-afford'}" onclick="selectBuyItem(${item.id})" data-item-id="${item.id}" data-tip="${escHtml(tipHtml)}">
         ${itemIconHtml(item.id, item.icon, tItemName(item), gender, 'market-item-img')}
       </div>`;
-  }).join('')}</div>`;
+  }).join('')}</div><div id="buy-detail-panel"></div>`;
 
   attachMarketTooltip(shopList, cell => cell.dataset.tip || '');
+}
+
+function selectSellItem(invId, itemId) {
+  const item = (charState?.inventory || []).find(i => i.id === invId);
+  if (!item) return;
+  selectedSellInvId = invId;
+
+  document.querySelectorAll('#market-list .market-cell').forEach(c => {
+    c.classList.toggle('selected', Number(c.dataset.invId) === invId);
+  });
+
+  const price = Number(item.sell_price);
+  const statLine = item.damage  ? `<div class="item-detail-stat">⚔️ ${item.damage} ${t('game.js.dmg_unit')}</div>`
+                 : item.defense ? `<div class="item-detail-stat">🛡️ ${item.defense} ${t('game.js.def_unit')}</div>`
+                 : '';
+  const panel = document.getElementById('sell-detail-panel');
+  if (!panel) return;
+  panel.innerHTML = `
+    <div class="item-detail-panel">
+      <div class="item-detail-header">
+        ${itemIconHtml(item.item_id, item.icon, tItemName(item), charState?.gender, 'item-detail-icon-img')}
+        <div>
+          <div class="item-detail-name">${escHtml(tItemName(item))}</div>
+          <div class="item-detail-type">${tItemType(item)}</div>
+        </div>
+      </div>
+      <div class="item-detail-meta">🪙 ${price}g ${t('game.js.each')} · ${t('game.js.qty')}: ${item.quantity}</div>
+      ${statLine}
+      <div class="item-detail-actions">
+        <button type="button" class="btn btn-danger btn-sm" onclick="sellItem(${invId},${itemId},1)">${t('game.js.sell_btn')}</button>
+        <button type="button" class="btn btn-outline btn-sm" onclick="clearSellSelection()">${t('game.js.cancel_btn')}</button>
+      </div>
+    </div>`;
+}
+
+function clearSellSelection() {
+  selectedSellInvId = null;
+  document.querySelectorAll('#market-list .market-cell').forEach(c => c.classList.remove('selected'));
+  const panel = document.getElementById('sell-detail-panel');
+  if (panel) panel.innerHTML = '';
+}
+
+function selectBuyItem(itemId) {
+  const item = shopItemsCache[itemId];
+  if (!item) return;
+  selectedBuyItemId = itemId;
+  const gold = Number(charState?.gold) || 0;
+  const price = Number(item.buy_price);
+  const canAfford = gold >= price;
+
+  document.querySelectorAll('#market-shop-list .market-cell').forEach(c => {
+    c.classList.toggle('selected', Number(c.dataset.itemId) === itemId);
+  });
+
+  let stats = '';
+  if (item.damage  > 0) stats += `<div class="item-detail-stat">⚔️ ${item.damage} ${t('game.js.dmg_unit')}</div>`;
+  if (item.defense > 0) stats += `<div class="item-detail-stat">🛡️ ${item.defense} ${t('game.js.def_unit')}</div>`;
+
+  let buffLine = '';
+  if (item.item_subtype === 'adventure_potion' && item.buff_effect) {
+    try {
+      const b = JSON.parse(item.buff_effect);
+      const BUFF_LABELS = {
+        speed:         '⚡ −30% dungeon time',
+        loot_quality:  '🍀 Improved loot quality',
+        loot_count:    '🎁 +2 extra loot items',
+        stamina:       '💚 +1 stamina on completion',
+        xp_multiplier: '📚 ×2 XP gain',
+      };
+      if (BUFF_LABELS[b.type]) buffLine = `<div class="item-detail-buff">${BUFF_LABELS[b.type]}</div>`;
+    } catch { /* ignore */ }
+  }
+
+  const panel = document.getElementById('buy-detail-panel');
+  if (!panel) return;
+  panel.innerHTML = `
+    <div class="item-detail-panel">
+      <div class="item-detail-header">
+        ${itemIconHtml(item.id, item.icon, tItemName(item), charState?.gender, 'item-detail-icon-img')}
+        <div>
+          <div class="item-detail-name">${escHtml(tItemName(item))}</div>
+          <div class="item-detail-type">${tItemType(item)}</div>
+        </div>
+      </div>
+      <div class="item-detail-meta">🪙 ${price}g</div>
+      ${stats}
+      ${buffLine}
+      <div class="item-detail-actions">
+        ${canAfford
+          ? `<button type="button" class="btn btn-primary btn-sm" onclick="buyItem(${item.id},1)">${t('game.js.buy_btn')}</button>`
+          : `<span class="item-detail-cant-afford">${t('game.js.cant_afford')}</span>`}
+        <button type="button" class="btn btn-outline btn-sm" onclick="clearBuySelection()">${t('game.js.cancel_btn')}</button>
+      </div>
+    </div>`;
+}
+
+function clearBuySelection() {
+  selectedBuyItemId = null;
+  document.querySelectorAll('#market-shop-list .market-cell').forEach(c => c.classList.remove('selected'));
+  const panel = document.getElementById('buy-detail-panel');
+  if (panel) panel.innerHTML = '';
 }
 
 async function sellItem(invId, itemId, qty) {
