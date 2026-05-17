@@ -1271,15 +1271,33 @@ input:focus, select:focus {
 }
 
 /* ---- Mobile (375px) ---- */
-@media (max-width: 480px) {
+@media (max-width: 640px) {
+  .game-arena { padding: 0.75rem 0.5rem; }
   .action-grid {
-    grid-template-columns: repeat(7, 44px);
-    grid-template-rows: 74px 150px 74px;
-    gap: 4px;
+    grid-template-columns: repeat(4, 62px);
+    grid-template-rows: 74px 74px 150px 74px 74px;
+    gap: 6px;
   }
-  .action-sq { width: 54px; height: 54px; font-size: 0.55rem; }
+  .action-sq { width: 60px; height: 60px; font-size: 0.55rem; }
   .action-sq .sq-icon { font-size: 1.4rem; }
-  .avatar-cell { width: 140px; height: 150px; }
+  .avatar-cell { width: 140px; height: 150px; grid-column: 1 / 5 !important; grid-row: 3 !important; }
+  /* Top row — first 4 */
+  #wrap-dungeon      { grid-column: 1 !important; grid-row: 1 !important; }
+  #wrap-farm         { grid-column: 2 !important; grid-row: 1 !important; }
+  #wrap-tavern       { grid-column: 3 !important; grid-row: 1 !important; }
+  #wrap-read         { grid-column: 4 !important; grid-row: 1 !important; }
+  /* Top row — remaining 3, above avatar */
+  #wrap-fishing      { grid-column: 1 !important; grid-row: 2 !important; }
+  #wrap-solo-dungeon { grid-column: 2 !important; grid-row: 2 !important; }
+  #wrap-research     { grid-column: 3 !important; grid-row: 2 !important; }
+  /* Bottom row — first 4 */
+  #wrap-inventory    { grid-column: 1 !important; grid-row: 4 !important; }
+  #wrap-attributes   { grid-column: 2 !important; grid-row: 4 !important; }
+  #wrap-equipment    { grid-column: 3 !important; grid-row: 4 !important; }
+  #wrap-market       { grid-column: 4 !important; grid-row: 4 !important; }
+  /* Bottom row — remaining 2, below avatar */
+  #wrap-castle       { grid-column: 1 !important; grid-row: 5 !important; }
+  #wrap-achievements { grid-column: 2 !important; grid-row: 5 !important; }
   .pickaxe-wrap { right: -72px; top: 30px; width: 48px; height: 48px; transform-origin: 44px 40px; }
   .pickaxe-wrap svg { width: 48px; height: 48px; }
   .char-grid { grid-template-columns: 1fr 1fr; }
