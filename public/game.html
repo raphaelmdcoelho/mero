@@ -6,7 +6,7 @@
   <title>Mero — Adventure</title>
   <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
   <script src="https://cdn.tailwindcss.com"></script>
-  <link rel="stylesheet" href="/css/style.css?v=5" />
+  <link rel="stylesheet" href="/css/style.css?v=6" />
 </head>
 <body>
 
@@ -35,7 +35,7 @@
     <div class="game-arena">
       <div class="action-grid">
         <!-- Top-left: Dungeons (timer-based) -->
-        <div class="action-sq-wrap" style="grid-column:1;grid-row:1;">
+        <div class="action-sq-wrap" id="wrap-dungeon" style="grid-column:1;grid-row:1;">
           <span id="dungeon-label" class="sq-label" data-i18n="game.dungeon">Adventure</span>
           <div class="action-sq" id="sq-dungeon" onclick="handleDungeon()">
             <img src="/adventure_icon.png" alt="Adventure" class="sq-icon" />
@@ -43,7 +43,7 @@
         </div>
 
         <!-- Top center-left: Farm (unlocks at level 3) -->
-        <div class="action-sq-wrap" style="grid-column:2;grid-row:1;position:relative;">
+        <div class="action-sq-wrap" id="wrap-farm" style="grid-column:2;grid-row:1;position:relative;">
           <span id="farm-label" class="sq-label" data-i18n="game.farm">Farm</span>
           <div class="action-sq" id="sq-farm" onclick="handleFarm()">
             <img src="/farm-icon.png" alt="Farm" class="sq-icon" />
@@ -52,7 +52,7 @@
         </div>
 
         <!-- Top center-right: Tavern -->
-        <div class="action-sq-wrap" style="grid-column:3;grid-row:1;">
+        <div class="action-sq-wrap" id="wrap-tavern" style="grid-column:3;grid-row:1;">
           <span id="tavern-label" class="sq-label" data-i18n="game.tavern">Tavern</span>
           <div class="action-sq" id="sq-tavern" onclick="handleTavern()">
             <div class="tavern-progress-fill" id="tavern-progress-fill"></div>
@@ -61,7 +61,7 @@
         </div>
 
         <!-- Top-right: Read -->
-        <div class="action-sq-wrap" style="grid-column:4;grid-row:1;">
+        <div class="action-sq-wrap" id="wrap-read" style="grid-column:4;grid-row:1;">
           <span id="read-label" class="sq-label" data-i18n="game.read">Read</span>
           <div class="action-sq" id="sq-read" onclick="handleRead()">
             <div class="read-progress-fill" id="read-progress-fill"></div>
@@ -70,7 +70,7 @@
         </div>
 
         <!-- Row 1 col 5: Fishing -->
-        <div class="action-sq-wrap" style="grid-column:5;grid-row:1;">
+        <div class="action-sq-wrap" id="wrap-fishing" style="grid-column:5;grid-row:1;">
           <span id="fishing-label" class="sq-label" data-i18n="game.fishing">Fishing</span>
           <div class="action-sq" id="sq-fishing" onclick="handleFishing()">
             <img src="/fishing.png" alt="Fishing" class="sq-icon" />
@@ -78,7 +78,7 @@
         </div>
 
         <!-- Row 1 col 6: Dungeon (turn-based solo combat) -->
-        <div class="action-sq-wrap" style="grid-column:6;grid-row:1;">
+        <div class="action-sq-wrap" id="wrap-solo-dungeon" style="grid-column:6;grid-row:1;">
           <span id="solo-dungeon-label" class="sq-label">Dungeon</span>
           <div class="action-sq" id="sq-solo-dungeon" onclick="handleDungeonSolo()">
             <img src="/dungeon-icon.png" alt="Dungeon" class="sq-icon" />
@@ -86,7 +86,7 @@
         </div>
 
         <!-- Row 1 col 7: Research (coming soon) -->
-        <div class="action-sq-wrap" style="grid-column:7;grid-row:1;">
+        <div class="action-sq-wrap" id="wrap-research" style="grid-column:7;grid-row:1;">
           <span id="research-label" class="sq-label" data-i18n="game.research">Research</span>
           <div class="action-sq disabled" id="sq-research">
             <img src="/research-icon.png" alt="Research" class="sq-icon" />
@@ -141,14 +141,14 @@
         </div>
 
         <!-- Bottom row: all action buttons in one row (cols 1-6, row 3) -->
-        <div class="action-sq-wrap" style="grid-column:1;grid-row:3;">
+        <div class="action-sq-wrap" id="wrap-inventory" style="grid-column:1;grid-row:3;">
           <span class="sq-label" data-i18n="game.inventory">Inventory</span>
           <div class="action-sq" id="sq-inventory" onclick="openPanel('inventory')">
             <img src="/inventory-icon.png" alt="Inventory" class="sq-icon" />
           </div>
         </div>
 
-        <div class="action-sq-wrap" style="grid-column:2;grid-row:3;">
+        <div class="action-sq-wrap" id="wrap-attributes" style="grid-column:2;grid-row:3;">
           <span class="sq-label" data-i18n="game.attributes">Attributes</span>
           <div class="action-sq" id="sq-attributes" style="position:relative;" onclick="openPanel('attributes')">
             <img src="/attributes-icon.png" alt="Attributes" class="sq-icon" />
@@ -156,21 +156,21 @@
           </div>
         </div>
 
-        <div class="action-sq-wrap" style="grid-column:3;grid-row:3;">
+        <div class="action-sq-wrap" id="wrap-equipment" style="grid-column:3;grid-row:3;">
           <span class="sq-label" data-i18n="game.equipment">Equipment</span>
           <div class="action-sq" id="sq-equipment" onclick="openPanel('equipment')">
             <img src="/equipment-icon.png" alt="Equipment" class="sq-icon" />
           </div>
         </div>
 
-        <div class="action-sq-wrap" style="grid-column:4;grid-row:3;">
+        <div class="action-sq-wrap" id="wrap-market" style="grid-column:4;grid-row:3;">
           <span class="sq-label" data-i18n="game.market">Market</span>
           <div class="action-sq" id="sq-market" onclick="openPanel('market')">
             <img src="/market-icon.png" alt="Market" class="sq-icon" />
           </div>
         </div>
 
-        <div class="action-sq-wrap" style="grid-column:5;grid-row:3;">
+        <div class="action-sq-wrap" id="wrap-castle" style="grid-column:5;grid-row:3;">
           <span class="sq-label" data-i18n="game.castle">Castle</span>
           <div class="action-sq disabled" id="sq-castle" style="position:relative;">
             <img src="/castle-icon.png" alt="Castle" class="sq-icon" />
@@ -178,7 +178,7 @@
           </div>
         </div>
 
-        <div class="action-sq-wrap" style="grid-column:6;grid-row:3;">
+        <div class="action-sq-wrap" id="wrap-achievements" style="grid-column:6;grid-row:3;">
           <span class="sq-label" data-i18n="game.achievements">Achievements</span>
           <div class="action-sq disabled" id="sq-achievements" style="position:relative;">
             <img src="/achivements_icon.png" alt="Achievements" class="sq-icon" />
@@ -956,6 +956,30 @@
       font-size: 0.95rem;
       color: #f5c842;
       white-space: nowrap;
+    }
+
+    @media (max-width: 640px) {
+      .game-arena { padding: 0.75rem 0.5rem; }
+      .action-grid {
+        grid-template-columns: repeat(4, 62px) !important;
+        grid-template-rows: 74px 74px 150px 74px 74px !important;
+        gap: 6px !important;
+      }
+      .action-sq { width: 60px !important; height: 60px !important; }
+      .avatar-cell { grid-column: 1 / 5 !important; grid-row: 3 !important; }
+      #wrap-dungeon      { grid-column: 1 !important; grid-row: 1 !important; }
+      #wrap-farm         { grid-column: 2 !important; grid-row: 1 !important; }
+      #wrap-tavern       { grid-column: 3 !important; grid-row: 1 !important; }
+      #wrap-read         { grid-column: 4 !important; grid-row: 1 !important; }
+      #wrap-fishing      { grid-column: 1 !important; grid-row: 2 !important; }
+      #wrap-solo-dungeon { grid-column: 2 !important; grid-row: 2 !important; }
+      #wrap-research     { grid-column: 3 !important; grid-row: 2 !important; }
+      #wrap-inventory    { grid-column: 1 !important; grid-row: 4 !important; }
+      #wrap-attributes   { grid-column: 2 !important; grid-row: 4 !important; }
+      #wrap-equipment    { grid-column: 3 !important; grid-row: 4 !important; }
+      #wrap-market       { grid-column: 4 !important; grid-row: 4 !important; }
+      #wrap-castle       { grid-column: 1 !important; grid-row: 5 !important; }
+      #wrap-achievements { grid-column: 2 !important; grid-row: 5 !important; }
     }
   </style>
 
