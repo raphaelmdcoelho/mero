@@ -2062,15 +2062,15 @@ input:focus, select:focus {
   font-size: 3.5rem;
   line-height: 1;
   margin-bottom: 0.25rem;
-  min-height: 64px;
+  min-height: 140px;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
 .solo-monster-img {
-  max-width: 80px;
-  max-height: 80px;
+  width: 140px;
+  height: 140px;
   object-fit: contain;
   image-rendering: pixelated;
 }
