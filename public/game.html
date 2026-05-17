@@ -980,6 +980,24 @@
       #wrap-market       { grid-column: 4 !important; grid-row: 4 !important; }
       #wrap-castle       { grid-column: 1 !important; grid-row: 5 !important; }
       #wrap-achievements { grid-column: 2 !important; grid-row: 5 !important; }
+      /* Reset fixed-px icon widths — they were tuned for 100px desktop buttons,
+         on 60px mobile buttons they appear 2× too large */
+      #sq-farm .sq-icon,
+      #sq-tavern .sq-icon,
+      #sq-research .sq-icon,
+      #sq-attributes .sq-icon,
+      #sq-equipment .sq-icon,
+      #sq-market .sq-icon,
+      #sq-castle .sq-icon,
+      #sq-achievements .sq-icon {
+        width: 100% !important;
+        height: 100% !important;
+        max-width: none !important;
+        top: 0 !important;
+        left: 0 !important;
+        transform: scale(1.4) !important;
+        object-fit: fill !important;
+      }
     }
   </style>
 
