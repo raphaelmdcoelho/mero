@@ -15,10 +15,11 @@ const ITEM_IMAGES = {
 };
 
 const ITEM_IMAGES_STATIC = {
-  6:  '/img/carrot_icon.png', // Carrot
-  7:  '/img/apple_icon.png',  // Apple
-  29: '/img/onion_icon.png',  // Onion
-  30: '/img/corn.png',        // Corn
+  6:  '/img/carrot_icon.png',      // Carrot
+  7:  '/img/apple_icon.png',       // Apple
+  29: '/img/onion_icon.png',       // Onion
+  30: '/img/corn.png',             // Corn
+  31: '/img/iron_gauntlets.png',   // Iron Gauntlets
 };
 
 function getItemImage(itemId, gender) {
@@ -303,9 +304,10 @@ function renderAll(char) {
 // Shared avatar renderer — used by the game screen and the equipment modal
 function renderCharAvatar(containerEl, char) {
   if (!containerEl || !char) return;
-  const armorImg  = char.equippedArmor  ? getItemImage(char.equippedArmor.id,  char.gender) : null;
-  const shieldImg = char.equippedShield ? getItemImage(char.equippedShield.id, char.gender) : null;
-  const bootsImg  = char.equippedBoots  ? getItemImage(char.equippedBoots.id,  char.gender) : null;
+  const armorImg    = char.equippedArmor  ? getItemImage(char.equippedArmor.id,  char.gender) : null;
+  const shieldImg   = char.equippedShield ? getItemImage(char.equippedShield.id, char.gender) : null;
+  const bootsImg    = char.equippedBoots  ? getItemImage(char.equippedBoots.id,  char.gender) : null;
+  const gauntletImg = char.equippedArm    ? getItemImage(char.equippedArm.id,    char.gender) : null;
   let armorOverlay = '';
   if (armorImg) {
     const size = ITEM_OVERLAY_SIZE[Number(char.equippedArmor.id)];
@@ -313,14 +315,15 @@ function renderCharAvatar(containerEl, char) {
     const armorGenderClass = char.gender === 'female' ? ' equip-overlay-armor--female' : '';
     armorOverlay = `<img class="equip-overlay${armorGenderClass}"${style} src="${escHtml(armorImg)}" alt="" />`;
   }
-  const shieldOverlay = shieldImg ? `<img class="equip-overlay equip-overlay-shield" src="${escHtml(shieldImg)}" alt="" />` : '';
+  const shieldOverlay   = shieldImg   ? `<img class="equip-overlay equip-overlay-shield"   src="${escHtml(shieldImg)}"   alt="" />` : '';
   const bootsGenderClass = char.gender === 'female' ? ' equip-overlay-boots--female' : '';
-  const bootsOverlay  = bootsImg  ? `<img class="equip-overlay equip-overlay-boots${bootsGenderClass}" src="${escHtml(bootsImg)}" alt="" />` : '';
+  const bootsOverlay    = bootsImg    ? `<img class="equip-overlay equip-overlay-boots${bootsGenderClass}" src="${escHtml(bootsImg)}" alt="" />` : '';
+  const gauntletOverlay = gauntletImg ? `<img class="equip-overlay equip-overlay-gauntlet" src="${escHtml(gauntletImg)}" alt="" />` : '';
   if (char.avatar_path) {
-    containerEl.innerHTML = `<img class="char-avatar-img" src="${escHtml(char.avatar_path)}" alt="Avatar" />${armorOverlay}${shieldOverlay}${bootsOverlay}`;
+    containerEl.innerHTML = `<img class="char-avatar-img" src="${escHtml(char.avatar_path)}" alt="Avatar" />${armorOverlay}${shieldOverlay}${bootsOverlay}${gauntletOverlay}`;
   } else {
     const icon = CLASS_ICONS[char.class] || '🧍';
-    containerEl.innerHTML = `<span class="char-avatar-icon">${icon}</span>${armorOverlay}${shieldOverlay}${bootsOverlay}`;
+    containerEl.innerHTML = `<span class="char-avatar-icon">${icon}</span>${armorOverlay}${shieldOverlay}${bootsOverlay}${gauntletOverlay}`;
   }
 }
 

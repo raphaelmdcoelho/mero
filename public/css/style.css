@@ -757,6 +757,14 @@ input:focus, select:focus {
   height: 45%;
 }
 
+.equip-overlay-gauntlet {
+  top: 60%;
+  left: 28%;
+  width: 45%;
+  height: 45%;
+  z-index: 2;
+}
+
 /* Status bar */
 .status-bar {
   background: var(--surface);
