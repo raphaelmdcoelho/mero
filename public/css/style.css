@@ -512,7 +512,7 @@ input:focus, select:focus {
 }
 .action-grid {
   display: grid;
-  grid-template-columns: repeat(6, 100px);
+  grid-template-columns: repeat(7, 100px);
   grid-template-rows: 120px 200px 120px;
   column-gap: 12px;
   row-gap: 24px;
@@ -632,6 +632,7 @@ input:focus, select:focus {
 #sq-achievements.active,
 #sq-market.active { outline-color: var(--accent); }
 #sq-dungeon      .sq-icon,
+#sq-solo-dungeon .sq-icon,
 #sq-farm         .sq-icon,
 #sq-tavern       .sq-icon,
 #sq-read         .sq-icon,
@@ -1267,9 +1268,9 @@ input:focus, select:focus {
 /* ---- Mobile (375px) ---- */
 @media (max-width: 480px) {
   .action-grid {
-    grid-template-columns: repeat(6, 54px);
+    grid-template-columns: repeat(7, 44px);
     grid-template-rows: 74px 150px 74px;
-    gap: 5px;
+    gap: 4px;
   }
   .action-sq { width: 54px; height: 54px; font-size: 0.55rem; }
   .action-sq .sq-icon { font-size: 1.4rem; }
@@ -2089,6 +2090,4 @@ input:focus, select:focus {
   margin-top: 0.25rem;
 }
 
-/* sq-solo-dungeon icon sizing — matches other action squares */
-#sq-solo-dungeon .sq-icon { width: 100px; top: 50%; }
 

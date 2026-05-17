@@ -585,8 +585,8 @@ async function initDb() {
   // ── Seed solo monsters (turn-based Dungeon feature) ─────────────────────────
   // [id, name, icon, image_path, hp, attack, agility, defense, hit_chance, xp_reward, stamina_cost, loot_table]
   const soloMonsterData = [
-    [1, 'Goblin Scout', '👺', null, 30,  5, 15, 2, 65, 20, 10, '[{"item_id":6,"chance":50},{"item_id":37,"chance":35},{"item_id":5,"chance":15}]'],
-    [2, 'Stone Troll',  '🧌', null, 65, 10,  6, 8, 70, 50, 10, '[{"item_id":5,"chance":40},{"item_id":9,"chance":12},{"item_id":10,"chance":8}]'],
+    [1, 'Daemon',     '👹', '/dungeon_deamon_icon.png', 30,  5, 15, 2, 65, 20, 10, '[{"item_id":6,"chance":50},{"item_id":37,"chance":35},{"item_id":5,"chance":15}]'],
+    [2, 'Stone Golem','🗿', '/dungeon_golem_icon.png',  65, 10,  6, 8, 70, 50, 10, '[{"item_id":5,"chance":40},{"item_id":9,"chance":12},{"item_id":10,"chance":8}]'],
   ];
   await client.batch([
     ...soloMonsterData.map(([id, name, icon, ip, hp, atk, agi, def, hit, xp, st, lt]) => ({
