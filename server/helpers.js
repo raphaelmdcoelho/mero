@@ -4,7 +4,7 @@ const { client } = require('./db');
 // Shared full character state — used by game.js and market.js
 // Uses two parallel Promise.all batches to minimize round trips (2 total instead of 7+)
 async function fullChar(charId) {
-  const [charR, invR, farmR, runR] = await Promise.all([
+  const [charR, invR, farmR, runR, soloR] = await Promise.all([
     client.execute({ sql: 'SELECT * FROM characters WHERE id = ?', args: [charId] }),
     client.execute({
       sql: `SELECT inv.id, inv.quantity, i.id as item_id, i.name, i.type, i.description, i.icon,
@@ -19,12 +19,23 @@ async function fullChar(charId) {
       args: [charId],
     }),
     client.execute({ sql: 'SELECT * FROM dungeon_run WHERE character_id = ?', args: [charId] }),
+    client.execute({
+      sql: `SELECT sb.*, sm.name as monster_name, sm.icon as monster_icon,
+                   sm.hp as monster_max_hp, sm.attack as monster_attack,
+                   sm.agility as monster_agility, sm.defense as monster_defense,
+                   sm.image_path as monster_image_path
+            FROM solo_battle sb
+            JOIN solo_monsters sm ON sm.id = sb.monster_id
+            WHERE sb.character_id = ?`,
+      args: [charId],
+    }),
   ]);
 
   const char      = Object.assign({}, charR.rows[0]);
   const inventory = invR.rows.map(r => Object.assign({}, r));
   const farmQueue = farmR.rows.map(r => Object.assign({}, r));
   const runRow    = runR.rows[0] ?? null;
+  const soloRow   = soloR.rows[0] ? Object.assign({}, soloR.rows[0]) : null;
 
   const [weapR, armR, shieldR, armGlovesR, bootsR, helmetR, monR] = await Promise.all([
     char.weapon_id
@@ -67,7 +78,7 @@ async function fullChar(charId) {
   const farmXp      = Number(char.farm_xp)    || 0;
   const farmXpToNext = farmLevel * 5;
 
-  return { ...char, inventory, equippedWeapon, equippedArmor, equippedShield, equippedArm, equippedBoots, equippedHelmet, farmQueue, dungeonRun, farmLevel, farmXp, farmXpToNext };
+  return { ...char, inventory, equippedWeapon, equippedArmor, equippedShield, equippedArm, equippedBoots, equippedHelmet, farmQueue, dungeonRun, soloBattle: soloRow, farmLevel, farmXp, farmXpToNext };
 }
 
 module.exports = { fullChar };

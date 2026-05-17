@@ -66,7 +66,7 @@
       'char.failed_create':      'Failed to create character',
 
       // Game page — action squares
-      'game.dungeon':            'Dungeons',
+      'game.dungeon':            'Adventure',
       'game.farm':               'Farm',
       'game.tavern':             'Tavern',
       'game.inventory':          'Inventory',
@@ -272,7 +272,7 @@
       'game.js.resting_badge':      '🍺 Resting',
 
       // Game JS — action square labels (dynamic)
-      'game.js.dungeon_lbl':        'Dungeons',
+      'game.js.dungeon_lbl':        'Adventure',
       'game.js.tavern_lbl':         'Tavern',
       'game.js.farm_lbl':           'Farm',
       'game.js.read_lbl':           'Read',
@@ -435,7 +435,7 @@
       'char.failed_create':      'Falha ao criar personagem',
 
       // Game page — action squares
-      'game.dungeon':            'Masmorras',
+      'game.dungeon':            'Aventura',
       'game.farm':               'Fazenda',
       'game.tavern':             'Taverna',
       'game.inventory':          'Inventário',
@@ -641,7 +641,7 @@
       'game.js.resting_badge':      '🍺 Descansando',
 
       // Game JS — action square labels (dynamic)
-      'game.js.dungeon_lbl':        'Masmorras',
+      'game.js.dungeon_lbl':        'Aventura',
       'game.js.tavern_lbl':         'Taverna',
       'game.js.farm_lbl':           'Fazenda',
       'game.js.read_lbl':           'Ler',

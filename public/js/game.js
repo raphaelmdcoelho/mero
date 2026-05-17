@@ -138,6 +138,10 @@ async function init() {
     startDungeonPoll();
     openPanel('battle');
   }
+  // Resume solo dungeon battle if one is in progress
+  if (data.activity === 'dungeon_solo' && data.soloBattle) {
+    resumeSoloBattle(data.soloBattle, data);
+  }
   // Resume tavern progress bar if resting
   if (data.activity === 'tavern' && data.activity_started_at) {
     tavernStartedAt = Number(data.activity_started_at) * 1000;
@@ -192,6 +196,18 @@ function renderAll(char) {
   document.getElementById('xp-fill').style.width = xpPct + '%';
   document.getElementById('xp-text').textContent = `${Math.floor(char.xp)} / ${char.xp_to_next}`;
 
+  // HP bar
+  const hp    = Math.max(0, Number(char.hp) || 0);
+  const maxHp = Number(char.max_hp) || 20;
+  const hpPct = maxHp > 0 ? Math.min(100, (hp / maxHp) * 100) : 0;
+  const hpFill = document.getElementById('hp-fill');
+  if (hpFill) {
+    hpFill.style.width = hpPct + '%';
+    hpFill.classList.toggle('low', hpPct < 30);
+  }
+  const hpText = document.getElementById('hp-text');
+  if (hpText) hpText.textContent = `${Math.ceil(hp)} / ${maxHp}`;
+
   // Stamina bar
   const st    = Math.max(0, Number(char.stamina) || 0);
   const maxSt = Number(char.max_stamina) || 10;
@@ -224,6 +240,9 @@ function renderAll(char) {
       const run = char.dungeonRun;
       const lvl = run ? run.dungeon_level : '';
       actLabel.textContent = t('game.js.dungeon_badge', { n: lvl });
+    } else if (char.activity === 'dungeon_solo') {
+      const sb = char.soloBattle;
+      actLabel.textContent = sb ? `⚔️ Fighting ${sb.monster_name}` : '⚔️ Dungeon';
     } else if (char.activity === 'farm') {
       actLabel.textContent = t('game.js.farming_badge');
     } else if (char.activity === 'reading') {
@@ -306,17 +325,18 @@ function renderCharAvatar(containerEl, char) {
 }
 
 function updateActionSquares(activity, isFarming = false) {
-  const dungeon = document.getElementById('sq-dungeon');
-  const farm    = document.getElementById('sq-farm');
-  const tavern  = document.getElementById('sq-tavern');
-  const inv     = document.getElementById('sq-inventory');
-  const eq      = document.getElementById('sq-equipment');
-  const attrs   = document.getElementById('sq-attributes');
-  const stats   = document.getElementById('sq-stats');
-  const read    = document.getElementById('sq-read');
-  const fishing = document.getElementById('sq-fishing');
+  const dungeon     = document.getElementById('sq-dungeon');
+  const soloDungeon = document.getElementById('sq-solo-dungeon');
+  const farm        = document.getElementById('sq-farm');
+  const tavern      = document.getElementById('sq-tavern');
+  const inv         = document.getElementById('sq-inventory');
+  const eq          = document.getElementById('sq-equipment');
+  const attrs       = document.getElementById('sq-attributes');
+  const stats       = document.getElementById('sq-stats');
+  const read        = document.getElementById('sq-read');
+  const fishing     = document.getElementById('sq-fishing');
 
-  const resetEls = [dungeon, farm, tavern, inv, eq, attrs, stats, read, fishing].filter(Boolean);
+  const resetEls = [dungeon, soloDungeon, farm, tavern, inv, eq, attrs, stats, read, fishing].filter(Boolean);
   resetEls.forEach(el => el.classList.remove('active', 'disabled'));
 
   document.getElementById('dungeon-label').textContent = t('game.js.dungeon_lbl');
@@ -326,11 +346,20 @@ function updateActionSquares(activity, isFarming = false) {
 
   if (isFarming) {
     dungeon.classList.add('disabled');
+    if (soloDungeon) soloDungeon.classList.add('disabled');
     tavern.classList.add('disabled');
     if (read) read.classList.add('disabled');
     if (fishing) fishing.classList.add('disabled');
   } else if (activity === 'dungeon') {
     dungeon.classList.add('active');
+    if (soloDungeon) soloDungeon.classList.add('disabled');
+    tavern.classList.add('disabled');
+    farm.classList.add('disabled');
+    if (read) read.classList.add('disabled');
+    if (fishing) fishing.classList.add('disabled');
+  } else if (activity === 'dungeon_solo') {
+    if (soloDungeon) soloDungeon.classList.add('active');
+    dungeon.classList.add('disabled');
     tavern.classList.add('disabled');
     farm.classList.add('disabled');
     if (read) read.classList.add('disabled');
@@ -1997,6 +2026,242 @@ function showToast(msg, type = '') {
 function escHtml(str) {
   return String(str)
     .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ──────────────────────────────────────────────────────────────────────────────
+// Solo Dungeon (turn-based combat)
+// ──────────────────────────────────────────────────────────────────────────────
+
+let soloMonsters       = [];
+let soloMonsterIndex   = 0;
+let soloTurnInterval   = null;
+let soloBattleActive   = false;
+let soloBattleHeroMaxHp   = 20;
+let soloBattleMonsterMaxHp = 30;
+
+function handleDungeonSolo() {
+  if (!charState) return;
+  if (farmEndsAt) return;
+  if (charState.activity === 'dungeon_solo') {
+    openSoloBattlePanel(charState.soloBattle, charState);
+    return;
+  }
+  if (charState.activity) return;
+  openSoloDungeonModal();
+}
+
+async function openSoloDungeonModal() {
+  const res = await api.get(`/api/solo/${charId}/monsters`);
+  if (!res) return;
+  const data = await res.json();
+  soloMonsters = data.monsters || [];
+  soloMonsterIndex = 0;
+
+  const modal = document.getElementById('solo-dungeon-modal');
+  modal.classList.add('open');
+  renderSoloMonsterCarousel();
+  updateSoloModalHp(data.heroHp, data.heroMaxHp, data.heroStamina);
+}
+
+function closeSoloDungeonModal() {
+  document.getElementById('solo-dungeon-modal').classList.remove('open');
+}
+
+function renderSoloMonsterCarousel() {
+  if (!soloMonsters.length) return;
+  const m = soloMonsters[soloMonsterIndex];
+  const content = document.getElementById('solo-carousel-content');
+  content.innerHTML = `
+    <div class="solo-monster-card">
+      <div class="solo-monster-portrait">${m.image_path ? `<img src="${escHtml(m.image_path)}" alt="${escHtml(m.name)}" class="solo-monster-img" />` : `<span class="monster-icon">${escHtml(m.icon)}</span>`}</div>
+      <div class="monster-name" style="text-align:center;margin:0.4rem 0;">${escHtml(m.name)}</div>
+      <div class="solo-monster-stats">
+        <span>❤️ ${m.hp}</span>
+        <span>⚔️ ${m.attack}</span>
+        <span>💨 ${m.agility}</span>
+        <span>🛡️ ${m.defense}</span>
+      </div>
+      <div class="solo-xp-hint">🏆 ${m.xp_reward} XP</div>
+    </div>`;
+  document.getElementById('solo-carousel-prev').disabled = soloMonsterIndex === 0;
+  document.getElementById('solo-carousel-next').disabled = soloMonsterIndex === soloMonsters.length - 1;
+  document.getElementById('solo-stamina-cost').textContent = `Costs ${m.stamina_cost} Stamina`;
+  const st = Number(charState?.stamina) || 0;
+  const canFight = st >= m.stamina_cost && (Number(charState?.hp) || 0) > 0;
+  document.getElementById('solo-fight-btn').disabled = !canFight;
+  document.getElementById('solo-stamina-warning').classList.toggle('hidden', canFight);
+}
+
+function updateSoloModalHp(hp, maxHp, stamina) {
+  const pct = maxHp > 0 ? Math.min(100, (hp / maxHp) * 100) : 0;
+  const fill = document.getElementById('solo-modal-hp-fill');
+  if (fill) { fill.style.width = pct + '%'; fill.classList.toggle('low', pct < 30); }
+  const txt = document.getElementById('solo-modal-hp-text');
+  if (txt) txt.textContent = `${Math.ceil(hp)} / ${maxHp}`;
+}
+
+function prevSoloMonster() {
+  if (soloMonsterIndex > 0) { soloMonsterIndex--; renderSoloMonsterCarousel(); }
+}
+
+function nextSoloMonster() {
+  if (soloMonsterIndex < soloMonsters.length - 1) { soloMonsterIndex++; renderSoloMonsterCarousel(); }
+}
+
+async function startSoloBattle() {
+  if (!soloMonsters.length) return;
+  const monster = soloMonsters[soloMonsterIndex];
+  closeSoloDungeonModal();
+
+  const res = await api.post(`/api/solo/${charId}/start`, { monster_id: monster.id });
+  if (!res || !res.ok) {
+    const err = res ? await res.json() : {};
+    showToast(err.error || 'Could not start battle', 'danger');
+    return;
+  }
+  const data = await res.json();
+  soloBattleActive      = true;
+  soloBattleHeroMaxHp   = data.heroMaxHp;
+  soloBattleMonsterMaxHp = data.monsterMaxHp;
+
+  openSoloBattlePanel({ monster_name: data.monster.name, monster_icon: data.monster.icon, monster_hp: data.monsterHp, monster_max_hp: data.monsterMaxHp }, { hp: data.heroHp, max_hp: data.heroMaxHp });
+  appendSoloLog([{ type: 'log-separator', text: `Battle started against ${data.monster.name}!` }]);
+  startSoloTurnLoop();
+
+  // Refresh char state
+  const tick = await api.get(`/api/game/${charId}/tick`);
+  if (tick) { const d = await tick.json(); charState = d; renderAll(d); }
+}
+
+function openSoloBattlePanel(soloBattle, char) {
+  const panel = document.getElementById('solo-battle-panel');
+  if (!panel) return;
+  panel.classList.add('open');
+
+  const name  = soloBattle.monster_name  || '?';
+  const icon  = soloBattle.monster_icon  || '👾';
+  const monHp = Number(soloBattle.monster_hp)     || 0;
+  const monMax = Number(soloBattle.monster_max_hp) || monHp;
+  const heroHp  = Number(char.hp) || Number(char.heroHp) || 0;
+  const heroMax = Number(char.max_hp) || Number(char.heroMaxHp) || 20;
+
+  soloBattleHeroMaxHp    = heroMax;
+  soloBattleMonsterMaxHp = monMax;
+
+  document.getElementById('solo-battle-title').textContent = `⚔️ ${name}`;
+  document.getElementById('solo-monster-name').textContent = name;
+  document.getElementById('solo-monster-icon').textContent = icon;
+  updateSoloBattleBars(heroHp, heroMax, monHp, monMax);
+}
+
+function resumeSoloBattle(soloBattle, char) {
+  soloBattleActive = true;
+  openSoloBattlePanel(soloBattle, char);
+  appendSoloLog([{ type: 'log-separator', text: 'Resuming battle…' }]);
+  startSoloTurnLoop();
+}
+
+function updateSoloBattleBars(heroHp, heroMax, monHp, monMax) {
+  const hPct = heroMax > 0 ? Math.min(100, (heroHp / heroMax) * 100) : 0;
+  const mPct = monMax  > 0 ? Math.min(100, (monHp  / monMax)  * 100) : 0;
+  const hFill = document.getElementById('solo-hero-hp-fill');
+  if (hFill) { hFill.style.width = hPct + '%'; hFill.classList.toggle('low', hPct < 30); }
+  const mFill = document.getElementById('solo-monster-hp-fill');
+  if (mFill) mFill.style.width = mPct + '%';
+  const hTxt = document.getElementById('solo-hero-hp-text');
+  if (hTxt) hTxt.textContent = `${Math.ceil(heroHp)} / ${heroMax}`;
+  const mTxt = document.getElementById('solo-monster-hp-text');
+  if (mTxt) mTxt.textContent = `${Math.ceil(monHp)} / ${monMax}`;
+}
+
+function appendSoloLog(entries) {
+  const log = document.getElementById('solo-battle-log');
+  if (!log) return;
+  const empty = log.querySelector('.battle-log-empty');
+  if (empty) empty.remove();
+  for (const e of entries) {
+    const div = document.createElement('div');
+    div.className = e.type === 'log-separator' ? 'log-fight-sep'
+      : e.type === 'hit-player'  ? 'log-hit-player'
+      : e.type === 'hit-monster' ? 'log-hit-monster'
+      : e.type === 'dodge'       ? 'log-dodge'
+      : 'log-miss-player';
+    div.textContent = e.type === 'log-separator' ? `— ${e.text} —` : e.text;
+    log.appendChild(div);
+  }
+  log.scrollTop = log.scrollHeight;
+}
+
+function startSoloTurnLoop() {
+  if (soloTurnInterval) clearInterval(soloTurnInterval);
+  soloTurnInterval = setInterval(soloTurn, 800);
+}
+
+function stopSoloTurnLoop() {
+  if (soloTurnInterval) { clearInterval(soloTurnInterval); soloTurnInterval = null; }
+}
+
+async function soloTurn() {
+  if (!soloBattleActive) { stopSoloTurnLoop(); return; }
+
+  const res = await api.post(`/api/solo/${charId}/turn`, {});
+  if (!res || !res.ok) { stopSoloTurnLoop(); return; }
+  const data = await res.json();
+
+  appendSoloLog(data.log || []);
+  updateSoloBattleBars(
+    data.heroHp,    soloBattleHeroMaxHp,
+    data.monsterHp, soloBattleMonsterMaxHp,
+  );
+
+  if (data.status === 'victory' || data.status === 'defeat') {
+    stopSoloTurnLoop();
+    soloBattleActive = false;
+    if (data.char) { charState = data.char; renderAll(data.char); }
+    setTimeout(() => showSoloResult(data), 600);
+  }
+}
+
+function showSoloResult(data) {
+  const victory = data.status === 'victory';
+  document.getElementById('solo-result-title').textContent = victory ? '🏆 Victory!' : '💀 Defeat';
+
+  const xpEl = document.getElementById('solo-result-xp');
+  xpEl.textContent = victory ? `+${data.xpGained} XP${data.leveled ? ' · Level Up! 🎉' : ''}` : 'No rewards — try again!';
+
+  const lootEl = document.getElementById('solo-result-loot');
+  if (victory && data.loot && data.loot.length > 0) {
+    lootEl.innerHTML = data.loot.map(i => `<div class="loot-item"><span class="loot-icon">${escHtml(i.icon || '?')}</span><span>${escHtml(i.name)}</span></div>`).join('');
+  } else if (victory) {
+    lootEl.innerHTML = '<p class="loot-empty">No loot this time.</p>';
+  } else {
+    lootEl.textContent = '';
+  }
+
+  document.getElementById('solo-result-modal').classList.add('open');
+}
+
+function closeSoloResultModal() {
+  document.getElementById('solo-result-modal').classList.remove('open');
+  document.getElementById('solo-battle-panel').classList.remove('open');
+  const log = document.getElementById('solo-battle-log');
+  if (log) log.innerHTML = '<span class="battle-log-empty">Combat begins…</span>';
+}
+
+function closeSoloBattlePanel() {
+  if (soloBattleActive) return; // Can't close while battle is running
+  document.getElementById('solo-battle-panel').classList.remove('open');
+}
+
+async function fleeSoloBattle() {
+  stopSoloTurnLoop();
+  soloBattleActive = false;
+  const res = await api.post(`/api/solo/${charId}/flee`, {});
+  if (res) { const d = await res.json(); if (d.char) { charState = d.char; renderAll(d.char); } }
+  document.getElementById('solo-battle-panel').classList.remove('open');
+  const log = document.getElementById('solo-battle-log');
+  if (log) log.innerHTML = '<span class="battle-log-empty">Combat begins…</span>';
+  showToast('You fled the dungeon!', 'warn');
 }
 
 // ---- Start ----
