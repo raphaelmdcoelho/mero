@@ -34,11 +34,11 @@
   <div class="game-layout">
     <div class="game-arena">
       <div class="action-grid">
-        <!-- Top-left: Dungeon -->
+        <!-- Top-left: Dungeons (timer-based) -->
         <div class="action-sq-wrap" style="grid-column:1;grid-row:1;">
-          <span id="dungeon-label" class="sq-label" data-i18n="game.dungeon">Dungeon</span>
+          <span id="dungeon-label" class="sq-label" data-i18n="game.dungeon">Dungeons</span>
           <div class="action-sq" id="sq-dungeon" onclick="handleDungeon()">
-            <img src="/dungeon-icon.png" alt="Dungeon" class="sq-icon" />
+            <img src="/dungeon-icon.png" alt="Dungeons" class="sq-icon" />
           </div>
         </div>
 
@@ -77,12 +77,11 @@
           </div>
         </div>
 
-        <!-- Row 1 col 6: Research (coming soon) -->
+        <!-- Row 1 col 6: Dungeon (turn-based solo combat) -->
         <div class="action-sq-wrap" style="grid-column:6;grid-row:1;">
-          <span id="research-label" class="sq-label" data-i18n="game.research">Research</span>
-          <div class="action-sq disabled" id="sq-research">
-            <img src="/research-icon.png" alt="Research" class="sq-icon" />
-            <span class="unspent-badge" style="font-size:0.5rem;" data-i18n="game.coming_soon">Soon</span>
+          <span id="solo-dungeon-label" class="sq-label">Dungeon</span>
+          <div class="action-sq" id="sq-solo-dungeon" onclick="handleDungeonSolo()">
+            <img src="/research-icon.png" alt="Dungeon" class="sq-icon" />
           </div>
         </div>
 
@@ -183,6 +182,13 @@
     <!-- Status bars -->
     <div class="status-bar">
       <div class="status-bars">
+        <div class="stat-row">
+          <span class="stat-label">HP</span>
+          <div class="stat-track">
+            <div class="stat-fill hp" id="hp-fill" style="width:100%"></div>
+          </div>
+          <span class="stat-value" id="hp-text">20 / 20</span>
+        </div>
         <div class="stat-row">
           <span class="stat-label">XP</span>
           <div class="stat-track">
@@ -354,6 +360,95 @@
       <div class="loot-list" id="loot-list"></div>
       <div class="modal-footer">
         <button type="button" class="btn btn-primary" onclick="closeLootModal()" data-i18n="dungeon.collect_close">Collect &amp; Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Solo Dungeon — Monster Selection Modal -->
+  <div class="modal-overlay" id="solo-dungeon-modal">
+    <div class="modal">
+      <h2 class="modal-title">⚔️ Dungeon</h2>
+      <p class="solo-modal-sub">Choose your opponent</p>
+
+      <!-- Hero HP reminder -->
+      <div class="solo-hero-hp-row">
+        <span class="battle-hero-label">Your HP</span>
+        <div class="stat-track solo-hp-track">
+          <div class="stat-fill hp" id="solo-modal-hp-fill"></div>
+        </div>
+        <span class="solo-modal-hp-text" id="solo-modal-hp-text">20 / 20</span>
+      </div>
+
+      <!-- Monster carousel -->
+      <div class="dungeon-carousel solo-carousel-gap">
+        <button type="button" class="carousel-arrow" id="solo-carousel-prev" onclick="prevSoloMonster()">&#8249;</button>
+        <div class="dungeon-carousel-content" id="solo-carousel-content">
+          <!-- populated by JS -->
+        </div>
+        <button type="button" class="carousel-arrow" id="solo-carousel-next" onclick="nextSoloMonster()">&#8250;</button>
+      </div>
+
+      <!-- Stamina cost -->
+      <div class="solo-stamina-cost" id="solo-stamina-cost">Costs 10 Stamina</div>
+      <div class="stamina-warning hidden" id="solo-stamina-warning">Not enough stamina!</div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline" onclick="closeSoloDungeonModal()">Cancel</button>
+        <button type="button" class="btn btn-primary" id="solo-fight-btn" onclick="startSoloBattle()">⚔️ Fight!</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Solo Dungeon — Battle Panel -->
+  <div class="side-panel" id="solo-battle-panel">
+    <div class="side-panel-header">
+      <span class="side-panel-title" id="solo-battle-title">⚔️ Dungeon</span>
+      <button class="close-btn" onclick="closeSoloBattlePanel()">✕</button>
+    </div>
+    <div class="side-panel-body">
+      <!-- Monster HP -->
+      <div class="monster-card" id="solo-monster-card">
+        <div class="monster-icon" id="solo-monster-icon">👺</div>
+        <div class="monster-info">
+          <div class="monster-name" id="solo-monster-name">Goblin Scout</div>
+          <div class="monster-hp-row">
+            <div class="stat-track">
+              <div class="stat-fill hp" id="solo-monster-hp-fill"></div>
+            </div>
+            <span class="monster-hp-text" id="solo-monster-hp-text">30 / 30</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Hero HP -->
+      <div class="battle-hero-hp">
+        <span class="battle-hero-label">Hero HP</span>
+        <div class="stat-track">
+          <div class="stat-fill hp" id="solo-hero-hp-fill"></div>
+        </div>
+        <span class="monster-hp-text" id="solo-hero-hp-text">20 / 20</span>
+      </div>
+
+      <!-- Battle log -->
+      <div class="battle-log" id="solo-battle-log">
+        <span class="battle-log-empty">Combat begins…</span>
+      </div>
+
+      <!-- Actions -->
+      <div class="battle-actions">
+        <button type="button" class="btn btn-danger battle-attack-btn" id="solo-flee-btn" onclick="fleeSoloBattle()">🚪 Flee</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Solo Dungeon — Result Modal -->
+  <div class="modal-overlay" id="solo-result-modal">
+    <div class="modal">
+      <h2 class="modal-title" id="solo-result-title">Victory!</h2>
+      <div class="loot-xp-row" id="solo-result-xp"></div>
+      <div class="loot-list" id="solo-result-loot"></div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-primary" onclick="closeSoloResultModal()">Continue</button>
       </div>
     </div>
   </div>

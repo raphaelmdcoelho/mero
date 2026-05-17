@@ -37,6 +37,7 @@ app.use('/api/characters', require('./routes/characters'));
 app.use('/api/game',       require('./routes/game'));
 app.use('/api/farm',       require('./routes/farm'));
 app.use('/api/market',     require('./routes/market'));
+app.use('/api/solo',       require('./routes/dungeon_solo'));
 
 // SPA fallback — only for non-asset paths
 app.get('*', (req, res) => {

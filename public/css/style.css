@@ -2019,3 +2019,76 @@ input:focus, select:focus {
   25%       { transform: translateX(-5px); }
   75%       { transform: translateX(5px); }
 }
+
+/* ── Solo Dungeon ─────────────────────────────────────────────────────────── */
+.solo-modal-sub {
+  text-align: center;
+  color: var(--muted);
+  font-size: 0.85rem;
+  margin-bottom: 0.75rem;
+}
+
+.solo-hero-hp-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.solo-hp-track { flex: 1; }
+
+.solo-modal-hp-text {
+  font-size: 0.8rem;
+  white-space: nowrap;
+  color: var(--muted);
+}
+
+.solo-carousel-gap { margin: 0.75rem 0; }
+
+.solo-stamina-cost {
+  text-align: center;
+  font-size: 0.82rem;
+  color: var(--muted);
+  margin-bottom: 0.25rem;
+}
+
+.solo-monster-card {
+  text-align: center;
+  padding: 0.5rem 0.25rem;
+}
+
+.solo-monster-portrait {
+  font-size: 3.5rem;
+  line-height: 1;
+  margin-bottom: 0.25rem;
+  min-height: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.solo-monster-img {
+  max-width: 80px;
+  max-height: 80px;
+  object-fit: contain;
+  image-rendering: pixelated;
+}
+
+.solo-monster-stats {
+  display: flex;
+  justify-content: center;
+  gap: 0.75rem;
+  font-size: 0.82rem;
+  color: var(--muted);
+  margin-top: 0.35rem;
+}
+
+.solo-xp-hint {
+  font-size: 0.8rem;
+  color: var(--gold);
+  margin-top: 0.25rem;
+}
+
+/* sq-solo-dungeon icon sizing — matches other action squares */
+#sq-solo-dungeon .sq-icon { width: 100px; top: 50%; }
+

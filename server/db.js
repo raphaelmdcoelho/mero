@@ -107,6 +107,31 @@ async function initDb() {
       monster_hp    REAL    NOT NULL,
       started_at    INTEGER NOT NULL
     );
+
+    CREATE TABLE IF NOT EXISTS solo_monsters (
+      id           INTEGER PRIMARY KEY AUTOINCREMENT,
+      name         TEXT    NOT NULL,
+      icon         TEXT    NOT NULL DEFAULT '👾',
+      image_path   TEXT    DEFAULT NULL,
+      hp           INTEGER NOT NULL,
+      attack       INTEGER NOT NULL,
+      agility      INTEGER NOT NULL,
+      defense      INTEGER NOT NULL,
+      hit_chance   INTEGER NOT NULL DEFAULT 70,
+      xp_reward    INTEGER NOT NULL,
+      stamina_cost INTEGER NOT NULL DEFAULT 10,
+      loot_table   TEXT    NOT NULL DEFAULT '[]'
+    );
+
+    CREATE TABLE IF NOT EXISTS solo_battle (
+      id           INTEGER PRIMARY KEY AUTOINCREMENT,
+      character_id INTEGER NOT NULL REFERENCES characters(id) UNIQUE,
+      monster_id   INTEGER NOT NULL REFERENCES solo_monsters(id),
+      monster_hp   INTEGER NOT NULL,
+      status       TEXT    NOT NULL DEFAULT 'active',
+      turns        INTEGER NOT NULL DEFAULT 0,
+      started_at   INTEGER NOT NULL DEFAULT (unixepoch())
+    );
   `);
 
   // Additive migrations — safe to run on existing DBs
@@ -556,6 +581,23 @@ async function initDb() {
       ], 'write');
     }
   }
+
+  // ── Seed solo monsters (turn-based Dungeon feature) ─────────────────────────
+  // [id, name, icon, image_path, hp, attack, agility, defense, hit_chance, xp_reward, stamina_cost, loot_table]
+  const soloMonsterData = [
+    [1, 'Goblin Scout', '👺', null, 30,  5, 15, 2, 65, 20, 10, '[{"item_id":6,"chance":50},{"item_id":37,"chance":35},{"item_id":5,"chance":15}]'],
+    [2, 'Stone Troll',  '🧌', null, 65, 10,  6, 8, 70, 50, 10, '[{"item_id":5,"chance":40},{"item_id":9,"chance":12},{"item_id":10,"chance":8}]'],
+  ];
+  await client.batch([
+    ...soloMonsterData.map(([id, name, icon, ip, hp, atk, agi, def, hit, xp, st, lt]) => ({
+      sql:  'INSERT OR IGNORE INTO solo_monsters (id, name, icon, image_path, hp, attack, agility, defense, hit_chance, xp_reward, stamina_cost, loot_table) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)',
+      args: [id, name, icon, ip, hp, atk, agi, def, hit, xp, st, lt],
+    })),
+    ...soloMonsterData.map(([id, name, icon, ip, hp, atk, agi, def, hit, xp, st, lt]) => ({
+      sql:  'UPDATE solo_monsters SET name=?, icon=?, image_path=?, hp=?, attack=?, agility=?, defense=?, hit_chance=?, xp_reward=?, stamina_cost=?, loot_table=? WHERE id=?',
+      args: [name, icon, ip, hp, atk, agi, def, hit, xp, st, lt, id],
+    })),
+  ], 'write');
 }
 
 module.exports = { client, transaction, initDb };
