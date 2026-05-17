@@ -360,6 +360,9 @@
       'game.js.click_to_sell':      'Click to sell 1',
       'game.js.click_to_buy':       'Click to buy 1',
       'game.js.cant_afford':        'Not enough gold',
+      'game.js.sell_btn':           'Sell',
+      'game.js.buy_btn':            'Buy',
+      'game.js.cancel_btn':         'Cancel',
 
       // Attributes
       'attr.strength':              'Strength',
@@ -730,6 +733,9 @@
       'game.js.click_to_sell':      'Clique para vender 1',
       'game.js.click_to_buy':       'Clique para comprar 1',
       'game.js.cant_afford':        'Ouro insuficiente',
+      'game.js.sell_btn':           'Vender',
+      'game.js.buy_btn':            'Comprar',
+      'game.js.cancel_btn':         'Cancelar',
 
       // Attributes
       'attr.strength':              'Força',
