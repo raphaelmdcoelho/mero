@@ -650,6 +650,10 @@ input:focus, select:focus {
   transform: scale(1.5);
   filter: brightness(1.15);
 }
+#sq-dungeon .sq-icon {
+  transform: scale(0.82);
+  object-fit: contain;
+}
 #sq-fishing .sq-icon {
   transform: scale(0.82) translateY(6px);
   object-fit: contain;
