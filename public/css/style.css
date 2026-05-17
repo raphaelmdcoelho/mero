@@ -512,7 +512,7 @@ input:focus, select:focus {
 }
 .action-grid {
   display: grid;
-  grid-template-columns: repeat(6, 100px);
+  grid-template-columns: repeat(7, 100px);
   grid-template-rows: 120px 200px 120px;
   column-gap: 12px;
   row-gap: 24px;
@@ -632,6 +632,7 @@ input:focus, select:focus {
 #sq-achievements.active,
 #sq-market.active { outline-color: var(--accent); }
 #sq-dungeon      .sq-icon,
+#sq-solo-dungeon .sq-icon,
 #sq-farm         .sq-icon,
 #sq-tavern       .sq-icon,
 #sq-read         .sq-icon,
@@ -1271,9 +1272,9 @@ input:focus, select:focus {
 /* ---- Mobile (375px) ---- */
 @media (max-width: 480px) {
   .action-grid {
-    grid-template-columns: repeat(6, 54px);
+    grid-template-columns: repeat(7, 44px);
     grid-template-rows: 74px 150px 74px;
-    gap: 5px;
+    gap: 4px;
   }
   .action-sq { width: 54px; height: 54px; font-size: 0.55rem; }
   .action-sq .sq-icon { font-size: 1.4rem; }
@@ -2023,3 +2024,74 @@ input:focus, select:focus {
   25%       { transform: translateX(-5px); }
   75%       { transform: translateX(5px); }
 }
+
+/* ── Solo Dungeon ─────────────────────────────────────────────────────────── */
+.solo-modal-sub {
+  text-align: center;
+  color: var(--muted);
+  font-size: 0.85rem;
+  margin-bottom: 0.75rem;
+}
+
+.solo-hero-hp-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.solo-hp-track { flex: 1; }
+
+.solo-modal-hp-text {
+  font-size: 0.8rem;
+  white-space: nowrap;
+  color: var(--muted);
+}
+
+.solo-carousel-gap { margin: 0.75rem 0; }
+
+.solo-stamina-cost {
+  text-align: center;
+  font-size: 0.82rem;
+  color: var(--muted);
+  margin-bottom: 0.25rem;
+}
+
+.solo-monster-card {
+  text-align: center;
+  padding: 0.5rem 0.25rem;
+}
+
+.solo-monster-portrait {
+  font-size: 3.5rem;
+  line-height: 1;
+  margin-bottom: 0.25rem;
+  min-height: 140px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.solo-monster-img {
+  width: 140px;
+  height: 140px;
+  object-fit: contain;
+  image-rendering: pixelated;
+}
+
+.solo-monster-stats {
+  display: flex;
+  justify-content: center;
+  gap: 0.75rem;
+  font-size: 0.82rem;
+  color: var(--muted);
+  margin-top: 0.35rem;
+}
+
+.solo-xp-hint {
+  font-size: 0.8rem;
+  color: var(--gold);
+  margin-top: 0.25rem;
+}
+
+
