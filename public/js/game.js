@@ -931,9 +931,7 @@ const MAX_INVENTORY_SLOTS = 25;
 // ---- Inventory ----
 function renderInventory(char) {
   if (!char) return;
-  selectedInvIdx = null;
-  const tooltip = document.getElementById('item-tooltip');
-  if (tooltip) tooltip.style.display = 'none';
+  const prevIdx = selectedInvIdx;
   const grid = document.getElementById('inv-grid');
   const inv  = char.inventory || [];
   const slots = Array(MAX_INVENTORY_SLOTS).fill(null);
@@ -950,6 +948,12 @@ function renderInventory(char) {
       ${item.quantity > 1 ? `<span class="qty">${item.quantity}</span>` : ''}
     </div>`;
   }).join('');
+
+  // restore selection if an item was open before the re-render
+  if (prevIdx !== null && inv[prevIdx]) {
+    selectedInvIdx = null; // reset so showItemInfo doesn't treat it as a toggle
+    showItemInfo(prevIdx);
+  }
 }
 
 function showItemInfo(idx) {
@@ -1909,6 +1913,7 @@ function attachMarketTooltip(container, getHtml) {
 
 function renderMarketPanel(char) {
   if (!char) return;
+  const prevSellInvId = selectedSellInvId;
   selectedSellInvId = null;
   const gold = Number(char.gold) || 0;
   document.getElementById('market-gold-amount').textContent = `🪙 ${gold}g`;
@@ -1945,10 +1950,17 @@ function renderMarketPanel(char) {
   }).join('')}</div><div id="sell-detail-panel"></div>`;
 
   attachMarketTooltip(list, cell => cell.dataset.tip || '');
+
+  // restore selection if an item was open before the re-render
+  if (prevSellInvId !== null) {
+    const item = (char.inventory || []).find(i => i.id === prevSellInvId);
+    if (item) selectSellItem(item.id, item.item_id);
+  }
 }
 
 async function renderShopPane() {
   const shopList = document.getElementById('market-shop-list');
+  const prevBuyItemId = selectedBuyItemId;
   selectedBuyItemId = null;
   shopList.innerHTML = `<p class="muted-sm">${t('game.js.loading')}</p>`;
   const res = await api.get(`/api/market/${charId}/shop`);
@@ -2003,6 +2015,11 @@ async function renderShopPane() {
   }).join('')}</div><div id="buy-detail-panel"></div>`;
 
   attachMarketTooltip(shopList, cell => cell.dataset.tip || '');
+
+  // restore selection if an item was open before the re-render
+  if (prevBuyItemId !== null && shopItemsCache[prevBuyItemId]) {
+    selectBuyItem(prevBuyItemId);
+  }
 }
 
 function selectSellItem(invId, itemId) {
