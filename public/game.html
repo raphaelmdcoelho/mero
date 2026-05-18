@@ -325,14 +325,10 @@
         <h2 class="modal-title">Choose a Book</h2>
         <button type="button" class="close-btn" onclick="closeReadModal()">✕</button>
       </div>
-      <div class="read-body">
-        <img src="/img/read_background.png" class="read-bg-img" alt="Library" />
-        <div class="read-right">
-          <p class="read-modal-subtitle">Select a book to read</p>
-          <div class="read-book-list" id="read-book-list">
-            <!-- populated by JS -->
-          </div>
-        </div>
+      <img src="/img/read_background.png" class="read-bg-img" alt="Library" />
+      <p class="read-modal-subtitle">Select a book to read</p>
+      <div class="read-book-list" id="read-book-list">
+        <!-- populated by JS -->
       </div>
       <div class="modal-footer">
         <button class="btn btn-outline" onclick="closeReadModal()">Cancel</button>
@@ -904,22 +900,14 @@
     }
 
     /* Read modal */
-    .read-modal-content { width: min(92vw, 620px); }
-    .read-body {
-      display: flex;
-      gap: 1rem;
-      align-items: flex-start;
-    }
+    .read-modal-content { width: min(92vw, 480px); display: flex; flex-direction: column; gap: 0; }
     .read-bg-img {
-      flex: 0 0 180px;
-      width: 180px;
+      width: 100%;
+      display: block;
       border-radius: 8px;
       object-fit: cover;
-      align-self: stretch;
-    }
-    .read-right {
-      flex: 1;
-      min-width: 0;
+      max-height: 200px;
+      margin-bottom: 0.75rem;
     }
     .read-modal-subtitle {
       font-size: 0.82rem;
