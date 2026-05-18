@@ -347,6 +347,7 @@ input:focus, select:focus {
   justify-content: flex-end;
   padding: 0.15rem 1.5rem;
   border-top: 1px solid var(--border);
+  margin-top: auto;
 }
 .version-badge {
   font-size: 0.75rem;
@@ -607,7 +608,6 @@ input:focus, select:focus {
 .game-layout {
   display: flex;
   flex-direction: column;
-  flex: 1;
 }
 .game-arena {
   display: flex;
