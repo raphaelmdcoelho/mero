@@ -94,8 +94,9 @@ router.post('/:characterId/sell', async (req, res) => {
 
   if (!invRow) return res.status(404).json({ error: 'Item not in inventory' });
 
-  const equippedSlots = [char.weapon_id, char.armor_id, char.shield_id, char.arm_id, char.boots_id, char.helmet_id];
-  const isEquipped = equippedSlots.includes(invRow.item_id);
+  const equippedSlots = [char.weapon_id, char.armor_id, char.shield_id, char.arm_id, char.boots_id, char.helmet_id]
+    .filter(Boolean).map(Number);
+  const isEquipped = equippedSlots.includes(Number(invRow.item_id));
   const maxSellable = isEquipped ? invRow.quantity - 1 : invRow.quantity;
 
   if (maxSellable <= 0) return res.status(400).json({ error: 'Unequip the item before selling' });
