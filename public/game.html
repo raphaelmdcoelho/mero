@@ -857,7 +857,6 @@
       pointer-events: none;
       z-index: 0;
     }
-    #sq-read > * { position: relative; z-index: 1; }
 
     /* Read modal */
     .read-modal-subtitle {
@@ -926,7 +925,6 @@
       pointer-events: none;
       z-index: 0;
     }
-    #sq-tavern > * { position: relative; z-index: 1; }
 
     /* Adventure (dungeon) progress fill — elapsed timer, fills left-to-right */
     #sq-dungeon::before {
@@ -939,7 +937,6 @@
       pointer-events: none;
       z-index: 0;
     }
-    #sq-dungeon > * { position: relative; z-index: 1; }
 
     /* Solo dungeon progress fill — pulses while in combat */
     #sq-solo-dungeon::before {
@@ -957,7 +954,6 @@
       opacity: 1;
       animation: pulse-fill 1.8s ease-in-out infinite;
     }
-    #sq-solo-dungeon > * { position: relative; z-index: 1; }
 
     @keyframes pulse-fill {
       0%, 100% { opacity: 0.4; }
