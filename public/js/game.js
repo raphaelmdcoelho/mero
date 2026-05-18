@@ -2041,6 +2041,15 @@ function selectSellItem(invId, itemId) {
   const statLine = item.damage  ? `<div class="item-detail-stat">⚔️ ${item.damage} ${t('game.js.dmg_unit')}</div>`
                  : item.defense ? `<div class="item-detail-stat">🛡️ ${item.defense} ${t('game.js.def_unit')}</div>`
                  : '';
+
+  const equippedIds = [
+    charState?.equippedWeapon?.id, charState?.equippedArmor?.id, charState?.equippedShield?.id,
+    charState?.equippedArm?.id,    charState?.equippedBoots?.id,  charState?.equippedHelmet?.id,
+  ].filter(Boolean);
+  const isEquipped  = equippedIds.includes(item.item_id);
+  const maxSellable = isEquipped ? item.quantity - 1 : item.quantity;
+  const equippedNote = isEquipped ? `<div class="item-detail-equipped-note">${t('game.js.equipped_note')}</div>` : '';
+
   const panel = document.getElementById('sell-detail-panel');
   if (!panel) return;
   panel.innerHTML = `
@@ -2054,8 +2063,9 @@ function selectSellItem(invId, itemId) {
       </div>
       <div class="item-detail-meta">🪙 ${price}g ${t('game.js.each')} · ${t('game.js.qty')}: ${item.quantity}</div>
       ${statLine}
+      ${equippedNote}
       <div class="item-detail-actions">
-        <button type="button" class="btn btn-danger btn-sm" onclick="sellItem(${invId},${itemId},1)">${t('game.js.sell_btn')}</button>
+        <button type="button" class="btn btn-danger btn-sm" ${maxSellable <= 0 ? 'disabled' : `onclick="sellItem(${invId},${itemId},1)"`}>${t('game.js.sell_btn')}</button>
         <button type="button" class="btn btn-outline btn-sm" onclick="clearSellSelection()">${t('game.js.cancel_btn')}</button>
       </div>
     </div>`;

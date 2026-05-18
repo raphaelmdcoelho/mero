@@ -252,10 +252,10 @@
 
       // Market panel
       'game.mp.your_gold':       'Your gold',
-      'game.mp.desc':            'Sell items and plants for gold. Equipped items cannot be sold.',
+      'game.mp.desc':            'Sell items and plants for gold. Equipped items can only sell excess copies.',
       'game.mp.tab_sell':        'Sell',
       'game.mp.tab_buy':         'Buy',
-      'game.mp.sell_desc':       'Sell items for gold. Equipped items cannot be sold.',
+      'game.mp.sell_desc':       'Sell items for gold. One copy of each equipped item is reserved.',
       'game.mp.buy_desc':        'Browse the shop and purchase items.',
       'game.mp.cat_food':        'Food',
       'game.mp.cat_potions':     'Potions',
@@ -350,6 +350,7 @@
       'game.js.nothing_to_sell':    'Nothing to sell.',
       'game.js.sell_one':           'Sell 1',
       'game.js.equipped_tag':       'Equipped',
+      'game.js.equipped_note':      'Equipped — unequip to sell all',
       'game.js.buy_one':            'Buy 1',
       'game.js.cant_buy':           'Could not buy item',
       'game.js.bought_for':         '🪙 Bought for {n}g!',
@@ -624,10 +625,10 @@
 
       // Market panel
       'game.mp.your_gold':       'Seu ouro',
-      'game.mp.desc':            'Venda itens e plantas por ouro. Itens equipados não podem ser vendidos.',
+      'game.mp.desc':            'Venda itens e plantas por ouro. Itens equipados só vendem cópias excedentes.',
       'game.mp.tab_sell':        'Vender',
       'game.mp.tab_buy':         'Comprar',
-      'game.mp.sell_desc':       'Venda itens por ouro. Itens equipados não podem ser vendidos.',
+      'game.mp.sell_desc':       'Venda itens por ouro. Uma cópia de cada item equipado fica reservada.',
       'game.mp.buy_desc':        'Explore a loja e compre itens.',
       'game.mp.cat_food':        'Comida',
       'game.mp.cat_potions':     'Poções',
@@ -723,6 +724,7 @@
       'game.js.nothing_to_sell':    'Nada para vender.',
       'game.js.sell_one':           'Vender 1',
       'game.js.equipped_tag':       'Equipado',
+      'game.js.equipped_note':      'Equipado — desequipe para vender tudo',
       'game.js.buy_one':            'Comprar 1',
       'game.js.cant_buy':           'Não foi possível comprar o item',
       'game.js.bought_for':         '🪙 Comprado por {n}g!',
