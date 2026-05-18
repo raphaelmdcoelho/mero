@@ -862,7 +862,7 @@ document.getElementById('loot-modal').addEventListener('click', function(e) {
 
 // ---- Combat Stats ----
 async function refreshCombatStats() {
-  const panel = document.getElementById('attr-panel');
+  const panel = document.getElementById('attr-modal');
   if (!panel.classList.contains('open')) return;
 
   const res = await api.get(`/api/game/${charId}/stats`);
@@ -909,7 +909,7 @@ function renderCombatStats(current, projected) {
 const PANEL_MAP = {
   inventory:  'inv-panel',
   equipment:  'eq-panel',
-  attributes: 'attr-panel',
+  attributes: 'attr-modal',
   battle:     'battle-panel',
   market:     'market-panel',
 };
@@ -930,6 +930,10 @@ function openPanel(type) {
 
 function eqOverlayClick(e) {
   if (e.target === document.getElementById('eq-panel')) closePanel('equipment');
+}
+
+function attrOverlayClick(e) {
+  if (e.target === document.getElementById('attr-modal')) closePanel('attributes');
 }
 
 function closePanel(type) {

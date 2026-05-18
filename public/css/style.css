@@ -347,6 +347,8 @@ input:focus, select:focus {
 }
 .modal-overlay.open .modal { transform: translateY(0); }
 .modal-title { font-family: 'Cinzel', serif; font-size: 1.3rem; margin-bottom: 1rem; }
+.modal-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem; }
+.modal-header .modal-title { margin-bottom: 0; }
 .modal-footer { display: flex; gap: 0.5rem; justify-content: flex-end; margin-top: 1.25rem; }
 
 /* Class selector */
@@ -1055,7 +1057,8 @@ input:focus, select:focus {
   padding: 0 4px;
 }
 
-/* ---- Attributes panel ---- */
+/* ---- Attributes modal ---- */
+.attr-modal-content { width: min(92vw, 420px); max-height: 85vh; overflow-y: auto; }
 .attr-unspent-bar {
   display: none;
   background: var(--surface2);

@@ -251,7 +251,10 @@
   <!-- Dungeon Modal -->
   <div class="modal-overlay" id="dungeon-modal">
     <div class="modal">
-      <h2 class="modal-title" data-i18n="game.dm.title">Choose Dungeon</h2>
+      <div class="modal-header">
+        <h2 class="modal-title" data-i18n="game.dm.title">Choose Dungeon</h2>
+        <button type="button" class="close-btn" onclick="closeDungeonModal()">✕</button>
+      </div>
       <!-- Carousel -->
       <div class="dungeon-carousel">
         <button class="carousel-arrow" id="carousel-prev" onclick="prevDungeon()" disabled>&#8249;</button>
@@ -318,7 +321,10 @@
   <!-- Read Modal -->
   <div class="modal-overlay" id="read-modal">
     <div class="modal">
-      <h2 class="modal-title">Choose a Book</h2>
+      <div class="modal-header">
+        <h2 class="modal-title">Choose a Book</h2>
+        <button type="button" class="close-btn" onclick="closeReadModal()">✕</button>
+      </div>
       <p class="read-modal-subtitle">Select a book to read</p>
       <div class="read-book-list" id="read-book-list">
         <!-- populated by JS -->
@@ -333,7 +339,10 @@
   <!-- Fishing Modal -->
   <div class="modal-overlay" id="fishing-modal">
     <div class="modal">
-      <h2 class="modal-title">Go Fishing</h2>
+      <div class="modal-header">
+        <h2 class="modal-title">Go Fishing</h2>
+        <button type="button" class="close-btn" onclick="closeFishingModal()">✕</button>
+      </div>
       <p class="fishing-modal-subtitle">Choose your bait</p>
       <div class="fishing-bait-grid" id="fishing-bait-grid">
         <!-- populated by JS -->
@@ -408,7 +417,10 @@
   <!-- Solo Dungeon — Monster Selection Modal -->
   <div class="modal-overlay" id="solo-dungeon-modal">
     <div class="modal">
-      <h2 class="modal-title">⚔️ Dungeon</h2>
+      <div class="modal-header">
+        <h2 class="modal-title">⚔️ Dungeon</h2>
+        <button type="button" class="close-btn" onclick="closeSoloDungeonModal()">✕</button>
+      </div>
       <p class="solo-modal-sub">Choose your opponent</p>
 
       <!-- Hero HP reminder -->
@@ -581,13 +593,13 @@
     </div>
   </div>
 
-  <!-- Attributes Panel -->
-  <div class="side-panel" id="attr-panel">
-    <div class="side-panel-header">
-      <span class="side-panel-title">⚡ Attributes</span>
-      <button type="button" class="close-btn" onclick="closePanel('attributes')">✕</button>
-    </div>
-    <div class="side-panel-body">
+  <!-- Attributes Modal -->
+  <div class="modal-overlay" id="attr-modal" onclick="attrOverlayClick(event)">
+    <div class="modal attr-modal-content">
+      <div class="modal-header">
+        <h2 class="modal-title">⚡ Attributes</h2>
+        <button type="button" class="close-btn" onclick="closePanel('attributes')">✕</button>
+      </div>
       <div id="attr-unspent-bar" class="attr-unspent-bar">
         <span class="attr-unspent-label" data-i18n="game.ap.points">Points to Distribute</span>
         <span id="attr-points-left" class="attr-points-left"></span>
@@ -762,9 +774,9 @@
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 3px;
+      gap: 2px;
       cursor: grab;
-      padding: 8px 12px;
+      padding: 5px 8px;
       border: 2px solid transparent;
       border-radius: 8px;
       background: rgba(255,255,255,0.05);
@@ -773,8 +785,8 @@
       transition: border-color 0.15s, background 0.15s;
     }
     .plant-card:hover { border-color: #a0c878; background: rgba(160,200,120,0.1); }
-    .plant-card img { width: 56px; height: 56px; object-fit: contain; pointer-events: none; }
-    .plant-card span { font-size: 0.68rem; color: #ccc; }
+    .plant-card img { width: 40px; height: 40px; object-fit: contain; pointer-events: none; }
+    .plant-card span { font-size: 0.65rem; color: #ccc; }
     .farm-hint { font-size: 0.72rem; color: var(--muted); text-align: center; margin: 10px 0 0; }
     .farm-grid-wrapper { position: relative; width: 100%; margin-top: 16px; }
     .farm-bg-img { width: 100%; display: block; border-radius: 8px; }
