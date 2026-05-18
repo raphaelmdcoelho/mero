@@ -320,14 +320,19 @@
 
   <!-- Read Modal -->
   <div class="modal-overlay" id="read-modal">
-    <div class="modal">
+    <div class="modal read-modal-content">
       <div class="modal-header">
         <h2 class="modal-title">Choose a Book</h2>
         <button type="button" class="close-btn" onclick="closeReadModal()">✕</button>
       </div>
-      <p class="read-modal-subtitle">Select a book to read</p>
-      <div class="read-book-list" id="read-book-list">
-        <!-- populated by JS -->
+      <div class="read-body">
+        <img src="/img/read_background.png" class="read-bg-img" alt="Library" />
+        <div class="read-right">
+          <p class="read-modal-subtitle">Select a book to read</p>
+          <div class="read-book-list" id="read-book-list">
+            <!-- populated by JS -->
+          </div>
+        </div>
       </div>
       <div class="modal-footer">
         <button class="btn btn-outline" onclick="closeReadModal()">Cancel</button>
@@ -604,19 +609,24 @@
         <span class="attr-unspent-label" data-i18n="game.ap.points">Points to Distribute</span>
         <span id="attr-points-left" class="attr-points-left"></span>
       </div>
-      <div id="attr-list"></div>
-      <div id="attr-confirm-row" class="attr-confirm-row">
-        <button type="button" class="btn btn-primary btn-full" onclick="confirmAttributes()" data-i18n="game.ap.confirm">Confirm Allocation</button>
-      </div>
-      <hr class="panel-divider" />
-      <div id="attr-combat-stats">
-        <p class="attr-section-title" data-i18n="game.sp.title">📊 Combat Stats</p>
-        <div class="combat-stat-row"><span class="cstat-label" data-i18n="game.sp.max_hp">❤️ Max HP</span><span class="cstat-value" id="cstat-hp">—</span></div>
-        <div class="combat-stat-row"><span class="cstat-label" data-i18n="game.sp.damage">⚔️ Damage</span><span class="cstat-value" id="cstat-dmg">—</span></div>
-        <div class="combat-stat-row"><span class="cstat-label" data-i18n="game.sp.hit_chance">🎯 Hit Chance</span><span class="cstat-value" id="cstat-hit">—</span></div>
-        <div class="combat-stat-row"><span class="cstat-label" data-i18n="game.sp.dodge_chance">💨 Dodge Chance</span><span class="cstat-value" id="cstat-dodge">—</span></div>
-        <div class="combat-stat-row"><span class="cstat-label" data-i18n="game.sp.defense">🛡️ Defense</span><span class="cstat-value" id="cstat-def">—</span></div>
-        <p class="cstat-note" data-i18n="game.sp.note">Stats include equipped gear and attribute bonuses.</p>
+      <div class="attr-cols">
+        <div class="attr-col-left">
+          <div id="attr-list"></div>
+          <div id="attr-confirm-row" class="attr-confirm-row">
+            <button type="button" class="btn btn-primary btn-full" onclick="confirmAttributes()" data-i18n="game.ap.confirm">Confirm Allocation</button>
+          </div>
+        </div>
+        <div class="attr-col-right">
+          <div id="attr-combat-stats">
+            <p class="attr-section-title" data-i18n="game.sp.title">📊 Combat Stats</p>
+            <div class="combat-stat-row"><span class="cstat-label" data-i18n="game.sp.max_hp">❤️ Max HP</span><span class="cstat-value" id="cstat-hp">—</span></div>
+            <div class="combat-stat-row"><span class="cstat-label" data-i18n="game.sp.damage">⚔️ Damage</span><span class="cstat-value" id="cstat-dmg">—</span></div>
+            <div class="combat-stat-row"><span class="cstat-label" data-i18n="game.sp.hit_chance">🎯 Hit Chance</span><span class="cstat-value" id="cstat-hit">—</span></div>
+            <div class="combat-stat-row"><span class="cstat-label" data-i18n="game.sp.dodge_chance">💨 Dodge Chance</span><span class="cstat-value" id="cstat-dodge">—</span></div>
+            <div class="combat-stat-row"><span class="cstat-label" data-i18n="game.sp.defense">🛡️ Defense</span><span class="cstat-value" id="cstat-def">—</span></div>
+            <p class="cstat-note" data-i18n="game.sp.note">Stats include equipped gear and attribute bonuses.</p>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -894,11 +904,28 @@
     }
 
     /* Read modal */
+    .read-modal-content { width: min(92vw, 620px); }
+    .read-body {
+      display: flex;
+      gap: 1rem;
+      align-items: flex-start;
+    }
+    .read-bg-img {
+      flex: 0 0 180px;
+      width: 180px;
+      border-radius: 8px;
+      object-fit: cover;
+      align-self: stretch;
+    }
+    .read-right {
+      flex: 1;
+      min-width: 0;
+    }
     .read-modal-subtitle {
       font-size: 0.82rem;
       color: var(--muted);
       text-align: center;
-      margin: -0.5rem 0 1rem;
+      margin: 0 0 0.75rem;
     }
     .read-book-list {
       display: flex;

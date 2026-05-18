@@ -1058,7 +1058,10 @@ input:focus, select:focus {
 }
 
 /* ---- Attributes modal ---- */
-.attr-modal-content { width: min(92vw, 420px); max-height: 85vh; overflow-y: auto; }
+.attr-modal-content { width: min(92vw, 660px); max-height: 85vh; overflow-y: auto; }
+.attr-cols { display: flex; gap: 1.5rem; align-items: flex-start; margin-top: 0.25rem; }
+.attr-col-left { flex: 1; min-width: 0; }
+.attr-col-right { flex: 0 0 190px; border-left: 1px solid var(--border); padding-left: 1.25rem; }
 .attr-unspent-bar {
   display: none;
   background: var(--surface2);
