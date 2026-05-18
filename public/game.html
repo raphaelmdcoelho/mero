@@ -30,6 +30,22 @@
     </div>
   </header>
 
+  <!-- Section nav tabs -->
+  <nav class="section-nav">
+    <a href="/game.html" class="section-nav-btn active">
+      <span class="section-nav-icon">⚔️</span>
+      <span class="section-nav-label">Hero</span>
+    </a>
+    <a href="/social.html" class="section-nav-btn">
+      <span class="section-nav-icon">👥</span>
+      <span class="section-nav-label">Social</span>
+    </a>
+    <button type="button" class="section-nav-btn disabled" disabled>
+      <span class="section-nav-icon">🏰</span>
+      <span class="section-nav-label">Castle</span>
+    </button>
+  </nav>
+
   <!-- Game arena -->
   <div class="game-layout">
     <div class="game-arena">
@@ -125,14 +141,6 @@
           <span class="sq-label" data-i18n="game.market">Market</span>
           <div class="action-sq" id="sq-market" onclick="openPanel('market')">
             <img src="/market-icon.png" alt="Market" class="sq-icon" />
-          </div>
-        </div>
-
-        <div class="action-sq-wrap" id="wrap-castle" style="grid-column:5;grid-row:3;">
-          <span class="sq-label" data-i18n="game.castle">Castle</span>
-          <div class="action-sq disabled" id="sq-castle" style="position:relative;">
-            <img src="/castle-icon.png" alt="Castle" class="sq-icon" />
-            <span class="unspent-badge" style="font-size:0.5rem;" data-i18n="game.coming_soon">Soon</span>
           </div>
         </div>
 
@@ -1106,8 +1114,7 @@
       #wrap-attributes   { grid-column: 2 !important; grid-row: 4 !important; }
       #wrap-equipment    { grid-column: 3 !important; grid-row: 4 !important; }
       #wrap-market       { grid-column: 4 !important; grid-row: 4 !important; }
-      #wrap-castle       { grid-column: 1 !important; grid-row: 5 !important; }
-      #wrap-achievements { grid-column: 2 !important; grid-row: 5 !important; }
+      #wrap-achievements { grid-column: 1 !important; grid-row: 5 !important; }
       /* Reset fixed-px icon widths — they were tuned for 100px desktop buttons,
          on 60px mobile buttons they appear 2× too large */
       #sq-farm .sq-icon,
@@ -1116,7 +1123,6 @@
       #sq-attributes .sq-icon,
       #sq-equipment .sq-icon,
       #sq-market .sq-icon,
-      #sq-castle .sq-icon,
       #sq-achievements .sq-icon {
         width: 100% !important;
         height: 100% !important;

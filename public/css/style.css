@@ -237,6 +237,52 @@ input:focus, select:focus {
 .header-right { display: flex; align-items: center; gap: 1rem; }
 .header-username { color: var(--muted); font-size: 0.9rem; }
 
+/* ---- Section nav tabs ---- */
+.section-nav {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.5rem 1.5rem;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+}
+.section-nav-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.15rem;
+  padding: 0.4rem 1.25rem;
+  border-radius: var(--radius);
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--muted);
+  font-family: 'Cinzel', serif;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-decoration: none;
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s, background 0.15s;
+}
+.section-nav-btn:hover:not(.disabled):not(:disabled) {
+  color: var(--text);
+  border-color: var(--border);
+  background: var(--surface2);
+  text-decoration: none;
+}
+.section-nav-btn.active {
+  color: var(--accent);
+  border-color: var(--border);
+  background: var(--surface2);
+}
+.section-nav-btn.disabled,
+.section-nav-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+.section-nav-icon { font-size: 1rem; }
+.section-nav-label { line-height: 1; }
+
 /* ---- Site footer ---- */
 .site-footer {
   text-align: center;
