@@ -264,8 +264,7 @@ function renderAll(char) {
     startLocalTimer();
   } else if (char.activity !== 'reading' && readStartedAt) {
     readStartedAt = null;
-    const readFill = document.getElementById('read-progress-fill');
-    if (readFill) readFill.style.width = '0%';
+    document.getElementById('sq-read')?.style.setProperty('--read-progress', '0%');
   }
 
   updateActionSquares(char.activity, char.farmQueue && char.farmQueue.length > 0);
@@ -345,8 +344,6 @@ function updateActionSquares(activity, isFarming = false) {
   const resetEls = [dungeon, soloDungeon, farm, tavern, inv, eq, attrs, stats, read, fishing].filter(Boolean);
   resetEls.forEach(el => el.classList.remove('active', 'disabled'));
 
-  const soloFill = document.getElementById('solo-button-fill');
-  if (soloFill) soloFill.classList.remove('active');
 
   document.getElementById('dungeon-label').textContent = t('game.js.dungeon_lbl');
   document.getElementById('tavern-label').textContent  = t('game.js.tavern_lbl');
@@ -368,7 +365,6 @@ function updateActionSquares(activity, isFarming = false) {
     if (fishing) fishing.classList.add('disabled');
   } else if (activity === 'dungeon_solo') {
     if (soloDungeon) soloDungeon.classList.add('active');
-    if (soloFill) soloFill.classList.add('active');
     dungeon.classList.add('disabled');
     tavern.classList.add('disabled');
     farm.classList.add('disabled');
@@ -463,10 +459,8 @@ async function stopActivity() {
   if (!res.ok) { showToast(data.error || t('game.js.failed_stop'), 'danger'); return; }
   tavernStartedAt = null;
   readStartedAt   = null;
-  const tavernFill = document.getElementById('tavern-progress-fill');
-  if (tavernFill) tavernFill.style.width = '0%';
-  const readFill = document.getElementById('read-progress-fill');
-  if (readFill) readFill.style.width = '0%';
+  document.getElementById('sq-tavern')?.style.setProperty('--tavern-progress', '0%');
+  document.getElementById('sq-read')?.style.setProperty('--read-progress', '0%');
   if (!dungeonEndsAt) stopLocalTimer();
   charState = data;
   renderAll(data);
@@ -718,21 +712,21 @@ function updateTimerDisplay() {
 let localTimerInterval = null;
 
 function updateTavernProgressBar() {
-  const fill = document.getElementById('tavern-progress-fill');
-  if (!fill) return;
-  if (!tavernStartedAt) { fill.style.width = '0%'; return; }
+  const btn = document.getElementById('sq-tavern');
+  if (!btn) return;
+  if (!tavernStartedAt) { btn.style.setProperty('--tavern-progress', '0%'); return; }
   const elapsedSec = (Date.now() - tavernStartedAt) / 1000;
-  fill.style.width = Math.min(100, (elapsedSec / 300) * 100) + '%';
+  btn.style.setProperty('--tavern-progress', Math.min(100, (elapsedSec / 300) * 100) + '%');
 }
 
 function updateDungeonButtonFill() {
-  const fill = document.getElementById('dungeon-button-fill');
-  if (!fill) return;
-  if (!dungeonEndsAt) { fill.style.width = '0%'; return; }
+  const btn = document.getElementById('sq-dungeon');
+  if (!btn) return;
+  if (!dungeonEndsAt) { btn.style.setProperty('--dungeon-progress', '0%'); return; }
   const totalMs     = DIFFICULTY_DURATIONS[charState?.dungeonRun?.difficulty] || DIFFICULTY_DURATIONS.easy;
   const remainingMs = Math.max(0, dungeonEndsAt - Date.now());
   const pct         = totalMs > 0 ? Math.min(100, ((totalMs - remainingMs) / totalMs) * 100).toFixed(1) : 0;
-  fill.style.width  = pct + '%';
+  btn.style.setProperty('--dungeon-progress', pct + '%');
 }
 
 function startLocalTimer() {
@@ -1379,11 +1373,11 @@ async function confirmStartReading() {
 }
 
 function updateReadProgressBar() {
-  const fill = document.getElementById('read-progress-fill');
-  if (!fill) return;
-  if (!readStartedAt) { fill.style.width = '0%'; return; }
+  const btn = document.getElementById('sq-read');
+  if (!btn) return;
+  if (!readStartedAt) { btn.style.setProperty('--read-progress', '0%'); return; }
   const elapsedSec = (Date.now() - readStartedAt) / 1000;
-  fill.style.width = Math.min(100, (elapsedSec / 3600) * 100) + '%';
+  btn.style.setProperty('--read-progress', Math.min(100, (elapsedSec / 3600) * 100) + '%');
 }
 
 document.getElementById('read-modal').addEventListener('click', function(e) {

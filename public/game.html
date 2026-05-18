@@ -38,7 +38,6 @@
         <div class="action-sq-wrap" id="wrap-dungeon" style="grid-column:1;grid-row:1;">
           <span id="dungeon-label" class="sq-label" data-i18n="game.dungeon">Adventure</span>
           <div class="action-sq" id="sq-dungeon" onclick="handleDungeon()">
-            <div class="dungeon-progress-fill" id="dungeon-button-fill"></div>
             <img src="/adventure_icon.png" alt="Adventure" class="sq-icon" />
           </div>
         </div>
@@ -56,7 +55,6 @@
         <div class="action-sq-wrap" id="wrap-tavern" style="grid-column:3;grid-row:1;">
           <span id="tavern-label" class="sq-label" data-i18n="game.tavern">Tavern</span>
           <div class="action-sq" id="sq-tavern" onclick="handleTavern()">
-            <div class="tavern-progress-fill" id="tavern-progress-fill"></div>
             <img src="/tavern-icon.png" alt="Tavern" class="sq-icon" />
           </div>
         </div>
@@ -65,7 +63,6 @@
         <div class="action-sq-wrap" id="wrap-read" style="grid-column:4;grid-row:1;">
           <span id="read-label" class="sq-label" data-i18n="game.read">Read</span>
           <div class="action-sq" id="sq-read" onclick="handleRead()">
-            <div class="read-progress-fill" id="read-progress-fill"></div>
             <img src="/read-icon.png" alt="Read" class="sq-icon" />
           </div>
         </div>
@@ -82,7 +79,6 @@
         <div class="action-sq-wrap" id="wrap-solo-dungeon" style="grid-column:6;grid-row:1;">
           <span id="solo-dungeon-label" class="sq-label">Dungeon</span>
           <div class="action-sq" id="sq-solo-dungeon" onclick="handleDungeonSolo()">
-            <div class="solo-progress-fill" id="solo-button-fill"></div>
             <img src="/dungeon-icon.png" alt="Dungeon" class="sq-icon" />
           </div>
         </div>
@@ -851,17 +847,17 @@
     #sq-farm > * { position: relative; z-index: 1; }
 
     /* Read progress fill */
-    .read-progress-fill {
+    #sq-read::before {
+      content: '';
       position: absolute;
       inset: 0;
-      width: 0%;
+      width: var(--read-progress, 0%);
       background: rgba(80, 180, 60, 0.28);
-      border-radius: inherit;
-      z-index: 0;
+      transition: width 1s linear;
       pointer-events: none;
-      transition: width 0.5s linear;
+      z-index: 0;
     }
-    #sq-read > img, #sq-read > span { position: relative; z-index: 1; }
+    #sq-read > * { position: relative; z-index: 1; }
 
     /* Read modal */
     .read-modal-subtitle {
@@ -919,60 +915,53 @@
       white-space: nowrap;
     }
 
-    /* Tavern rest progress fill */
-    .tavern-progress-fill {
-      position: absolute;
-      inset: 0;
-      width: 0%;
-      background: rgba(34, 197, 94, 0.35);
-      border-radius: inherit;
-      z-index: 0;
-      pointer-events: none;
-      transition: width 0.5s linear;
-    }
-    #sq-tavern > img, #sq-tavern > span { position: relative; z-index: 1; }
-
-    /* Adventure (dungeon) progress fill — elapsed timer, fills left-to-right */
-    .dungeon-progress-fill {
-      position: absolute;
-      inset: 0;
-      width: 0%;
-      background: rgba(80, 180, 60, 0.28);
-      border-radius: inherit;
-      z-index: 0;
-      pointer-events: none;
-      transition: width 0.5s linear;
-    }
-    #sq-dungeon > img, #sq-dungeon > span { position: relative; z-index: 1; }
-
-    /* Solo dungeon progress fill — indeterminate shimmer while in combat */
-    .solo-progress-fill {
-      position: absolute;
-      inset: 0;
-      width: 0%;
-      border-radius: inherit;
-      overflow: hidden;
-      z-index: 0;
-      pointer-events: none;
-    }
-    .solo-progress-fill.active {
-      width: 100%;
-      background: rgba(80, 180, 60, 0.14);
-    }
-    .solo-progress-fill.active::after {
+    /* Tavern progress fill */
+    #sq-tavern::before {
       content: '';
       position: absolute;
       inset: 0;
-      will-change: transform;
-      background: linear-gradient(90deg, transparent 0%, rgba(80, 180, 60, 0.32) 50%, transparent 100%);
-      animation: shimmer-sweep 1.8s linear infinite;
+      width: var(--tavern-progress, 0%);
+      background: rgba(80, 180, 60, 0.28);
+      transition: width 1s linear;
+      pointer-events: none;
+      z-index: 0;
     }
-    #sq-solo-dungeon > img, #sq-solo-dungeon > span { position: relative; z-index: 1; }
+    #sq-tavern > * { position: relative; z-index: 1; }
 
-    /* translateX shimmer — composite-only, no Paint cost */
-    @keyframes shimmer-sweep {
-      0%   { transform: translateX(-100%); }
-      100% { transform: translateX(100%); }
+    /* Adventure (dungeon) progress fill — elapsed timer, fills left-to-right */
+    #sq-dungeon::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      width: var(--dungeon-progress, 0%);
+      background: rgba(80, 180, 60, 0.28);
+      transition: width 1s linear;
+      pointer-events: none;
+      z-index: 0;
+    }
+    #sq-dungeon > * { position: relative; z-index: 1; }
+
+    /* Solo dungeon progress fill — pulses while in combat */
+    #sq-solo-dungeon::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: rgba(80, 180, 60, 0.28);
+      pointer-events: none;
+      z-index: 0;
+      opacity: 0;
+      will-change: opacity;
+      transition: opacity 0.3s;
+    }
+    #sq-solo-dungeon.active::before {
+      opacity: 1;
+      animation: pulse-fill 1.8s ease-in-out infinite;
+    }
+    #sq-solo-dungeon > * { position: relative; z-index: 1; }
+
+    @keyframes pulse-fill {
+      0%, 100% { opacity: 0.4; }
+      50%       { opacity: 1; }
     }
 
     /* Tavern rest modal */
