@@ -298,8 +298,12 @@
 
   <!-- Tavern Rest Modal -->
   <div class="modal-overlay" id="tavern-modal">
-    <div class="modal">
-      <h2 class="modal-title" data-i18n="tavern.modal.title">Rest at the Tavern</h2>
+    <div class="modal tavern-modal-content">
+      <div class="modal-header tavern-modal-header">
+        <h2 class="modal-title" data-i18n="tavern.modal.title">Rest at the Tavern</h2>
+        <button type="button" class="close-btn" onclick="closeTavernModal()">✕</button>
+      </div>
+      <img src="/img/tavern_background.png" class="tavern-bg-img" alt="Tavern" />
       <p class="tavern-modal-subtitle" data-i18n="tavern.modal.subtitle">Choose your rest type</p>
       <div class="tavern-rest-options" id="tavern-rest-options">
         <!-- populated by JS -->
@@ -979,16 +983,37 @@
     }
 
     /* Tavern rest modal */
+    .tavern-modal-content {
+      width: min(92vw, 480px);
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+    }
+    .tavern-modal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 0.75rem;
+    }
+    .tavern-modal-header .modal-title { margin-bottom: 0; }
+    .tavern-bg-img {
+      width: 100%;
+      display: block;
+      border-radius: 8px;
+      object-fit: cover;
+      max-height: 180px;
+      margin-bottom: 0.75rem;
+    }
     .tavern-modal-subtitle {
       font-size: 0.82rem;
       color: var(--muted);
       text-align: center;
-      margin: -0.5rem 0 1rem;
+      margin: 0 0 0.6rem;
     }
     .tavern-rest-options {
       display: flex;
       flex-direction: column;
-      gap: 0.75rem;
+      gap: 0.5rem;
       margin-bottom: 0.5rem;
     }
     .tavern-rest-card {
@@ -996,9 +1021,9 @@
       align-items: center;
       justify-content: space-between;
       gap: 1rem;
-      padding: 0.85rem 1rem;
+      padding: 0.5rem 0.85rem;
       border: 2px solid var(--border);
-      border-radius: 10px;
+      border-radius: 8px;
       background: var(--surface2);
       cursor: pointer;
       transition: border-color 0.15s, background 0.15s;
@@ -1011,10 +1036,10 @@
       opacity: 0.4;
       cursor: not-allowed;
     }
-    .tavern-rest-card-info { display: flex; flex-direction: column; gap: 2px; }
+    .tavern-rest-card-info { display: flex; flex-direction: column; gap: 1px; }
     .tavern-rest-card-name {
       font-family: 'Cinzel', serif;
-      font-size: 0.9rem;
+      font-size: 0.85rem;
       color: var(--text);
     }
     .tavern-rest-card-desc {
