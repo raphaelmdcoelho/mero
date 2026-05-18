@@ -12,39 +12,37 @@
 
   <!-- Header -->
   <header class="site-header">
-    <div style="display:flex;align-items:center;gap:1rem;">
-      <a href="/characters.html" class="game-logo" style="font-size:1.4rem;text-decoration:none;">MERO</a>
+    <div class="header-left">
+      <a href="/characters.html" class="game-logo">MERO</a>
       <div>
-        <div id="char-name-header" style="font-family:'Cinzel',serif;font-size:1rem;color:var(--text);"></div>
-        <div id="char-class-header" style="font-size:0.75rem;color:var(--muted);"></div>
+        <div id="char-name-header" class="header-char-name"></div>
+        <div id="char-class-header" class="header-char-class"></div>
       </div>
     </div>
-    <div style="display:flex;align-items:center;gap:0.75rem;">
-      <div id="activity-badge" style="display:none;" class="activity-badge">
+    <nav class="header-nav">
+      <a href="/game.html" class="header-nav-btn active">
+        <span class="header-nav-icon">⚔️</span>
+        <span class="header-nav-label">Hero</span>
+      </a>
+      <a href="/social.html" class="header-nav-btn">
+        <span class="header-nav-icon">👥</span>
+        <span class="header-nav-label">Social</span>
+      </a>
+      <button type="button" class="header-nav-btn" disabled>
+        <span class="header-nav-icon">🏰</span>
+        <span class="header-nav-label">Castle</span>
+      </button>
+    </nav>
+    <div class="header-right">
+      <div id="activity-badge" class="activity-badge">
         <div class="activity-dot"></div>
         <span id="activity-label">Active</span>
       </div>
       <div class="lang-switcher"></div>
       <a href="/characters.html" class="btn btn-outline btn-sm" data-i18n="game.heroes_link">← Heroes</a>
-      <button class="btn btn-outline btn-sm" onclick="logout()" data-i18n="game.logout">Logout</button>
+      <button type="button" class="btn btn-outline btn-sm" onclick="logout()" data-i18n="game.logout">Logout</button>
     </div>
   </header>
-
-  <!-- Section nav tabs -->
-  <nav class="section-nav">
-    <a href="/game.html" class="section-nav-btn active">
-      <span class="section-nav-icon">⚔️</span>
-      <span class="section-nav-label">Hero</span>
-    </a>
-    <a href="/social.html" class="section-nav-btn">
-      <span class="section-nav-icon">👥</span>
-      <span class="section-nav-label">Social</span>
-    </a>
-    <button type="button" class="section-nav-btn disabled" disabled>
-      <span class="section-nav-icon">🏰</span>
-      <span class="section-nav-label">Castle</span>
-    </button>
-  </nav>
 
   <!-- Game arena -->
   <div class="game-layout">
