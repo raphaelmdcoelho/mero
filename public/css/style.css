@@ -543,6 +543,7 @@ input:focus, select:focus {
   user-select: none;
   position: relative;
   overflow: hidden;
+  isolation: isolate;
 }
 .action-sq .sq-icon { font-size: 2.2rem; line-height: 1; }
 #sq-attributes .sq-icon,
