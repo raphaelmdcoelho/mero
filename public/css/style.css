@@ -608,7 +608,6 @@ input:focus, select:focus {
   min-height: calc(100vh - 57px);
 }
 .game-arena {
-  flex: 1;
   display: flex;
   align-items: flex-start;
   justify-content: center;
