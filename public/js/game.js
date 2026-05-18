@@ -7,11 +7,12 @@ const CLASS_ICONS = { Warrior: '⚔️', Mage: '🔮', Rogue: '🗡️', Cleric:
 
 // Item image map: item_id → base path (gender suffix + .png appended at runtime)
 const ITEM_IMAGES = {
-  3:  '/items/leather_armor', // Leather Armor
-  4:  '/items/iron_shield',   // Iron Shield
-  12: '/items/oak_shield',    // Oak Shield
-  15: '/items/hunter_armor',  // Hunter Armor
-  33: '/items/boot_leather',  // Leather Boots
+  3:  '/items/leather_armor',    // Leather Armor
+  4:  '/items/iron_shield',      // Iron Shield
+  12: '/items/oak_shield',       // Oak Shield
+  15: '/items/hunter_armor',     // Hunter Armor
+  31: '/items/iron_gauntlets',   // Iron Gauntlets
+  33: '/items/boot_leather',     // Leather Boots
 };
 
 const ITEM_IMAGES_STATIC = {
@@ -19,7 +20,7 @@ const ITEM_IMAGES_STATIC = {
   7:  '/img/apple_icon.png',       // Apple
   29: '/img/onion_icon.png',       // Onion
   30: '/img/corn.png',             // Corn
-  31: '/img/iron_gauntlets.png',   // Iron Gauntlets
+  35: '/img/leather_helmet.png',   // Leather Helmet
 };
 
 function getItemImage(itemId, gender) {
@@ -308,6 +309,7 @@ function renderCharAvatar(containerEl, char) {
   const shieldImg   = char.equippedShield ? getItemImage(char.equippedShield.id, char.gender) : null;
   const bootsImg    = char.equippedBoots  ? getItemImage(char.equippedBoots.id,  char.gender) : null;
   const gauntletImg = char.equippedArm    ? getItemImage(char.equippedArm.id,    char.gender) : null;
+  const helmetImg   = char.equippedHelmet ? getItemImage(char.equippedHelmet.id, char.gender) : null;
   let armorOverlay = '';
   if (armorImg) {
     const size = ITEM_OVERLAY_SIZE[Number(char.equippedArmor.id)];
@@ -319,11 +321,12 @@ function renderCharAvatar(containerEl, char) {
   const bootsGenderClass = char.gender === 'female' ? ' equip-overlay-boots--female' : '';
   const bootsOverlay    = bootsImg    ? `<img class="equip-overlay equip-overlay-boots${bootsGenderClass}" src="${escHtml(bootsImg)}" alt="" />` : '';
   const gauntletOverlay = gauntletImg ? `<img class="equip-overlay equip-overlay-gauntlet" src="${escHtml(gauntletImg)}" alt="" />` : '';
+  const helmetOverlay   = helmetImg   ? `<img class="equip-overlay equip-overlay-helmet"   src="${escHtml(helmetImg)}"   alt="" />` : '';
   if (char.avatar_path) {
-    containerEl.innerHTML = `<img class="char-avatar-img" src="${escHtml(char.avatar_path)}" alt="Avatar" />${armorOverlay}${shieldOverlay}${bootsOverlay}${gauntletOverlay}`;
+    containerEl.innerHTML = `<img class="char-avatar-img" src="${escHtml(char.avatar_path)}" alt="Avatar" />${armorOverlay}${shieldOverlay}${bootsOverlay}${gauntletOverlay}${helmetOverlay}`;
   } else {
     const icon = CLASS_ICONS[char.class] || '🧍';
-    containerEl.innerHTML = `<span class="char-avatar-icon">${icon}</span>${armorOverlay}${shieldOverlay}${bootsOverlay}${gauntletOverlay}`;
+    containerEl.innerHTML = `<span class="char-avatar-icon">${icon}</span>${armorOverlay}${shieldOverlay}${bootsOverlay}${gauntletOverlay}${helmetOverlay}`;
   }
 }
 
