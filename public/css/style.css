@@ -1536,6 +1536,12 @@ input:focus, select:focus {
   font-size: 0.8rem;
   color: var(--gold);
 }
+.item-detail-equipped-note {
+  font-size: 0.78rem;
+  color: #fb923c;
+  font-style: italic;
+  margin-bottom: 0.3rem;
+}
 .item-detail-actions {
   display: flex;
   gap: 0.5rem;

@@ -1924,7 +1924,10 @@ function renderMarketPanel(char) {
   const gold = Number(char.gold) || 0;
   document.getElementById('market-gold-amount').textContent = `🪙 ${gold}g`;
 
-  const equippedIds = new Set([char.weapon_id, char.armor_id, char.shield_id].filter(Boolean));
+  const equippedIds = new Set(
+    [char.weapon_id, char.armor_id, char.shield_id, char.arm_id, char.boots_id, char.helmet_id]
+      .filter(Boolean).map(Number)
+  );
   const sellable = (char.inventory || []).filter(i => Number(i.sell_price) > 0);
   const list = document.getElementById('market-list');
 
@@ -1935,21 +1938,22 @@ function renderMarketPanel(char) {
 
   const gender = char.gender || 'male';
   list.innerHTML = `<div class="market-grid">${sellable.map(item => {
-    const equipped  = equippedIds.has(item.item_id);
-    const price     = Number(item.sell_price);
-    const qtyLabel  = item.quantity > 1 ? `×${item.quantity}` : '';
-    const clickAttr = equipped ? '' : `onclick="selectSellItem(${item.id},${item.item_id})"`;
-    const tipHtml   = `
+    const equipped    = equippedIds.has(Number(item.item_id));
+    const canClick    = !equipped || item.quantity > 1;
+    const price       = Number(item.sell_price);
+    const qtyLabel    = item.quantity > 1 ? `×${item.quantity}` : '';
+    const clickAttr   = canClick ? `onclick="selectSellItem(${item.id},${item.item_id})"` : '';
+    const tipHtml     = `
       <div class="market-tooltip-name">${escHtml(tItemName(item))}</div>
       <div class="market-tooltip-meta">
         ${t('game.js.qty')}: ${item.quantity}<br>
         <span class="market-tooltip-price">🪙 ${price}g ${t('game.js.each')}</span>
       </div>
       ${equipped
-        ? `<div class="market-tooltip-equipped">${t('game.js.equipped_tag')}</div>`
+        ? `<div class="market-tooltip-equipped">${t('game.js.equipped_tag')}${item.quantity > 1 ? ` · ${t('game.js.click_to_sell')}` : ''}</div>`
         : `<span class="market-tooltip-sell">${t('game.js.click_to_sell')}</span>`}`;
     return `
-      <div class="market-cell${equipped ? ' equipped' : ''}" ${clickAttr} data-inv-id="${item.id}" data-tip="${escHtml(tipHtml)}">
+      <div class="market-cell${equipped ? ' equipped' : ''}${canClick ? '' : ' no-click'}" ${clickAttr} data-inv-id="${item.id}" data-tip="${escHtml(tipHtml)}">
         ${itemIconHtml(item.item_id, item.icon, tItemName(item), gender, 'market-item-img')}
         ${qtyLabel ? `<span class="market-cell-qty">${qtyLabel}</span>` : ''}
       </div>`;
@@ -2041,6 +2045,15 @@ function selectSellItem(invId, itemId) {
   const statLine = item.damage  ? `<div class="item-detail-stat">⚔️ ${item.damage} ${t('game.js.dmg_unit')}</div>`
                  : item.defense ? `<div class="item-detail-stat">🛡️ ${item.defense} ${t('game.js.def_unit')}</div>`
                  : '';
+
+  const equippedIds = [
+    charState?.equippedWeapon?.id, charState?.equippedArmor?.id, charState?.equippedShield?.id,
+    charState?.equippedArm?.id,    charState?.equippedBoots?.id,  charState?.equippedHelmet?.id,
+  ].filter(Boolean).map(Number);
+  const isEquipped  = equippedIds.includes(Number(item.item_id));
+  const maxSellable = isEquipped ? item.quantity - 1 : item.quantity;
+  const equippedNote = isEquipped ? `<div class="item-detail-equipped-note">${t('game.js.equipped_note', { n: maxSellable })}</div>` : '';
+
   const panel = document.getElementById('sell-detail-panel');
   if (!panel) return;
   panel.innerHTML = `
@@ -2054,8 +2067,9 @@ function selectSellItem(invId, itemId) {
       </div>
       <div class="item-detail-meta">🪙 ${price}g ${t('game.js.each')} · ${t('game.js.qty')}: ${item.quantity}</div>
       ${statLine}
+      ${equippedNote}
       <div class="item-detail-actions">
-        <button type="button" class="btn btn-danger btn-sm" onclick="sellItem(${invId},${itemId},1)">${t('game.js.sell_btn')}</button>
+        <button type="button" class="btn btn-danger btn-sm" ${maxSellable <= 0 ? 'disabled' : `onclick="sellItem(${invId},${itemId},${maxSellable})"`}>${t('game.js.sell_btn')}</button>
         <button type="button" class="btn btn-outline btn-sm" onclick="clearSellSelection()">${t('game.js.cancel_btn')}</button>
       </div>
     </div>`;

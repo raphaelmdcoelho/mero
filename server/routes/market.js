@@ -93,12 +93,14 @@ router.post('/:characterId/sell', async (req, res) => {
   const invRow = invR.rows[0] ?? null;
 
   if (!invRow) return res.status(404).json({ error: 'Item not in inventory' });
-  if (invRow.quantity < qty) return res.status(400).json({ error: 'Not enough quantity' });
 
-  // Cannot sell equipped items
-  if (invRow.item_id === char.weapon_id || invRow.item_id === char.armor_id || invRow.item_id === char.shield_id) {
-    return res.status(400).json({ error: 'Unequip the item before selling' });
-  }
+  const equippedSlots = [char.weapon_id, char.armor_id, char.shield_id, char.arm_id, char.boots_id, char.helmet_id]
+    .filter(Boolean).map(Number);
+  const isEquipped = equippedSlots.includes(Number(invRow.item_id));
+  const maxSellable = isEquipped ? invRow.quantity - 1 : invRow.quantity;
+
+  if (maxSellable <= 0) return res.status(400).json({ error: 'Unequip the item before selling' });
+  if (qty > maxSellable) return res.status(400).json({ error: 'Not enough quantity' });
 
   const price = Number(invRow.sell_price) || 0;
   if (price <= 0) return res.status(400).json({ error: 'This item cannot be sold' });
