@@ -234,15 +234,30 @@ input:focus, select:focus {
   z-index: 50;
 }
 .site-header .game-logo { font-size: 1.6rem; }
-.header-right { display: flex; align-items: center; gap: 1rem; }
+.header-left  { display: flex; align-items: center; gap: 1rem; }
+.header-right { display: flex; align-items: center; gap: 0.75rem; }
 .header-username { color: var(--muted); font-size: 0.9rem; }
+
+/* ---- Social page ---- */
+.social-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  height: 60vh;
+  color: var(--muted);
+}
+.social-placeholder-icon { font-size: 3rem; }
+.social-placeholder-label { font-family: 'Cinzel', serif; font-size: 1.1rem; }
 
 /* ---- Section nav tabs ---- */
 .section-nav {
   display: flex;
   align-items: center;
-  gap: 0.25rem;
-  padding: 0.5rem 1.5rem;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.4rem 1.5rem;
   background: var(--surface);
   border-bottom: 1px solid var(--border);
 }
@@ -251,9 +266,8 @@ input:focus, select:focus {
   flex-direction: column;
   align-items: center;
   gap: 0.15rem;
-  padding: 0.4rem 1.25rem;
-  border-radius: var(--radius);
-  border: 1px solid transparent;
+  padding: 0.35rem 1.5rem;
+  border: none;
   background: transparent;
   color: var(--muted);
   font-family: 'Cinzel', serif;
@@ -262,18 +276,17 @@ input:focus, select:focus {
   letter-spacing: 0.05em;
   text-decoration: none;
   cursor: pointer;
-  transition: color 0.15s, border-color 0.15s, background 0.15s;
+  border-bottom: 2px solid transparent;
+  transition: color 0.15s, border-color 0.15s;
 }
 .section-nav-btn:hover:not(.disabled):not(:disabled) {
   color: var(--text);
-  border-color: var(--border);
-  background: var(--surface2);
+  border-bottom-color: var(--muted);
   text-decoration: none;
 }
 .section-nav-btn.active {
   color: var(--accent);
-  border-color: var(--border);
-  background: var(--surface2);
+  border-bottom-color: var(--accent);
 }
 .section-nav-btn.disabled,
 .section-nav-btn:disabled {
@@ -556,14 +569,14 @@ input:focus, select:focus {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 2rem 1rem;
+  padding: 0.75rem 1rem;
 }
 .action-grid {
   display: grid;
   grid-template-columns: repeat(7, 100px);
   grid-template-rows: 120px 200px 120px;
   column-gap: 12px;
-  row-gap: 24px;
+  row-gap: 8px;
   align-items: center;
   justify-items: center;
 }
