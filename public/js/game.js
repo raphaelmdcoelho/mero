@@ -345,6 +345,9 @@ function updateActionSquares(activity, isFarming = false) {
   const resetEls = [dungeon, soloDungeon, farm, tavern, inv, eq, attrs, stats, read, fishing].filter(Boolean);
   resetEls.forEach(el => el.classList.remove('active', 'disabled'));
 
+  const soloFill = document.getElementById('solo-button-fill');
+  if (soloFill) soloFill.classList.remove('active');
+
   document.getElementById('dungeon-label').textContent = t('game.js.dungeon_lbl');
   document.getElementById('tavern-label').textContent  = t('game.js.tavern_lbl');
   document.getElementById('farm-label').textContent    = t('game.js.farm_lbl');
@@ -365,6 +368,7 @@ function updateActionSquares(activity, isFarming = false) {
     if (fishing) fishing.classList.add('disabled');
   } else if (activity === 'dungeon_solo') {
     if (soloDungeon) soloDungeon.classList.add('active');
+    if (soloFill) soloFill.classList.add('active');
     dungeon.classList.add('disabled');
     tavern.classList.add('disabled');
     farm.classList.add('disabled');
@@ -721,12 +725,23 @@ function updateTavernProgressBar() {
   fill.style.width = Math.min(100, (elapsedSec / 300) * 100) + '%';
 }
 
+function updateDungeonButtonFill() {
+  const fill = document.getElementById('dungeon-button-fill');
+  if (!fill) return;
+  if (!dungeonEndsAt) { fill.style.width = '0%'; return; }
+  const totalMs     = DIFFICULTY_DURATIONS[charState?.dungeonRun?.difficulty] || DIFFICULTY_DURATIONS.easy;
+  const remainingMs = Math.max(0, dungeonEndsAt - Date.now());
+  const pct         = totalMs > 0 ? Math.min(100, ((totalMs - remainingMs) / totalMs) * 100).toFixed(1) : 0;
+  fill.style.width  = pct + '%';
+}
+
 function startLocalTimer() {
   if (localTimerInterval) clearInterval(localTimerInterval);
   localTimerInterval = setInterval(() => {
     if (dungeonEndsAt) updateTimerDisplay();
     updateTavernProgressBar();
     updateReadProgressBar();
+    updateDungeonButtonFill();
   }, 1000);
 }
 
@@ -747,6 +762,7 @@ function stopDungeonPoll() {
   dungeonPollInterval = null;
   stopLocalTimer();
   dungeonEndsAt = null;
+  updateDungeonButtonFill();
 }
 
 async function pollDungeonStatus() {
@@ -1408,6 +1424,7 @@ function openFishingModal() {
   renderFishingBaitGrid();
   document.getElementById('fishing-minigame').style.display = 'none';
   document.getElementById('fishing-modal').classList.add('open');
+  document.getElementById('fishing-button-fill')?.classList.add('active');
 }
 
 function closeFishingModal() {
@@ -1415,6 +1432,7 @@ function closeFishingModal() {
   selectedBait = null;
   fishAttempts = 0;
   document.getElementById('fishing-modal').classList.remove('open');
+  document.getElementById('fishing-button-fill')?.classList.remove('active');
 }
 
 function fishingBaitQty(itemId) {
