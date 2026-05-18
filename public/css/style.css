@@ -345,7 +345,7 @@ input:focus, select:focus {
 .site-footer {
   display: flex;
   justify-content: flex-end;
-  padding: 0.15rem 1.5rem;
+  padding: 0.4rem 1.5rem;
   border-top: 1px solid var(--border);
 }
 .version-badge {
