@@ -797,18 +797,28 @@ input:focus, select:focus {
   z-index: 4;
 }
 
-/* Status bar */
+/* Status bar / footer taskbar */
 .status-bar {
   background: var(--surface);
-  border-top: 1px solid var(--border);
-  padding: 1rem 1.5rem;
+  border-top: 2px solid var(--border);
+  padding: 0.75rem 1.25rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+.status-book-wrap {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding-right: 0.5rem;
+  border-right: 1px solid var(--border);
 }
 .status-bars {
+  flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 0.6rem;
-  max-width: 600px;
-  margin: 0 auto;
+  gap: 0.5rem;
 }
 .stat-row {
   display: flex;
@@ -1288,31 +1298,27 @@ input:focus, select:focus {
 
 /* Book page-turn animation */
 .pickaxe-wrap {
-  position: absolute;
-  right: -92px;
-  top: 40px;
-  width: 64px;
-  height: 64px;
-  opacity: 0.18;
+  width: 52px;
+  height: 52px;
+  opacity: 0.25;
   pointer-events: none;
   transition: opacity 0.35s;
 }
 .pickaxe-wrap.mining {
   opacity: 1;
 }
-/* Only the flipping page rect animates — the book itself stays still */
 .pickaxe-wrap.mining .book-page-flip {
   animation: page-turn 1.6s linear infinite;
-  transform-box: fill-box;   /* origin relative to the element's own bbox */
-  transform-origin: left center; /* pivot at the spine edge of the rect */
+  transform-box: fill-box;
+  transform-origin: left center;
 }
 @keyframes page-turn {
-  0%   { transform: scaleX(1); }  /* page resting on right side */
-  8%   { transform: scaleX(1); }  /* brief hold before lift */
-  45%  { transform: scaleX(0); }  /* page thin at spine */
-  78%  { transform: scaleX(-1); } /* page fully landed on left */
-  92%  { transform: scaleX(-1); } /* hold on left side */
-  100% { transform: scaleX(1); }  /* snap back for next cycle */
+  0%   { transform: scaleX(1); }
+  8%   { transform: scaleX(1); }
+  45%  { transform: scaleX(0); }
+  78%  { transform: scaleX(-1); }
+  92%  { transform: scaleX(-1); }
+  100% { transform: scaleX(1); }
 }
 
 /* ---- Mobile (375px) ---- */
@@ -1343,8 +1349,8 @@ input:focus, select:focus {
   /* Bottom row — remaining 2, below avatar */
   #wrap-castle       { grid-column: 1 !important; grid-row: 5 !important; }
   #wrap-achievements { grid-column: 2 !important; grid-row: 5 !important; }
-  .pickaxe-wrap { right: -72px; top: 30px; width: 48px; height: 48px; transform-origin: center center; }
-  .pickaxe-wrap svg { width: 48px; height: 48px; }
+  .pickaxe-wrap { width: 38px; height: 38px; }
+  .pickaxe-wrap svg { width: 38px; height: 38px; }
   .char-grid { grid-template-columns: 1fr 1fr; }
   .side-panel { width: 100%; right: -100%; }
   .diff-grid { grid-template-columns: 1fr; }
