@@ -411,7 +411,10 @@ function handleTavern() {
   if (!charState.activity) openTavernModal();
 }
 
+let selectedRestType = null;
+
 function openTavernModal() {
+  selectedRestType = null;
   const gold = Number(charState?.gold) || 0;
   const REST_TYPES = [
     { key: 'relax',    cost: 10, nameKey: 'tavern.rest.relax',    descKey: 'tavern.rest.relax_desc' },
@@ -421,8 +424,8 @@ function openTavernModal() {
   const container = document.getElementById('tavern-rest-options');
   container.innerHTML = REST_TYPES.map(r => {
     const canAfford = gold >= r.cost;
-    return `<div class="tavern-rest-card${canAfford ? '' : ' disabled'}"
-                 ${canAfford ? `onclick="startTavernRest('${r.key}')"` : ''}>
+    return `<div class="tavern-rest-card${canAfford ? '' : ' disabled'}" data-rest-key="${r.key}"
+                 ${canAfford ? `onclick="selectTavernRest('${r.key}')"` : ''}>
       <div class="tavern-rest-card-info">
         <span class="tavern-rest-card-name">${t(r.nameKey)}</span>
         <span class="tavern-rest-card-desc">${t(r.descKey)}</span>
@@ -430,10 +433,25 @@ function openTavernModal() {
       <span class="tavern-rest-card-cost">🪙 ${r.cost}g</span>
     </div>`;
   }).join('');
+  document.getElementById('tavern-start-btn').disabled = true;
   document.getElementById('tavern-modal').classList.add('open');
 }
 
+function selectTavernRest(key) {
+  selectedRestType = key;
+  document.querySelectorAll('.tavern-rest-card').forEach(el => {
+    el.classList.toggle('selected', el.dataset.restKey === key);
+  });
+  document.getElementById('tavern-start-btn').disabled = false;
+}
+
+function confirmTavernRest() {
+  if (!selectedRestType) return;
+  startTavernRest(selectedRestType);
+}
+
 function closeTavernModal() {
+  selectedRestType = null;
   document.getElementById('tavern-modal').classList.remove('open');
 }
 

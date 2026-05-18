@@ -310,6 +310,7 @@
       </div>
       <div class="modal-footer">
         <button class="btn btn-outline" onclick="closeTavernModal()" data-i18n="game.dm.cancel">Cancel</button>
+        <button class="btn btn-primary" id="tavern-start-btn" disabled onclick="confirmTavernRest()">Start</button>
       </div>
     </div>
   </div>
@@ -1035,6 +1036,10 @@
     .tavern-rest-card.disabled {
       opacity: 0.4;
       cursor: not-allowed;
+    }
+    .tavern-rest-card.selected {
+      border-color: var(--accent);
+      background: rgba(192, 132, 252, 0.12);
     }
     .tavern-rest-card-info { display: flex; flex-direction: column; gap: 1px; }
     .tavern-rest-card-name {
