@@ -148,10 +148,16 @@
 
     <!-- Status bar / footer taskbar -->
     <div class="status-bar">
+      <!-- Workers section -->
+      <div class="status-workers-wrap">
+        <span class="status-section-title">Workers</span>
+        <span class="status-workers-count" id="workers-count">0</span>
+      </div>
       <!-- Animated book — glows when an activity is running -->
       <div class="status-book-wrap">
+        <span class="status-section-title">Busy</span>
         <div id="pickaxe-wrap" class="pickaxe-wrap">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="52" height="52" style="image-rendering:pixelated;image-rendering:crisp-edges;">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" style="image-rendering:pixelated;image-rendering:crisp-edges;">
             <!-- Drop shadow -->
             <rect x="6"  y="58" width="52" height="4"  fill="#000" opacity="0.2"/>
             <!-- Top cover highlight -->
@@ -211,6 +217,7 @@
         </div>
       </div>
       <div class="status-bars">
+        <span class="status-section-title">Character Status</span>
         <div class="stat-row">
           <span class="stat-label">HP</span>
           <div class="stat-track">

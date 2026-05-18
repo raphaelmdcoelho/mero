@@ -804,14 +804,44 @@ input:focus, select:focus {
   border-top: 2px solid var(--border);
   padding: 0.75rem 1.25rem;
   display: flex;
-  align-items: center;
+  align-items: stretch;
   gap: 1rem;
+}
+.status-section-title {
+  font-size: 0.6rem;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--text-muted, #94a3b8);
+  text-align: center;
+  width: 100%;
+}
+.status-workers-wrap {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 0.35rem;
+  padding-top: 0.4rem;
+  padding-right: 1rem;
+  border-right: 1px solid var(--border);
+  min-width: 4rem;
+}
+.status-workers-count {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--text, #f1f5f9);
+  line-height: 1;
 }
 .status-book-wrap {
   flex-shrink: 0;
   display: flex;
+  flex-direction: column;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
+  gap: 0.35rem;
+  padding-top: 0.4rem;
+  padding-left: 0.5rem;
   padding-right: 0.5rem;
   border-right: 1px solid var(--border);
 }
@@ -819,7 +849,9 @@ input:focus, select:focus {
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  align-items: stretch;
+  gap: 0.35rem;
+  padding-top: 0.4rem;
 }
 .stat-row {
   display: flex;
@@ -1299,8 +1331,8 @@ input:focus, select:focus {
 
 /* Book page-turn animation */
 .pickaxe-wrap {
-  width: 52px;
-  height: 52px;
+  width: 64px;
+  height: 64px;
   opacity: 0.25;
   pointer-events: none;
   transition: opacity 0.35s;
