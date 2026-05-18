@@ -74,7 +74,6 @@
         <div class="action-sq-wrap" id="wrap-fishing" style="grid-column:5;grid-row:1;">
           <span id="fishing-label" class="sq-label" data-i18n="game.fishing">Fishing</span>
           <div class="action-sq" id="sq-fishing" onclick="handleFishing()">
-            <div class="fishing-progress-fill" id="fishing-button-fill"></div>
             <img src="/fishing.png" alt="Fishing" class="sq-icon" />
           </div>
         </div>
@@ -856,13 +855,13 @@
       position: absolute;
       inset: 0;
       width: 0%;
-      background: rgba(99, 179, 237, 0.35);
+      background: rgba(80, 180, 60, 0.28);
       border-radius: inherit;
       z-index: 0;
       pointer-events: none;
       transition: width 0.5s linear;
     }
-    #sq-read > * { position: relative; z-index: 1; }
+    #sq-read > img, #sq-read > span { position: relative; z-index: 1; }
 
     /* Read modal */
     .read-modal-subtitle {
@@ -931,44 +930,20 @@
       pointer-events: none;
       transition: width 0.5s linear;
     }
-    #sq-tavern > * { position: relative; z-index: 1; }
+    #sq-tavern > img, #sq-tavern > span { position: relative; z-index: 1; }
 
     /* Adventure (dungeon) progress fill — elapsed timer, fills left-to-right */
     .dungeon-progress-fill {
       position: absolute;
       inset: 0;
       width: 0%;
-      background: rgba(239, 68, 68, 0.28);
+      background: rgba(80, 180, 60, 0.28);
       border-radius: inherit;
       z-index: 0;
       pointer-events: none;
       transition: width 0.5s linear;
     }
-    #sq-dungeon > * { position: relative; z-index: 1; }
-
-    /* Fishing progress fill — indeterminate shimmer while modal is open */
-    .fishing-progress-fill {
-      position: absolute;
-      inset: 0;
-      width: 0%;
-      border-radius: inherit;
-      overflow: hidden;
-      z-index: 0;
-      pointer-events: none;
-    }
-    .fishing-progress-fill.active {
-      width: 100%;
-      background: rgba(56, 189, 248, 0.14);
-    }
-    .fishing-progress-fill.active::after {
-      content: '';
-      position: absolute;
-      inset: 0;
-      will-change: transform;
-      background: linear-gradient(90deg, transparent 0%, rgba(56, 189, 248, 0.38) 50%, transparent 100%);
-      animation: shimmer-sweep 1.4s linear infinite;
-    }
-    #sq-fishing > * { position: relative; z-index: 1; }
+    #sq-dungeon > img, #sq-dungeon > span { position: relative; z-index: 1; }
 
     /* Solo dungeon progress fill — indeterminate shimmer while in combat */
     .solo-progress-fill {
@@ -982,17 +957,17 @@
     }
     .solo-progress-fill.active {
       width: 100%;
-      background: rgba(168, 85, 247, 0.14);
+      background: rgba(80, 180, 60, 0.14);
     }
     .solo-progress-fill.active::after {
       content: '';
       position: absolute;
       inset: 0;
       will-change: transform;
-      background: linear-gradient(90deg, transparent 0%, rgba(168, 85, 247, 0.32) 50%, transparent 100%);
+      background: linear-gradient(90deg, transparent 0%, rgba(80, 180, 60, 0.32) 50%, transparent 100%);
       animation: shimmer-sweep 1.8s linear infinite;
     }
-    #sq-solo-dungeon > * { position: relative; z-index: 1; }
+    #sq-solo-dungeon > img, #sq-solo-dungeon > span { position: relative; z-index: 1; }
 
     /* translateX shimmer — composite-only, no Paint cost */
     @keyframes shimmer-sweep {

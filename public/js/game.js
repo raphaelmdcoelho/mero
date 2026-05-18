@@ -1424,7 +1424,6 @@ function openFishingModal() {
   renderFishingBaitGrid();
   document.getElementById('fishing-minigame').style.display = 'none';
   document.getElementById('fishing-modal').classList.add('open');
-  document.getElementById('fishing-button-fill')?.classList.add('active');
 }
 
 function closeFishingModal() {
@@ -1432,7 +1431,6 @@ function closeFishingModal() {
   selectedBait = null;
   fishAttempts = 0;
   document.getElementById('fishing-modal').classList.remove('open');
-  document.getElementById('fishing-button-fill')?.classList.remove('active');
 }
 
 function fishingBaitQty(itemId) {
