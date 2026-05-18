@@ -960,16 +960,8 @@ input:focus, select:focus {
   gap: 0.35rem;
   padding-top: 0.4rem;
 }
-.status-level-row {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.75rem;
-  margin-top: 0.25rem;
-}
-.status-level { font-family: 'Cinzel', serif; font-size: 0.85rem; color: var(--gold); }
-.status-gold  { font-size: 0.8rem; color: #f5c842; }
-.status-unspent { font-size: 0.75rem; color: var(--accent); font-family: 'Cinzel', serif; cursor: pointer; }
+.stat-gold-value { font-size: 0.85rem; color: #f5c842; font-weight: 600; flex: 1; }
+.status-unspent  { font-size: 0.75rem; color: var(--accent); font-family: 'Cinzel', serif; cursor: pointer; }
 
 .stat-row {
   display: flex;

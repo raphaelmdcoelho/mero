@@ -1,6 +1,7 @@
 /**
  * Shared status bar + footer — injected synchronously, identical on every page.
- * game.js populates the dynamic IDs (hp-fill, xp-fill, etc.) after load.
+ * game.js populates the dynamic IDs on the Hero page; for all other pages the
+ * DOMContentLoaded handler below fetches the tick API directly.
  */
 (function () {
   const html = `
@@ -71,11 +72,13 @@
       <div class="stat-track"><div class="stat-fill stamina" id="stamina-fill" style="width:100%"></div></div>
       <span class="stat-value" id="stamina-text">— / —</span>
     </div>
-    <div class="status-level-row">
-      <span id="level-display" class="status-level">—</span>
-      <span id="gold-display" class="status-gold">🪙 —</span>
+    <div class="stat-row">
+      <span class="stat-label">💰</span>
+      <span class="stat-gold-value" id="gold-display">🪙 —</span>
       <span id="unspent-header" class="status-unspent" style="display:none;" onclick="openPanel && openPanel('attributes')"></span>
     </div>
+    <!-- kept hidden so game.js can write to it without errors -->
+    <span id="level-display" style="display:none;"></span>
   </div>
 </div>
 <footer class="site-footer">
@@ -84,3 +87,44 @@
 
   document.getElementById('app-footer').outerHTML = html;
 })();
+
+// Load character stats on pages that don't have game.js (e.g. Social)
+document.addEventListener('DOMContentLoaded', function () {
+  if (typeof renderAll === 'function') return; // game.js already handles this
+
+  const charId = localStorage.getItem('activeCharacterId');
+  if (!charId || !window.api) return;
+
+  api.get('/api/game/' + charId + '/tick').then(function (res) {
+    if (!res) return;
+    return res.json();
+  }).then(function (char) {
+    if (!char) return;
+
+    var hp    = Number(char.current_hp)      || 0;
+    var maxHp = Number(char.max_hp)          || 1;
+    var xp    = Number(char.xp)              || 0;
+    var xpMax = Number(char.xp_to_next)      || 1;
+    var st    = Number(char.current_stamina) || 0;
+    var maxSt = Number(char.max_stamina)     || 1;
+
+    function setBar(fillId, textId, val, max, floor) {
+      var el = document.getElementById(fillId);
+      if (el) el.style.width = Math.min(100, (val / max) * 100) + '%';
+      var tx = document.getElementById(textId);
+      if (tx) tx.textContent = (floor ? Math.floor(val) : Math.ceil(val)) + ' / ' + max;
+    }
+
+    setBar('hp-fill',      'hp-text',      hp, maxHp, false);
+    setBar('xp-fill',      'xp-text',      xp, xpMax, true);
+    setBar('stamina-fill', 'stamina-text', st, maxSt, true);
+
+    var goldEl = document.getElementById('gold-display');
+    if (goldEl) goldEl.textContent = '🪙 ' + (Number(char.gold) || 0) + 'g';
+
+    var nameEl = document.getElementById('char-name-header');
+    if (nameEl) nameEl.textContent = char.name || '';
+    var classEl = document.getElementById('char-class-header');
+    if (classEl) classEl.textContent = char.class || '';
+  }).catch(function () { /* stats unavailable, bars stay at defaults */ });
+});
