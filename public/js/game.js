@@ -2048,7 +2048,7 @@ function selectSellItem(invId, itemId) {
   ].filter(Boolean);
   const isEquipped  = equippedIds.includes(item.item_id);
   const maxSellable = isEquipped ? item.quantity - 1 : item.quantity;
-  const equippedNote = isEquipped ? `<div class="item-detail-equipped-note">${t('game.js.equipped_note')}</div>` : '';
+  const equippedNote = isEquipped ? `<div class="item-detail-equipped-note">${t('game.js.equipped_note', { n: maxSellable })}</div>` : '';
 
   const panel = document.getElementById('sell-detail-panel');
   if (!panel) return;
@@ -2065,7 +2065,7 @@ function selectSellItem(invId, itemId) {
       ${statLine}
       ${equippedNote}
       <div class="item-detail-actions">
-        <button type="button" class="btn btn-danger btn-sm" ${maxSellable <= 0 ? 'disabled' : `onclick="sellItem(${invId},${itemId},1)"`}>${t('game.js.sell_btn')}</button>
+        <button type="button" class="btn btn-danger btn-sm" ${maxSellable <= 0 ? 'disabled' : `onclick="sellItem(${invId},${itemId},${maxSellable})"`}>${t('game.js.sell_btn')}</button>
         <button type="button" class="btn btn-outline btn-sm" onclick="clearSellSelection()">${t('game.js.cancel_btn')}</button>
       </div>
     </div>`;
