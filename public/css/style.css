@@ -301,7 +301,6 @@ input:focus, select:focus {
   text-align: center;
   padding: 1rem;
   border-top: 1px solid var(--border);
-  margin-top: 2rem;
 }
 .version-badge {
   font-size: 0.75rem;
