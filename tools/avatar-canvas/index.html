@@ -50,7 +50,39 @@
     color: var(--gold);
     letter-spacing: 0.08em;
   }
-  header span { color: var(--muted); font-family: system-ui; font-size: 0.7rem; letter-spacing: 0; }
+  header span { color: var(--muted); font-family: system-ui; font-size: 0.7rem; letter-spacing: 0; margin-right: auto; }
+
+  /* ── Zoom controls ── */
+  .zoom-controls {
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+  }
+  .zoom-btn {
+    width: 24px;
+    height: 24px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--text);
+    border-radius: 4px;
+    font-size: 1rem;
+    line-height: 1;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: border-color 0.15s, color 0.15s;
+  }
+  .zoom-btn:hover { border-color: var(--accent); color: var(--accent); }
+  #zoom-label {
+    font-family: system-ui;
+    font-size: 0.72rem;
+    color: var(--muted);
+    min-width: 38px;
+    text-align: center;
+    letter-spacing: 0;
+  }
 
   /* ── Panels ── */
   .panel {
@@ -235,6 +267,11 @@
 <header>
   Avatar Canvas
   <span>DEV TOOL — drag overlays to position, resize from bottom-right corner</span>
+  <div class="zoom-controls">
+    <button type="button" class="zoom-btn" id="zoom-out">−</button>
+    <span id="zoom-label">100%</span>
+    <button type="button" class="zoom-btn" id="zoom-in">+</button>
+  </div>
 </header>
 
 <!-- Left: Avatar selector -->
@@ -310,6 +347,7 @@ let state = {
   avatarStyle: 'A',
   activeItems: new Set(),   // item id numbers
   overlays: {},             // slot → { top, left, width, height } in %
+  zoom: 1.0,
 };
 
 const STORAGE_KEY = 'avatar-canvas-v1';
@@ -321,6 +359,7 @@ function loadState() {
     if (saved.avatarStyle) state.avatarStyle = saved.avatarStyle;
     if (saved.activeItems) state.activeItems = new Set(saved.activeItems);
     if (saved.overlays) state.overlays = saved.overlays;
+    if (saved.zoom) state.zoom = saved.zoom;
   } catch (_) {}
 }
 
@@ -330,6 +369,7 @@ function saveState() {
     avatarStyle: state.avatarStyle,
     activeItems: [...state.activeItems],
     overlays: state.overlays,
+    zoom: state.zoom,
   }));
 }
 
@@ -645,6 +685,39 @@ copyBtn.addEventListener('click', () => {
   document.getElementById('output-toolbar').appendChild(btn);
 })();
 
+// ── Zoom ──────────────────────────────────────────────────────────────────────
+
+const ZOOM_MIN  = 0.4;
+const ZOOM_MAX  = 3.0;
+const ZOOM_STEP = 0.1;
+
+const zoomLabel = document.getElementById('zoom-label');
+
+function applyZoom() {
+  avatarContainer.style.transform       = `scale(${state.zoom})`;
+  avatarContainer.style.transformOrigin = 'center center';
+  zoomLabel.textContent = Math.round(state.zoom * 100) + '%';
+  saveState();
+}
+
+document.getElementById('zoom-in').addEventListener('click', () => {
+  state.zoom = parseFloat(Math.min(ZOOM_MAX, state.zoom + ZOOM_STEP).toFixed(2));
+  applyZoom();
+});
+
+document.getElementById('zoom-out').addEventListener('click', () => {
+  state.zoom = parseFloat(Math.max(ZOOM_MIN, state.zoom - ZOOM_STEP).toFixed(2));
+  applyZoom();
+});
+
+// Scroll wheel on canvas area
+document.getElementById('canvas-area').addEventListener('wheel', (e) => {
+  e.preventDefault();
+  const delta = e.deltaY < 0 ? ZOOM_STEP : -ZOOM_STEP;
+  state.zoom = parseFloat(Math.min(ZOOM_MAX, Math.max(ZOOM_MIN, state.zoom + delta)).toFixed(2));
+  applyZoom();
+}, { passive: false });
+
 // ── Init ──────────────────────────────────────────────────────────────────────
 
 loadState();
@@ -659,6 +732,7 @@ updateBaseAvatar();
 buildEquipList();
 rebuildOverlays();
 updateCssOutput();
+applyZoom();
 </script>
 </body>
 </html>
