@@ -72,13 +72,13 @@
       <div class="stat-track"><div class="stat-fill stamina" id="stamina-fill" style="width:100%"></div></div>
       <span class="stat-value" id="stamina-text">— / —</span>
     </div>
-    <div class="stat-row">
-      <span class="stat-label">💰</span>
-      <span class="stat-gold-value" id="gold-display">🪙 —</span>
-      <span id="unspent-header" class="status-unspent" style="display:none;" onclick="openPanel && openPanel('attributes')"></span>
-    </div>
     <!-- kept hidden so game.js can write to it without errors -->
     <span id="level-display" style="display:none;"></span>
+    <span id="unspent-header" class="status-unspent" style="display:none;" onclick="openPanel && openPanel('attributes')"></span>
+  </div>
+  <div class="status-money-wrap">
+    <span class="status-section-title">Money</span>
+    <span class="status-money-value" id="gold-display">🪙 —</span>
   </div>
 </div>
 <footer class="site-footer">
@@ -101,12 +101,12 @@ document.addEventListener('DOMContentLoaded', function () {
   }).then(function (char) {
     if (!char) return;
 
-    var hp    = Number(char.current_hp)      || 0;
-    var maxHp = Number(char.max_hp)          || 1;
-    var xp    = Number(char.xp)              || 0;
-    var xpMax = Number(char.xp_to_next)      || 1;
-    var st    = Number(char.current_stamina) || 0;
-    var maxSt = Number(char.max_stamina)     || 1;
+    var hp    = Math.max(0, Number(char.hp)         || 0);
+    var maxHp = Number(char.max_hp)                 || 1;
+    var xp    = Number(char.xp)                     || 0;
+    var xpMax = Number(char.xp_to_next)             || 1;
+    var st    = Math.max(0, Number(char.stamina)    || 0);
+    var maxSt = Number(char.max_stamina)            || 1;
 
     function setBar(fillId, textId, val, max, floor) {
       var el = document.getElementById(fillId);
