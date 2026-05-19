@@ -9,9 +9,9 @@ const PLANT_ITEM_HP = { 6: 2, 7: 1 };
 const POINTS_PER_LEVEL = 5;
 
 const TAVERN_REST_TYPES = {
-  relax:    { staminaRate: 1, cost: 10 },
-  break:    { staminaRate: 3, cost: 30 },
-  recovery: { staminaRate: 6, cost: 70 },
+  relax:    { staminaRate: 3,  hpRate: 3,  cost: 10 },
+  break:    { staminaRate: 5,  hpRate: 5,  cost: 30 },
+  recovery: { staminaRate: 10, hpRate: 10, cost: 70 },
 };
 
 const SET_UNLOCK_LEVEL = { 1: 1, 2: 20, 3: 30, 4: 40, 5: 50, 6: 5, 7: 10, 8: 15 };
@@ -376,14 +376,24 @@ function applyTavernTick(char) {
   const attrStamina = Number(char.attr_stamina)  || 5;
   xp = Number(xp); level = Number(level);
 
-  const upd         = levelUp({ xp, xp_to_next, level, hp, unspent_points, attr_vitality: vitality, attr_stamina: attrStamina });
-  const max_stamina = upd.max_stamina;
-  const restType    = TAVERN_REST_TYPES[char.rest_type] || TAVERN_REST_TYPES.relax;
+  const upd          = levelUp({ xp, xp_to_next, level, hp, unspent_points, attr_vitality: vitality, attr_stamina: attrStamina });
+  const max_stamina  = upd.max_stamina;
+  const max_hp       = upd.max_hp;
+  const restType     = TAVERN_REST_TYPES[char.rest_type] || TAVERN_REST_TYPES.relax;
+  const tavernLevel  = Number(char.tavern_level) || 0;
+  const multiplier   = Math.pow(1.8, tavernLevel);
+  const stRate       = restType.staminaRate * multiplier;
+  const hpRate       = restType.hpRate      * multiplier;
+
   // Restore to full on level-up; otherwise accumulate regen
-  const stamina     = upd.leveled
+  const stamina = upd.leveled
     ? max_stamina
-    : Math.min(max_stamina, (Number(char.stamina) || 0) + (restType.staminaRate * elapsed) / 60);
-  return { ...upd, stamina, max_stamina, last_tick_at: now };
+    : Math.min(max_stamina, (Number(char.stamina) || 0) + (stRate * elapsed) / 60);
+  const newHp = upd.leveled
+    ? max_hp
+    : Math.min(max_hp, (Number(upd.hp) || 0) + (hpRate * elapsed) / 60);
+
+  return { ...upd, hp: newHp, stamina, max_stamina, last_tick_at: now };
 }
 
 // Compute stamina regen based on elapsed time since last regen point was awarded.
@@ -492,6 +502,31 @@ router.post('/:characterId/stop', async (req, res) => {
       args: [stopNow, stopNow, char.id],
     });
   }
+
+  res.json(await fullChar(char.id));
+});
+
+// POST /api/game/:characterId/tavern-upgrade
+router.post('/:characterId/tavern-upgrade', async (req, res) => {
+  const char = await ownedChar(req, res);
+  if (!char) return;
+
+  if (char.activity) {
+    return res.status(400).json({ error: 'Cannot upgrade while in an activity' });
+  }
+
+  const currentLevel = Number(char.tavern_level) || 0;
+  const upgradeCost  = (currentLevel + 1) * 1000;
+  const gold         = Number(char.gold) || 0;
+
+  if (gold < upgradeCost) {
+    return res.status(400).json({ error: `Not enough gold (need ${upgradeCost}g, have ${gold}g)` });
+  }
+
+  await client.execute({
+    sql:  'UPDATE characters SET tavern_level = ?, gold = gold - ? WHERE id = ?',
+    args: [currentLevel + 1, upgradeCost, char.id],
+  });
 
   res.json(await fullChar(char.id));
 });

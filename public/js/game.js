@@ -419,24 +419,39 @@ let selectedRestType = null;
 
 function openTavernModal() {
   selectedRestType = null;
-  const gold = Number(charState?.gold) || 0;
+  const gold        = Number(charState?.gold) || 0;
+  const tavernLevel = Number(charState?.tavern_level) || 0;
+  const multiplier  = Math.pow(1.8, tavernLevel);
+  const fmt         = v => Number.isInteger(Math.round(v)) ? Math.round(v) : v.toFixed(1);
+
+  const BASE_RATES = { relax: 3, break: 5, recovery: 10 };
   const REST_TYPES = [
-    { key: 'relax',    cost: 10, nameKey: 'tavern.rest.relax',    descKey: 'tavern.rest.relax_desc' },
-    { key: 'break',    cost: 30, nameKey: 'tavern.rest.break',    descKey: 'tavern.rest.break_desc' },
-    { key: 'recovery', cost: 70, nameKey: 'tavern.rest.recovery', descKey: 'tavern.rest.recovery_desc' },
+    { key: 'relax',    cost: 10, nameKey: 'tavern.rest.relax',    rate: BASE_RATES.relax    },
+    { key: 'break',    cost: 30, nameKey: 'tavern.rest.break',    rate: BASE_RATES.break    },
+    { key: 'recovery', cost: 70, nameKey: 'tavern.rest.recovery', rate: BASE_RATES.recovery },
   ];
   const container = document.getElementById('tavern-rest-options');
   container.innerHTML = REST_TYPES.map(r => {
-    const canAfford = gold >= r.cost;
+    const canAfford  = gold >= r.cost;
+    const effectiveRate = fmt(r.rate * multiplier);
+    const desc = `+${effectiveRate} ST+HP/min`;
     return `<div class="tavern-rest-card${canAfford ? '' : ' disabled'}" data-rest-key="${r.key}"
                  ${canAfford ? `onclick="selectTavernRest('${r.key}')"` : ''}>
       <div class="tavern-rest-card-info">
         <span class="tavern-rest-card-name">${t(r.nameKey)}</span>
-        <span class="tavern-rest-card-desc">${t(r.descKey)}</span>
+        <span class="tavern-rest-card-desc">${desc}</span>
       </div>
       <span class="tavern-rest-card-cost">🪙 ${r.cost}g</span>
     </div>`;
   }).join('');
+
+  const upgradeCost = (tavernLevel + 1) * 1000;
+  const upgradeBtn  = document.getElementById('tavern-upgrade-btn');
+  const canUpgrade  = gold >= upgradeCost;
+  upgradeBtn.textContent = `⬆ Lv${tavernLevel + 1} · ${upgradeCost}g`;
+  upgradeBtn.disabled    = !canUpgrade;
+  upgradeBtn.title       = canUpgrade ? `Upgrade to level ${tavernLevel + 1}` : `Need ${upgradeCost}g`;
+
   document.getElementById('tavern-start-btn').disabled = true;
   document.getElementById('tavern-modal').classList.add('open');
 }
@@ -457,6 +472,19 @@ function confirmTavernRest() {
 function closeTavernModal() {
   selectedRestType = null;
   document.getElementById('tavern-modal').classList.remove('open');
+}
+
+async function upgradeTavern() {
+  const res = await api.post(`/api/game/${charId}/tavern-upgrade`);
+  if (!res) return;
+  const data = await res.json();
+  if (!res.ok) { showToast(data.error || t('game.js.failed'), 'danger'); return; }
+  charState = data;
+  renderAll(data);
+  document.getElementById('gold-display').textContent = `🪙 ${Number(data.gold) || 0}g`;
+  const newLevel = Number(data.tavern_level) || 0;
+  showToast(`Tavern upgraded to level ${newLevel}!`, 'success');
+  openTavernModal();
 }
 
 async function startTavernRest(restType) {

@@ -182,6 +182,7 @@ async function initDb() {
     'ALTER TABLE characters ADD COLUMN helmet_id INTEGER REFERENCES items(id)',
     "ALTER TABLE characters ADD COLUMN rest_type        TEXT    DEFAULT NULL",
     'ALTER TABLE characters ADD COLUMN stamina_regen_at INTEGER DEFAULT NULL',
+    'ALTER TABLE characters ADD COLUMN tavern_level     INTEGER NOT NULL DEFAULT 0',
   ];
 
   for (const sql of additiveMigrations) {

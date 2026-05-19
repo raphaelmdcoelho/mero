@@ -191,9 +191,12 @@
       <div class="tavern-rest-options" id="tavern-rest-options">
         <!-- populated by JS -->
       </div>
-      <div class="modal-footer">
-        <button class="btn btn-outline" onclick="closeTavernModal()" data-i18n="game.dm.cancel">Cancel</button>
-        <button class="btn btn-primary" id="tavern-start-btn" disabled onclick="confirmTavernRest()">Start</button>
+      <div class="modal-footer tavern-modal-footer">
+        <button type="button" class="btn btn-upgrade" id="tavern-upgrade-btn" onclick="upgradeTavern()">Upgrade</button>
+        <div class="tavern-footer-actions">
+          <button type="button" class="btn btn-outline" onclick="closeTavernModal()" data-i18n="game.dm.cancel">Cancel</button>
+          <button type="button" class="btn btn-primary" id="tavern-start-btn" disabled onclick="confirmTavernRest()">Start</button>
+        </div>
       </div>
     </div>
   </div>

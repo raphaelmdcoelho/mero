@@ -631,6 +631,33 @@ input:focus, select:focus {
 .modal-header .modal-title { margin-bottom: 0; }
 .modal-footer { display: flex; gap: 0.5rem; justify-content: flex-end; margin-top: 1.25rem; }
 
+.tavern-modal-footer {
+  justify-content: space-between;
+  align-items: center;
+}
+.tavern-footer-actions { display: flex; gap: 0.5rem; }
+.btn-upgrade {
+  background: linear-gradient(135deg, #78350f, #92400e);
+  border: 1px solid #b45309;
+  color: #fcd34d;
+  font-size: 0.78rem;
+  font-weight: 600;
+  padding: 0.45rem 0.85rem;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+.btn-upgrade:hover:not(:disabled) {
+  background: linear-gradient(135deg, #92400e, #b45309);
+  border-color: #fcd34d;
+  box-shadow: 0 0 8px #fcd34d44;
+}
+.btn-upgrade:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
 /* Class selector */
 .class-grid {
   display: grid;
