@@ -287,14 +287,78 @@ input:focus, select:focus {
 .social-placeholder {
   flex: 1;
   display: flex;
-  flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 1rem;
-  color: var(--muted);
+  overflow: hidden;
 }
-.social-placeholder-icon { font-size: 3rem; }
-.social-placeholder-label { font-family: 'Cinzel', serif; font-size: 1.1rem; }
+
+.social-scene {
+  position: relative;
+  display: inline-flex;
+  max-height: 100%;
+  max-width: 100%;
+}
+
+.social-bg-img {
+  display: block;
+  max-height: 100%;
+  width: auto;
+  max-width: 100%;
+}
+
+/* Overlay sits exactly over the rendered image */
+.leaderboard-overlay {
+  position: absolute;
+  inset: 0;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  /* board content area: left ~31%, right ~70%, top ~19%, bottom ~86% */
+  top:    19%;
+  left:   31%;
+  width:  39%;
+  height: 67%;
+  display: flex;
+  flex-direction: column;
+}
+
+.leaderboard-row {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 0.4em;
+  padding-left: 18%;
+  padding-right: 4%;
+  overflow: hidden;
+}
+
+.leaderboard-row:first-child {
+  padding-left: 14%;
+}
+
+.lb-name {
+  flex: 1;
+  font-family: 'Cinzel', serif;
+  font-size: clamp(0.5rem, 1.1vw, 0.85rem);
+  color: #f5e6c8;
+  text-shadow: 0 1px 3px #000, 0 0 6px #000;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.leaderboard-row:first-child .lb-name {
+  font-size: clamp(0.55rem, 1.3vw, 0.95rem);
+  color: #ffe880;
+}
+
+.lb-level {
+  font-family: 'Cinzel', serif;
+  font-size: clamp(0.45rem, 0.9vw, 0.72rem);
+  color: #c9b98a;
+  text-shadow: 0 1px 2px #000;
+  white-space: nowrap;
+}
 
 /* ---- Section nav tabs ---- */
 .section-nav {

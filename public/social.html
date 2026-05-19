@@ -6,7 +6,7 @@
   <title>Mero — Social</title>
   <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
   <script src="https://cdn.tailwindcss.com"></script>
-  <link rel="stylesheet" href="/css/style.css?v=6" />
+  <link rel="stylesheet" href="/css/style.css?v=7" />
 </head>
 <body>
 
@@ -15,8 +15,10 @@
   <script src="/js/header.js"></script>
 
   <div class="social-placeholder">
-    <span class="social-placeholder-icon">👥</span>
-    <p class="social-placeholder-label">Social — Coming Soon</p>
+    <div class="social-scene">
+      <img src="/img/social_background.png" class="social-bg-img" alt="">
+      <ol class="leaderboard-overlay" id="leaderboard-list"></ol>
+    </div>
   </div>
 
   <!-- Shared status bar + footer (injected by footer.js) -->
@@ -25,5 +27,29 @@
 
   <script src="/js/api.js?v=4"></script>
   <script src="/js/i18n.js?v=4"></script>
+  <script>
+    (async () => {
+      const list = document.getElementById('leaderboard-list');
+      try {
+        const res = await fetch('/api/social/leaderboard');
+        const data = await res.json();
+
+        for (let i = 0; i < 10; i++) {
+          const li = document.createElement('li');
+          li.className = 'leaderboard-row';
+          if (data[i]) {
+            const p = data[i];
+            li.innerHTML = `
+              <span class="lb-name">${p.character_name}</span>
+              <span class="lb-level">Lv.${p.level}</span>
+            `;
+          }
+          list.appendChild(li);
+        }
+      } catch {
+        // silently fail — background image still shows
+      }
+    })();
+  </script>
 </body>
 </html>
