@@ -283,6 +283,81 @@ input:focus, select:focus {
 .header-nav-icon { font-size: 0.9rem; }
 .header-nav-label { line-height: 1; }
 
+/* ---- Hamburger button ---- */
+.hamburger-btn {
+  display: none;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 5px;
+  width: 2.2rem;
+  height: 2.2rem;
+  padding: 0;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.hamburger-btn span {
+  display: block;
+  width: 20px;
+  height: 2px;
+  background: var(--text);
+  border-radius: 2px;
+  transition: transform 0.2s, opacity 0.2s;
+  transform-origin: center;
+}
+.hamburger-btn.open span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+.hamburger-btn.open span:nth-child(2) { opacity: 0; }
+.hamburger-btn.open span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+
+/* ---- Mobile nav dropdown ---- */
+.mobile-nav {
+  display: none;
+  grid-column: 1 / -1;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.25rem;
+  padding: 0.75rem 1rem 1rem;
+  border-top: 1px solid var(--border);
+}
+.mobile-nav.open { display: flex; }
+.mobile-nav .header-nav-btn {
+  flex-direction: row;
+  justify-content: flex-start;
+  gap: 0.6rem;
+  padding: 0.6rem 0.75rem;
+  font-size: 0.85rem;
+  border-bottom: none;
+  border-radius: 0.4rem;
+}
+.mobile-nav .header-nav-btn:hover:not(:disabled) {
+  background: var(--border);
+  border-bottom-color: transparent;
+}
+.mobile-nav .header-nav-btn.active {
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
+  border-bottom-color: transparent;
+  color: var(--accent);
+}
+.mobile-nav-divider {
+  height: 1px;
+  background: var(--border);
+  margin: 0.4rem 0;
+}
+.mobile-nav .btn { width: 100%; justify-content: center; }
+
+/* ---- Responsive breakpoint ---- */
+@media (max-width: 640px) {
+  .site-header {
+    grid-template-columns: 1fr auto;
+  }
+  .header-nav { display: none; }
+  .hamburger-btn { display: flex; }
+  .header-desktop-only { display: none !important; }
+  .activity-badge { display: none !important; }
+}
+
 /* ---- Social page ---- */
 .social-placeholder {
   flex: 1;
@@ -306,6 +381,8 @@ input:focus, select:focus {
   width: 100%;
   height: 100%;
 }
+
+.social-bg-mobile { display: none; }
 
 /* Overlay sits exactly over the rendered image.
    Percentages are relative to .social-scene which is always 1838:856. */
@@ -358,6 +435,41 @@ input:focus, select:focus {
   color: #c9b98a;
   text-shadow: 0 1px 2px #000;
   white-space: nowrap;
+}
+
+/* ---- Social page — mobile (portrait image, 5 rows) ---- */
+@media (max-width: 640px) {
+  .social-scene {
+    height: auto;
+    width: 100%;
+    aspect-ratio: 1008 / 1560;
+  }
+  .social-bg-desktop { display: none; }
+  .social-bg-mobile  { display: block; }
+
+  /* hide rows 6-10 */
+  .leaderboard-row:nth-child(n+6) { display: none; }
+
+  /* reposition overlay for 1008×1560 vertical image — tune these if needed */
+  .leaderboard-overlay {
+    top:    50.5%;
+    left:   15%;
+    width:  70%;
+    height: 17%;
+  }
+  .leaderboard-row {
+    padding-left: 20%;
+    padding-right: 8%;
+  }
+  .lb-name {
+    font-size: clamp(0.65rem, 3.5vw, 1rem);
+  }
+  .leaderboard-row:first-child .lb-name {
+    font-size: clamp(0.75rem, 4vw, 1.1rem);
+  }
+  .lb-level {
+    font-size: clamp(0.55rem, 2.8vw, 0.85rem);
+  }
 }
 
 /* ---- Section nav tabs ---- */

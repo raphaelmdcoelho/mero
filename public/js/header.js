@@ -13,6 +13,9 @@
       </a>`;
   }
 
+  const heroActive   = path.includes('game.html')   ? ' active' : '';
+  const socialActive = path.includes('social.html') ? ' active' : '';
+
   const html = `
 <header class="site-header">
   <div class="header-left">
@@ -36,6 +39,26 @@
       <span id="activity-label">Active</span>
     </div>
     <div class="lang-switcher"></div>
+    <a href="/characters.html" class="btn btn-outline btn-sm header-desktop-only" data-i18n="game.heroes_link">← Heroes</a>
+    <button type="button" class="btn btn-outline btn-sm header-desktop-only" onclick="siteLogout()" data-i18n="game.logout">Logout</button>
+    <button type="button" class="hamburger-btn" id="hamburger-btn" aria-label="Menu" onclick="toggleMobileNav()">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
+  <div class="mobile-nav" id="mobile-nav">
+    <a href="/game.html" class="header-nav-btn${heroActive}">
+      <span class="header-nav-icon">⚔️</span>
+      <span class="header-nav-label">Hero</span>
+    </a>
+    <a href="/social.html" class="header-nav-btn${socialActive}">
+      <span class="header-nav-icon">👥</span>
+      <span class="header-nav-label">Social</span>
+    </a>
+    <button type="button" class="header-nav-btn" disabled>
+      <span class="header-nav-icon">🏰</span>
+      <span class="header-nav-label">Castle</span>
+    </button>
+    <div class="mobile-nav-divider"></div>
     <a href="/characters.html" class="btn btn-outline btn-sm" data-i18n="game.heroes_link">← Heroes</a>
     <button type="button" class="btn btn-outline btn-sm" onclick="siteLogout()" data-i18n="game.logout">Logout</button>
   </div>
@@ -44,6 +67,25 @@
   const placeholder = document.getElementById('app-header');
   placeholder.outerHTML = html;
 })();
+
+function toggleMobileNav() {
+  const nav = document.getElementById('mobile-nav');
+  const btn = document.getElementById('hamburger-btn');
+  const open = nav.classList.toggle('open');
+  btn.classList.toggle('open', open);
+  btn.setAttribute('aria-expanded', open);
+}
+
+// Close mobile nav when clicking outside
+document.addEventListener('click', function (e) {
+  const nav = document.getElementById('mobile-nav');
+  const btn = document.getElementById('hamburger-btn');
+  if (nav && nav.classList.contains('open') && !nav.contains(e.target) && !btn.contains(e.target)) {
+    nav.classList.remove('open');
+    btn.classList.remove('open');
+    btn.setAttribute('aria-expanded', false);
+  }
+});
 
 function siteLogout() {
   const TOKEN_KEY = 'mero_access_token';
