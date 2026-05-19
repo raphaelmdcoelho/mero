@@ -676,6 +676,13 @@ body.game-page {
   background-attachment: fixed;
 }
 
+/* Fix social page: give body a fixed height so flex children fill exactly
+   the viewport, keeping the status bar at the same position as the Hero page. */
+body.social-page {
+  height: 100vh;
+  overflow: hidden;
+}
+
 .game-layout {
   display: flex;
   flex-direction: column;
