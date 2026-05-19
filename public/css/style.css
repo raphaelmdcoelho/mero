@@ -1982,16 +1982,32 @@ input:focus, select:focus {
   border: 1px solid var(--border);
   border-radius: 12px;
   width: min(95vw, 860px);
-  max-height: 90vh;
-  overflow-y: auto;
+  height: 80vh;
   display: flex;
   flex-direction: column;
   padding: 1.25rem;
   box-shadow: 0 20px 60px #000000cc, 0 0 40px #c084fc22;
   transform: translateY(20px);
   transition: transform 0.2s;
+  overflow: hidden;
 }
 .modal-overlay.open .inv-modal { transform: translateY(0); }
+.inv-modal-body {
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+#item-tooltip {
+  display: none;
+  margin-top: 1rem;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 0.75rem;
+  font-size: 0.85rem;
+  flex-shrink: 0;
+}
 
 /* ── Equipment Modal (Diablo/PoE style) ───────────────────────────────────── */
 .eq-modal {
