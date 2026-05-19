@@ -294,27 +294,30 @@ input:focus, select:focus {
 
 .social-scene {
   position: relative;
-  display: inline-flex;
-  max-height: 100%;
+  /* Lock scene to the image's native aspect ratio (1838×856).
+     height: 100% fills the placeholder; max-width prevents horizontal overflow. */
+  height: 100%;
+  aspect-ratio: 1838 / 856;
   max-width: 100%;
 }
 
 .social-bg-img {
   display: block;
-  max-height: 100%;
-  width: auto;
-  max-width: 100%;
+  width: 100%;
+  height: 100%;
 }
 
 /* Overlay sits exactly over the rendered image.
-   Percentages are relative to the .social-scene which is the same size as the image. */
+   Percentages are relative to .social-scene which is always 1838:856. */
 .leaderboard-overlay {
   position: absolute;
-  /* row 1 top ≈ 27%, row 10 bottom ≈ 82%, name area: left ≈ 31%, right ≈ 69% */
-  top:    27%;
-  left:   31%;
-  width:  38%;
-  height: 55%;
+  /* Measured from image pixels (1838×856):
+     rows 1-10 span y≈195-655 → top 22.8%, height 53.7%
+     name area  x≈555-1290  → left 30.2%, width 40.2% */
+  top:    23%;
+  left:   30%;
+  width:  40%;
+  height: 54%;
   list-style: none;
   margin: 0;
   padding: 0;
