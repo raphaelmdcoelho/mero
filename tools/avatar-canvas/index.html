@@ -371,10 +371,11 @@
     pointer-events: none;
   }
   .splash-logo-wrap {
+    position: relative;
     display: inline-flex;
-    flex-direction: column;
     align-items: center;
-    gap: 1rem;
+    justify-content: center;
+    padding: 64px;
   }
   #splash-logo {
     max-width: min(480px, 80vw);
@@ -382,13 +383,22 @@
     object-fit: contain;
     filter: drop-shadow(0 0 32px rgba(201,168,76,0.25));
   }
+  .moon-orbit {
+    position: absolute;
+    inset: 0;
+    animation: orbit 8s linear infinite;
+    pointer-events: none;
+  }
   .gamepad-spin {
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
     font-size: 48px;
     line-height: 1;
     filter: drop-shadow(0 0 8px rgba(201,168,76,0.65));
-    animation: spin 3s linear infinite;
   }
-  @keyframes spin {
+  @keyframes orbit {
     from { transform: rotate(0deg); }
     to   { transform: rotate(360deg); }
   }
@@ -528,7 +538,9 @@
 <div id="splash">
   <div class="splash-logo-wrap">
     <img id="splash-logo" src="" alt="ShedR" />
-    <div class="gamepad-spin">🎮</div>
+    <div class="moon-orbit">
+      <div class="gamepad-spin">🎮</div>
+    </div>
   </div>
   <button type="button" id="splash-start">Enter Studio</button>
 </div>
