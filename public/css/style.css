@@ -314,7 +314,7 @@ input:focus, select:focus {
   /* Measured from image pixels (1838×856):
      rows 1-10 span y≈195-655 → top 22.8%, height 53.7%
      name area  x≈555-1290  → left 30.2%, width 40.2% */
-  top:    30%;
+  top:    28.5%;
   left:   30%;
   width:  33%;
   height: 44%;
