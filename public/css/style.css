@@ -452,10 +452,10 @@ input:focus, select:focus {
 
   /* reposition overlay for 1008×1560 vertical image — tune these if needed */
   .leaderboard-overlay {
-    top:    35%;
+    top:    48%;
     left:   15%;
     width:  70%;
-    height: 20%;
+    height: 14%;
   }
   .leaderboard-row {
     padding-left: 20%;
