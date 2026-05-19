@@ -43,14 +43,14 @@ function itemIconHtml(itemId, itemIcon, itemName, gender, imgClass) {
 }
 
 const ATTRS = [
-  { key: 'strength',      labelKey: 'attr.strength',      icon: '⚔️',  hintKey: 'attr.strength_hint' },
-  { key: 'dexterity',     labelKey: 'attr.dexterity',     icon: '🏹',  hintKey: 'attr.dexterity_hint' },
-  { key: 'agility',       labelKey: 'attr.agility',       icon: '💨',  hintKey: 'attr.agility_hint' },
-  { key: 'vitality',      labelKey: 'attr.vitality',      icon: '❤️',  hintKey: 'attr.vitality_hint' },
-  { key: 'intelligence',  labelKey: 'attr.intelligence',  icon: '🔮',  hintKey: 'attr.intelligence_hint' },
-  { key: 'focus',         labelKey: 'attr.focus',         icon: '🎯',  hintKey: 'attr.focus_hint' },
-  { key: 'stamina',    labelKey: 'attr.stamina',    icon: '⚡', hintKey: 'attr.stamina_hint' },
-  { key: 'resistance', labelKey: 'attr.resistance', icon: '🌀', hintKey: 'attr.resistance_hint' },
+  { key: 'strength',      labelKey: 'attr.strength',      hintKey: 'attr.strength_hint' },
+  { key: 'dexterity',     labelKey: 'attr.dexterity',     hintKey: 'attr.dexterity_hint' },
+  { key: 'agility',       labelKey: 'attr.agility',       hintKey: 'attr.agility_hint' },
+  { key: 'vitality',      labelKey: 'attr.vitality',      hintKey: 'attr.vitality_hint' },
+  { key: 'intelligence',  labelKey: 'attr.intelligence',  hintKey: 'attr.intelligence_hint' },
+  { key: 'focus',         labelKey: 'attr.focus',         hintKey: 'attr.focus_hint' },
+  { key: 'stamina',       labelKey: 'attr.stamina',       hintKey: 'attr.stamina_hint' },
+  { key: 'resistance',    labelKey: 'attr.resistance',    hintKey: 'attr.resistance_hint' },
 ];
 
 const DUNGEONS = [
@@ -1289,14 +1289,13 @@ function renderAttributes(char) {
   document.getElementById('attr-confirm-row').classList.toggle('visible', pendingTotal > 0);
 
   const list = document.getElementById('attr-list');
-  list.innerHTML = ATTRS.map(({ key, labelKey, icon, hintKey }) => {
+  list.innerHTML = ATTRS.map(({ key, labelKey, hintKey }) => {
     const base  = Number(char[`attr_${key}`]) || 5;
     const delta = pendingAttrs[key] || 0;
     const label = t(labelKey) || key;
     const hint  = t(hintKey)  || '';
     return `
       <div class="attr-row">
-        <span class="attr-icon">${icon}</span>
         <span class="attr-name" title="${hint}">${label}</span>
         <span class="attr-value">${base}</span>
         ${unspent > 0 ? `

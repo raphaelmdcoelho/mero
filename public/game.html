@@ -8,7 +8,7 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="/css/style.css?v=6" />
 </head>
-<body>
+<body class="game-page">
 
   <!-- Shared header (injected by header.js) -->
   <div id="app-header"></div>
@@ -83,14 +83,14 @@
         </div>
 
         <!-- Bottom row: all action buttons in one row (cols 1-6, row 3) -->
-        <div class="action-sq-wrap" id="wrap-inventory" style="grid-column:1;grid-row:3;">
+        <div class="action-sq-wrap" id="wrap-inventory" style="grid-column:2;grid-row:3;">
           <span class="sq-label" data-i18n="game.inventory">Inventory</span>
           <div class="action-sq" id="sq-inventory" onclick="openPanel('inventory')">
             <img src="/inventory-icon.png" alt="Inventory" class="sq-icon" />
           </div>
         </div>
 
-        <div class="action-sq-wrap" id="wrap-attributes" style="grid-column:2;grid-row:3;">
+        <div class="action-sq-wrap" id="wrap-attributes" style="grid-column:3;grid-row:3;">
           <span class="sq-label" data-i18n="game.attributes">Attributes</span>
           <div class="action-sq" id="sq-attributes" style="position:relative;" onclick="openPanel('attributes')">
             <img src="/attributes-icon.png" alt="Attributes" class="sq-icon" />
@@ -98,21 +98,21 @@
           </div>
         </div>
 
-        <div class="action-sq-wrap" id="wrap-equipment" style="grid-column:3;grid-row:3;">
+        <div class="action-sq-wrap" id="wrap-equipment" style="grid-column:4;grid-row:3;">
           <span class="sq-label" data-i18n="game.equipment">Equipment</span>
           <div class="action-sq" id="sq-equipment" onclick="openPanel('equipment')">
             <img src="/equipment-icon.png" alt="Equipment" class="sq-icon" />
           </div>
         </div>
 
-        <div class="action-sq-wrap" id="wrap-market" style="grid-column:4;grid-row:3;">
+        <div class="action-sq-wrap" id="wrap-market" style="grid-column:5;grid-row:3;">
           <span class="sq-label" data-i18n="game.market">Market</span>
           <div class="action-sq" id="sq-market" onclick="openPanel('market')">
             <img src="/market-icon.png" alt="Market" class="sq-icon" />
           </div>
         </div>
 
-        <div class="action-sq-wrap" id="wrap-achievements" style="grid-column:5;grid-row:3;">
+        <div class="action-sq-wrap" id="wrap-achievements" style="grid-column:6;grid-row:3;">
           <span class="sq-label" data-i18n="game.achievements">Achievements</span>
           <div class="action-sq disabled" id="sq-achievements" style="position:relative;">
             <img src="/achivements_icon.png" alt="Achievements" class="sq-icon" />
@@ -480,7 +480,7 @@
   <div class="modal-overlay" id="attr-modal" onclick="attrOverlayClick(event)">
     <div class="modal attr-modal-content">
       <div class="modal-header">
-        <h2 class="modal-title">⚡ Attributes</h2>
+        <h2 class="modal-title">Attributes</h2>
         <button type="button" class="close-btn" onclick="closePanel('attributes')">✕</button>
       </div>
       <div id="attr-unspent-bar" class="attr-unspent-bar">
@@ -489,7 +489,7 @@
       </div>
       <div class="attr-cols">
         <div class="attr-col-left">
-          <p class="attr-section-title">⚡ Attributes</p>
+          <p class="attr-section-title">Attributes</p>
           <div id="attr-list"></div>
           <div id="attr-confirm-row" class="attr-confirm-row">
             <button type="button" class="btn btn-primary btn-full" onclick="confirmAttributes()" data-i18n="game.ap.confirm">Confirm Allocation</button>
@@ -497,12 +497,12 @@
         </div>
         <div class="attr-col-right">
           <div id="attr-combat-stats">
-            <p class="attr-section-title" data-i18n="game.sp.title">📊 Combat Stats</p>
-            <div class="combat-stat-row"><span class="cstat-label" data-i18n="game.sp.max_hp">❤️ Max HP</span><span class="cstat-value" id="cstat-hp">—</span></div>
-            <div class="combat-stat-row"><span class="cstat-label" data-i18n="game.sp.damage">⚔️ Damage</span><span class="cstat-value" id="cstat-dmg">—</span></div>
-            <div class="combat-stat-row"><span class="cstat-label" data-i18n="game.sp.hit_chance">🎯 Hit Chance</span><span class="cstat-value" id="cstat-hit">—</span></div>
-            <div class="combat-stat-row"><span class="cstat-label" data-i18n="game.sp.dodge_chance">💨 Dodge Chance</span><span class="cstat-value" id="cstat-dodge">—</span></div>
-            <div class="combat-stat-row"><span class="cstat-label" data-i18n="game.sp.defense">🛡️ Defense</span><span class="cstat-value" id="cstat-def">—</span></div>
+            <p class="attr-section-title" data-i18n="game.sp.title">Combat Stats</p>
+            <div class="combat-stat-row"><span class="cstat-label" data-i18n="game.sp.max_hp">Max HP</span><span class="cstat-value" id="cstat-hp">—</span></div>
+            <div class="combat-stat-row"><span class="cstat-label" data-i18n="game.sp.damage">Damage</span><span class="cstat-value" id="cstat-dmg">—</span></div>
+            <div class="combat-stat-row"><span class="cstat-label" data-i18n="game.sp.hit_chance">Hit Chance</span><span class="cstat-value" id="cstat-hit">—</span></div>
+            <div class="combat-stat-row"><span class="cstat-label" data-i18n="game.sp.dodge_chance">Dodge Chance</span><span class="cstat-value" id="cstat-dodge">—</span></div>
+            <div class="combat-stat-row"><span class="cstat-label" data-i18n="game.sp.defense">Defense</span><span class="cstat-value" id="cstat-def">—</span></div>
             <p class="cstat-note" data-i18n="game.sp.note">Stats include equipped gear and attribute bonuses.</p>
           </div>
         </div>

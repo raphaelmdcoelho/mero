@@ -70,7 +70,7 @@
       'game.farm':               'Farm',
       'game.tavern':             'Tavern',
       'game.inventory':          'Inventory',
-      'game.attributes':         'Attributes',
+      'game.attributes':         'Status',
       'game.equipment':          'Equipment',
       'game.read':               'Read',
       'game.market':             'Market',
@@ -225,12 +225,12 @@
       'game.eq.equip_from':      'Equip from inventory:',
 
       // Stats panel
-      'game.sp.title':           '📊 Combat Stats',
-      'game.sp.max_hp':          '❤️ Max HP',
-      'game.sp.damage':          '⚔️ Damage',
-      'game.sp.hit_chance':      '🎯 Hit Chance',
-      'game.sp.dodge_chance':    '💨 Dodge Chance',
-      'game.sp.defense':         '🛡️ Defense',
+      'game.sp.title':           'Combat Stats',
+      'game.sp.max_hp':          'Max HP',
+      'game.sp.damage':          'Damage',
+      'game.sp.hit_chance':      'Hit Chance',
+      'game.sp.dodge_chance':    'Dodge Chance',
+      'game.sp.defense':         'Defense',
       'game.sp.note':            'Stats include equipped gear and attribute bonuses.',
 
       // Attributes panel
@@ -443,7 +443,7 @@
       'game.farm':               'Fazenda',
       'game.tavern':             'Taverna',
       'game.inventory':          'Inventário',
-      'game.attributes':         'Atributos',
+      'game.attributes':         'Status',
       'game.equipment':          'Equipamento',
       'game.read':               'Ler',
       'game.market':             'Mercado',
@@ -598,12 +598,12 @@
       'game.eq.equip_from':      'Equipar do inventário:',
 
       // Stats panel
-      'game.sp.title':           '📊 Status de Combate',
-      'game.sp.max_hp':          '❤️ HP Máximo',
-      'game.sp.damage':          '⚔️ Dano',
-      'game.sp.hit_chance':      '🎯 Chance de Acerto',
-      'game.sp.dodge_chance':    '💨 Chance de Esquiva',
-      'game.sp.defense':         '🛡️ Defesa',
+      'game.sp.title':           'Status de Combate',
+      'game.sp.max_hp':          'HP Máximo',
+      'game.sp.damage':          'Dano',
+      'game.sp.hit_chance':      'Chance de Acerto',
+      'game.sp.dodge_chance':    'Chance de Esquiva',
+      'game.sp.defense':         'Defesa',
       'game.sp.note':            'Os valores incluem bônus de equipamento e atributos.',
 
       // Attributes panel
