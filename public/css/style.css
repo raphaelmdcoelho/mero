@@ -382,6 +382,8 @@ input:focus, select:focus {
   height: 100%;
 }
 
+.social-bg-mobile { display: none; }
+
 /* Overlay sits exactly over the rendered image.
    Percentages are relative to .social-scene which is always 1838:856. */
 .leaderboard-overlay {
@@ -433,6 +435,41 @@ input:focus, select:focus {
   color: #c9b98a;
   text-shadow: 0 1px 2px #000;
   white-space: nowrap;
+}
+
+/* ---- Social page — mobile (portrait image, 5 rows) ---- */
+@media (max-width: 640px) {
+  .social-scene {
+    height: auto;
+    width: 100%;
+    aspect-ratio: 1008 / 1560;
+  }
+  .social-bg-desktop { display: none; }
+  .social-bg-mobile  { display: block; }
+
+  /* hide rows 6-10 */
+  .leaderboard-row:nth-child(n+6) { display: none; }
+
+  /* reposition overlay for 1008×1560 vertical image — tune these if needed */
+  .leaderboard-overlay {
+    top:    35%;
+    left:   15%;
+    width:  70%;
+    height: 30%;
+  }
+  .leaderboard-row {
+    padding-left: 20%;
+    padding-right: 8%;
+  }
+  .lb-name {
+    font-size: clamp(0.65rem, 3.5vw, 1rem);
+  }
+  .leaderboard-row:first-child .lb-name {
+    font-size: clamp(0.75rem, 4vw, 1.1rem);
+  }
+  .lb-level {
+    font-size: clamp(0.55rem, 2.8vw, 0.85rem);
+  }
 }
 
 /* ---- Section nav tabs ---- */
