@@ -352,6 +352,50 @@
   }
   .reset-btn:hover { border-color: var(--accent); color: var(--accent); }
 
+  /* ── Splash screen ── */
+  #splash {
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    background: var(--bg);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2.5rem;
+    transition: opacity 0.5s ease, transform 0.5s ease;
+  }
+  #splash.fade-out {
+    opacity: 0;
+    transform: scale(1.04);
+    pointer-events: none;
+  }
+  #splash-logo {
+    max-width: min(480px, 80vw);
+    width: 100%;
+    object-fit: contain;
+    filter: drop-shadow(0 0 32px rgba(201,168,76,0.25));
+  }
+  #splash-start {
+    padding: 0.75rem 3rem;
+    background: transparent;
+    border: 2px solid var(--accent);
+    color: var(--accent);
+    font-family: 'Cinzel', Georgia, serif;
+    font-size: 1rem;
+    font-weight: 700;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background 0.2s, color 0.2s, box-shadow 0.2s;
+  }
+  #splash-start:hover {
+    background: var(--accent);
+    color: #1a1a22;
+    box-shadow: 0 0 24px rgba(201,168,76,0.4);
+  }
+
   /* ── Add-equipment form ── */
   .panel-title-row {
     display: flex;
@@ -464,6 +508,12 @@
 </head>
 <body>
 
+<!-- Splash / home screen -->
+<div id="splash">
+  <img id="splash-logo" src="" alt="ShedR" />
+  <button type="button" id="splash-start">Enter Studio</button>
+</div>
+
 <header>
   ShedR
   <span>DEV TOOL — click overlay to select · drag to move · use size controls or corner handle to resize</span>
@@ -571,6 +621,19 @@
 </div>
 
 <script>
+// ── Splash screen ────────────────────────────────────────────────────────────
+
+(function initSplash() {
+  const LOGO_SRC = location.protocol === 'file:' ? '../../shedr.png' : '/shedr.png';
+  document.getElementById('splash-logo').src = LOGO_SRC;
+
+  document.getElementById('splash-start').addEventListener('click', () => {
+    const splash = document.getElementById('splash');
+    splash.classList.add('fade-out');
+    splash.addEventListener('transitionend', () => splash.remove(), { once: true });
+  });
+})();
+
 // ── Constants ─────────────────────────────────────────────────────────────────
 
 // When served via `npm run canvas` use the server's /public route;
