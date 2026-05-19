@@ -8,27 +8,11 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="/css/style.css?v=6" />
 </head>
-<body>
+<body class="game-page">
 
-  <!-- Header -->
-  <header class="site-header">
-    <div style="display:flex;align-items:center;gap:1rem;">
-      <a href="/characters.html" class="game-logo" style="font-size:1.4rem;text-decoration:none;">MERO</a>
-      <div>
-        <div id="char-name-header" style="font-family:'Cinzel',serif;font-size:1rem;color:var(--text);"></div>
-        <div id="char-class-header" style="font-size:0.75rem;color:var(--muted);"></div>
-      </div>
-    </div>
-    <div style="display:flex;align-items:center;gap:0.75rem;">
-      <div id="activity-badge" style="display:none;" class="activity-badge">
-        <div class="activity-dot"></div>
-        <span id="activity-label">Active</span>
-      </div>
-      <div class="lang-switcher"></div>
-      <a href="/characters.html" class="btn btn-outline btn-sm" data-i18n="game.heroes_link">← Heroes</a>
-      <button class="btn btn-outline btn-sm" onclick="logout()" data-i18n="game.logout">Logout</button>
-    </div>
-  </header>
+  <!-- Shared header (injected by header.js) -->
+  <div id="app-header"></div>
+  <script src="/js/header.js"></script>
 
   <!-- Game arena -->
   <div class="game-layout">
@@ -55,7 +39,6 @@
         <div class="action-sq-wrap" id="wrap-tavern" style="grid-column:3;grid-row:1;">
           <span id="tavern-label" class="sq-label" data-i18n="game.tavern">Tavern</span>
           <div class="action-sq" id="sq-tavern" onclick="handleTavern()">
-            <div class="tavern-progress-fill" id="tavern-progress-fill"></div>
             <img src="/tavern-icon.png" alt="Tavern" class="sq-icon" />
           </div>
         </div>
@@ -64,7 +47,6 @@
         <div class="action-sq-wrap" id="wrap-read" style="grid-column:4;grid-row:1;">
           <span id="read-label" class="sq-label" data-i18n="game.read">Read</span>
           <div class="action-sq" id="sq-read" onclick="handleRead()">
-            <div class="read-progress-fill" id="read-progress-fill"></div>
             <img src="/read-icon.png" alt="Read" class="sq-icon" />
           </div>
         </div>
@@ -98,57 +80,17 @@
         <div class="avatar-cell" style="grid-column:1/8;grid-row:2;justify-self:center;">
           <div class="avatar-display" id="avatar-display"></div>
 
-          <!-- Pixel art pickaxe — appears on the right of the avatar when an activity is active -->
-          <div id="pickaxe-wrap" class="pickaxe-wrap">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" style="image-rendering:pixelated;image-rendering:crisp-edges;">
-              <!-- Upper prong tip -->
-              <rect x="0"  y="0"  width="4" height="4" fill="#f1f5f9"/>
-              <!-- Upper prong body -->
-              <rect x="0"  y="4"  width="4" height="4" fill="#94a3b8"/>
-              <rect x="4"  y="4"  width="4" height="4" fill="#64748b"/>
-              <rect x="4"  y="8"  width="4" height="4" fill="#94a3b8"/>
-              <rect x="8"  y="8"  width="4" height="4" fill="#64748b"/>
-              <!-- Head body -->
-              <rect x="8"  y="12" width="4" height="4" fill="#94a3b8"/>
-              <rect x="12" y="12" width="4" height="4" fill="#94a3b8"/>
-              <rect x="16" y="12" width="4" height="4" fill="#64748b"/>
-              <rect x="20" y="12" width="4" height="4" fill="#475569"/>
-              <rect x="8"  y="16" width="4" height="4" fill="#64748b"/>
-              <rect x="12" y="16" width="4" height="4" fill="#64748b"/>
-              <rect x="16" y="16" width="4" height="4" fill="#475569"/>
-              <rect x="20" y="16" width="4" height="4" fill="#334155"/>
-              <!-- Lower prong -->
-              <rect x="4"  y="20" width="4" height="4" fill="#94a3b8"/>
-              <rect x="8"  y="20" width="4" height="4" fill="#64748b"/>
-              <rect x="0"  y="24" width="4" height="4" fill="#94a3b8"/>
-              <rect x="4"  y="24" width="4" height="4" fill="#64748b"/>
-              <!-- Lower prong tip -->
-              <rect x="0"  y="28" width="4" height="4" fill="#cbd5e1"/>
-              <!-- Handle — joins head at col 6 then steps diagonally lower-right -->
-              <rect x="24" y="12" width="4" height="4" fill="#d97706"/>
-              <rect x="24" y="16" width="4" height="4" fill="#92400e"/>
-              <rect x="28" y="20" width="4" height="4" fill="#d97706"/>
-              <rect x="32" y="24" width="4" height="4" fill="#92400e"/>
-              <rect x="36" y="28" width="4" height="4" fill="#d97706"/>
-              <rect x="40" y="32" width="4" height="4" fill="#92400e"/>
-              <rect x="44" y="36" width="4" height="4" fill="#d97706"/>
-              <rect x="48" y="40" width="4" height="4" fill="#92400e"/>
-              <rect x="52" y="44" width="4" height="4" fill="#d97706"/>
-              <rect x="56" y="48" width="4" height="4" fill="#92400e"/>
-              <rect x="60" y="52" width="4" height="4" fill="#d97706"/>
-            </svg>
-          </div>
         </div>
 
         <!-- Bottom row: all action buttons in one row (cols 1-6, row 3) -->
-        <div class="action-sq-wrap" id="wrap-inventory" style="grid-column:1;grid-row:3;">
+        <div class="action-sq-wrap" id="wrap-inventory" style="grid-column:2;grid-row:3;">
           <span class="sq-label" data-i18n="game.inventory">Inventory</span>
           <div class="action-sq" id="sq-inventory" onclick="openPanel('inventory')">
             <img src="/inventory-icon.png" alt="Inventory" class="sq-icon" />
           </div>
         </div>
 
-        <div class="action-sq-wrap" id="wrap-attributes" style="grid-column:2;grid-row:3;">
+        <div class="action-sq-wrap" id="wrap-attributes" style="grid-column:3;grid-row:3;">
           <span class="sq-label" data-i18n="game.attributes">Attributes</span>
           <div class="action-sq" id="sq-attributes" style="position:relative;" onclick="openPanel('attributes')">
             <img src="/attributes-icon.png" alt="Attributes" class="sq-icon" />
@@ -156,25 +98,17 @@
           </div>
         </div>
 
-        <div class="action-sq-wrap" id="wrap-equipment" style="grid-column:3;grid-row:3;">
+        <div class="action-sq-wrap" id="wrap-equipment" style="grid-column:4;grid-row:3;">
           <span class="sq-label" data-i18n="game.equipment">Equipment</span>
           <div class="action-sq" id="sq-equipment" onclick="openPanel('equipment')">
             <img src="/equipment-icon.png" alt="Equipment" class="sq-icon" />
           </div>
         </div>
 
-        <div class="action-sq-wrap" id="wrap-market" style="grid-column:4;grid-row:3;">
+        <div class="action-sq-wrap" id="wrap-market" style="grid-column:5;grid-row:3;">
           <span class="sq-label" data-i18n="game.market">Market</span>
           <div class="action-sq" id="sq-market" onclick="openPanel('market')">
             <img src="/market-icon.png" alt="Market" class="sq-icon" />
-          </div>
-        </div>
-
-        <div class="action-sq-wrap" id="wrap-castle" style="grid-column:5;grid-row:3;">
-          <span class="sq-label" data-i18n="game.castle">Castle</span>
-          <div class="action-sq disabled" id="sq-castle" style="position:relative;">
-            <img src="/castle-icon.png" alt="Castle" class="sq-icon" />
-            <span class="unspent-badge" style="font-size:0.5rem;" data-i18n="game.coming_soon">Soon</span>
           </div>
         </div>
 
@@ -188,43 +122,19 @@
       </div>
     </div>
 
-    <!-- Status bars -->
-    <div class="status-bar">
-      <div class="status-bars">
-        <div class="stat-row">
-          <span class="stat-label">HP</span>
-          <div class="stat-track">
-            <div class="stat-fill hp" id="hp-fill" style="width:100%"></div>
-          </div>
-          <span class="stat-value" id="hp-text">20 / 20</span>
-        </div>
-        <div class="stat-row">
-          <span class="stat-label">XP</span>
-          <div class="stat-track">
-            <div class="stat-fill xp" id="xp-fill" style="width:0%"></div>
-          </div>
-          <span class="stat-value" id="xp-text">0 / 10</span>
-        </div>
-        <div class="stat-row">
-          <span class="stat-label">ST</span>
-          <div class="stat-track">
-            <div class="stat-fill stamina" id="stamina-fill" style="width:100%"></div>
-          </div>
-          <span class="stat-value" id="stamina-text">10 / 10</span>
-        </div>
-        <div style="text-align:center;margin-top:0.25rem;display:flex;align-items:center;justify-content:center;gap:0.75rem;">
-          <span id="level-display" style="font-family:'Cinzel',serif;font-size:0.85rem;color:var(--gold);">Level 1</span>
-          <span id="gold-display" style="font-size:0.8rem;color:#f5c842;">🪙 0g</span>
-          <span id="unspent-header" style="display:none;font-size:0.75rem;color:var(--accent);font-family:'Cinzel',serif;cursor:pointer;" onclick="openPanel('attributes')"></span>
-        </div>
-      </div>
-    </div>
   </div>
+
+  <!-- Shared status bar + footer (injected by footer.js) -->
+  <div id="app-footer"></div>
+  <script src="/js/footer.js"></script>
 
   <!-- Dungeon Modal -->
   <div class="modal-overlay" id="dungeon-modal">
     <div class="modal">
-      <h2 class="modal-title" data-i18n="game.dm.title">Choose Dungeon</h2>
+      <div class="modal-header">
+        <h2 class="modal-title" data-i18n="game.dm.title">Choose Dungeon</h2>
+        <button type="button" class="close-btn" onclick="closeDungeonModal()">✕</button>
+      </div>
       <!-- Carousel -->
       <div class="dungeon-carousel">
         <button class="carousel-arrow" id="carousel-prev" onclick="prevDungeon()" disabled>&#8249;</button>
@@ -271,22 +181,31 @@
 
   <!-- Tavern Rest Modal -->
   <div class="modal-overlay" id="tavern-modal">
-    <div class="modal">
-      <h2 class="modal-title" data-i18n="tavern.modal.title">Rest at the Tavern</h2>
+    <div class="modal tavern-modal-content">
+      <div class="modal-header tavern-modal-header">
+        <h2 class="modal-title" data-i18n="tavern.modal.title">Rest at the Tavern</h2>
+        <button type="button" class="close-btn" onclick="closeTavernModal()">✕</button>
+      </div>
+      <img src="/img/tavern_background.png" class="tavern-bg-img" alt="Tavern" />
       <p class="tavern-modal-subtitle" data-i18n="tavern.modal.subtitle">Choose your rest type</p>
       <div class="tavern-rest-options" id="tavern-rest-options">
         <!-- populated by JS -->
       </div>
       <div class="modal-footer">
         <button class="btn btn-outline" onclick="closeTavernModal()" data-i18n="game.dm.cancel">Cancel</button>
+        <button class="btn btn-primary" id="tavern-start-btn" disabled onclick="confirmTavernRest()">Start</button>
       </div>
     </div>
   </div>
 
   <!-- Read Modal -->
   <div class="modal-overlay" id="read-modal">
-    <div class="modal">
-      <h2 class="modal-title">Choose a Book</h2>
+    <div class="modal read-modal-content">
+      <div class="modal-header">
+        <h2 class="modal-title">Choose a Book</h2>
+        <button type="button" class="close-btn" onclick="closeReadModal()">✕</button>
+      </div>
+      <img src="/img/read_background.png" class="read-bg-img" alt="Library" />
       <p class="read-modal-subtitle">Select a book to read</p>
       <div class="read-book-list" id="read-book-list">
         <!-- populated by JS -->
@@ -301,7 +220,10 @@
   <!-- Fishing Modal -->
   <div class="modal-overlay" id="fishing-modal">
     <div class="modal">
-      <h2 class="modal-title">Go Fishing</h2>
+      <div class="modal-header">
+        <h2 class="modal-title">Go Fishing</h2>
+        <button type="button" class="close-btn" onclick="closeFishingModal()">✕</button>
+      </div>
       <p class="fishing-modal-subtitle">Choose your bait</p>
       <div class="fishing-bait-grid" id="fishing-bait-grid">
         <!-- populated by JS -->
@@ -376,7 +298,10 @@
   <!-- Solo Dungeon — Monster Selection Modal -->
   <div class="modal-overlay" id="solo-dungeon-modal">
     <div class="modal">
-      <h2 class="modal-title">⚔️ Dungeon</h2>
+      <div class="modal-header">
+        <h2 class="modal-title">⚔️ Dungeon</h2>
+        <button type="button" class="close-btn" onclick="closeSoloDungeonModal()">✕</button>
+      </div>
       <p class="solo-modal-sub">Choose your opponent</p>
 
       <!-- Hero HP reminder -->
@@ -462,18 +387,20 @@
     </div>
   </div>
 
-  <!-- Inventory Panel -->
-  <div class="side-panel" id="inv-panel">
-    <div class="side-panel-header">
-      <span class="side-panel-title">🎒 Inventory</span>
-      <button class="close-btn" onclick="closePanel('inventory')">✕</button>
-    </div>
-    <div class="side-panel-body">
+  <!-- Inventory Modal -->
+  <div class="modal-overlay" id="inv-panel" onclick="invOverlayClick(event)">
+    <div class="inv-modal">
+      <div class="modal-header">
+        <span class="side-panel-title">🎒 Inventory</span>
+        <button type="button" class="close-btn" onclick="closePanel('inventory')">✕</button>
+      </div>
       <p style="font-size:0.8rem;color:var(--muted);margin-bottom:0.75rem;" data-i18n="game.inv.hint">
-        Max 25 slots · Gold border = equipped
+        Max 40 slots · Gold border = equipped
       </p>
-      <div class="inv-grid" id="inv-grid"></div>
-      <div id="item-tooltip" style="display:none;margin-top:1rem;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:0.75rem;font-size:0.85rem;"></div>
+      <div class="inv-modal-body">
+        <div class="inv-grid" id="inv-grid"></div>
+        <div id="item-tooltip"></div>
+      </div>
     </div>
   </div>
 
@@ -549,30 +476,36 @@
     </div>
   </div>
 
-  <!-- Attributes Panel -->
-  <div class="side-panel" id="attr-panel">
-    <div class="side-panel-header">
-      <span class="side-panel-title">⚡ Attributes</span>
-      <button type="button" class="close-btn" onclick="closePanel('attributes')">✕</button>
-    </div>
-    <div class="side-panel-body">
+  <!-- Attributes Modal -->
+  <div class="modal-overlay" id="attr-modal" onclick="attrOverlayClick(event)">
+    <div class="modal attr-modal-content">
+      <div class="modal-header">
+        <h2 class="modal-title">Attributes</h2>
+        <button type="button" class="close-btn" onclick="closePanel('attributes')">✕</button>
+      </div>
       <div id="attr-unspent-bar" class="attr-unspent-bar">
         <span class="attr-unspent-label" data-i18n="game.ap.points">Points to Distribute</span>
         <span id="attr-points-left" class="attr-points-left"></span>
       </div>
-      <div id="attr-list"></div>
-      <div id="attr-confirm-row" class="attr-confirm-row">
-        <button type="button" class="btn btn-primary btn-full" onclick="confirmAttributes()" data-i18n="game.ap.confirm">Confirm Allocation</button>
-      </div>
-      <hr class="panel-divider" />
-      <div id="attr-combat-stats">
-        <p class="attr-section-title" data-i18n="game.sp.title">📊 Combat Stats</p>
-        <div class="combat-stat-row"><span class="cstat-label" data-i18n="game.sp.max_hp">❤️ Max HP</span><span class="cstat-value" id="cstat-hp">—</span></div>
-        <div class="combat-stat-row"><span class="cstat-label" data-i18n="game.sp.damage">⚔️ Damage</span><span class="cstat-value" id="cstat-dmg">—</span></div>
-        <div class="combat-stat-row"><span class="cstat-label" data-i18n="game.sp.hit_chance">🎯 Hit Chance</span><span class="cstat-value" id="cstat-hit">—</span></div>
-        <div class="combat-stat-row"><span class="cstat-label" data-i18n="game.sp.dodge_chance">💨 Dodge Chance</span><span class="cstat-value" id="cstat-dodge">—</span></div>
-        <div class="combat-stat-row"><span class="cstat-label" data-i18n="game.sp.defense">🛡️ Defense</span><span class="cstat-value" id="cstat-def">—</span></div>
-        <p class="cstat-note" data-i18n="game.sp.note">Stats include equipped gear and attribute bonuses.</p>
+      <div class="attr-cols">
+        <div class="attr-col-left">
+          <p class="attr-section-title">Attributes</p>
+          <div id="attr-list"></div>
+          <div id="attr-confirm-row" class="attr-confirm-row">
+            <button type="button" class="btn btn-primary btn-full" onclick="confirmAttributes()" data-i18n="game.ap.confirm">Confirm Allocation</button>
+          </div>
+        </div>
+        <div class="attr-col-right">
+          <div id="attr-combat-stats">
+            <p class="attr-section-title" data-i18n="game.sp.title">Combat Stats</p>
+            <div class="combat-stat-row"><span class="cstat-label" data-i18n="game.sp.max_hp">Max HP</span><span class="cstat-value" id="cstat-hp">—</span></div>
+            <div class="combat-stat-row"><span class="cstat-label" data-i18n="game.sp.damage">Damage</span><span class="cstat-value" id="cstat-dmg">—</span></div>
+            <div class="combat-stat-row"><span class="cstat-label" data-i18n="game.sp.hit_chance">Hit Chance</span><span class="cstat-value" id="cstat-hit">—</span></div>
+            <div class="combat-stat-row"><span class="cstat-label" data-i18n="game.sp.dodge_chance">Dodge Chance</span><span class="cstat-value" id="cstat-dodge">—</span></div>
+            <div class="combat-stat-row"><span class="cstat-label" data-i18n="game.sp.defense">Defense</span><span class="cstat-value" id="cstat-def">—</span></div>
+            <p class="cstat-note" data-i18n="game.sp.note">Stats include equipped gear and attribute bonuses.</p>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -673,6 +606,18 @@
       flex-direction: column;
       gap: 10px;
     }
+    .farm-modal-content .modal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .farm-modal-content .modal-title {
+      margin-bottom: 0;
+    }
+    .farm-modal-content .modal-footer {
+      justify-content: space-between;
+      align-items: center;
+    }
     .farm-xp-section {
       padding: 8px 16px 12px;
       border-bottom: 1px solid var(--border);
@@ -718,9 +663,9 @@
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 3px;
+      gap: 2px;
       cursor: grab;
-      padding: 8px 12px;
+      padding: 5px 8px;
       border: 2px solid transparent;
       border-radius: 8px;
       background: rgba(255,255,255,0.05);
@@ -729,8 +674,8 @@
       transition: border-color 0.15s, background 0.15s;
     }
     .plant-card:hover { border-color: #a0c878; background: rgba(160,200,120,0.1); }
-    .plant-card img { width: 56px; height: 56px; object-fit: contain; pointer-events: none; }
-    .plant-card span { font-size: 0.68rem; color: #ccc; }
+    .plant-card img { width: 40px; height: 40px; object-fit: contain; pointer-events: none; }
+    .plant-card span { font-size: 0.65rem; color: #ccc; }
     .farm-hint { font-size: 0.72rem; color: var(--muted); text-align: center; margin: 10px 0 0; }
     .farm-grid-wrapper { position: relative; width: 100%; margin-top: 16px; }
     .farm-bg-img { width: 100%; display: block; border-radius: 8px; }
@@ -822,29 +767,36 @@
       background: rgba(80, 180, 60, 0.28);
       transition: width 1s linear;
       pointer-events: none;
-      z-index: 0;
+      z-index: 1;
     }
-    #sq-farm > * { position: relative; z-index: 1; }
 
     /* Read progress fill */
-    .read-progress-fill {
+    #sq-read::before {
+      content: '';
       position: absolute;
       inset: 0;
-      width: 0%;
-      background: rgba(99, 179, 237, 0.35);
-      border-radius: inherit;
-      z-index: 0;
+      width: var(--read-progress, 0%);
+      background: rgba(80, 180, 60, 0.28);
+      transition: width 1s linear;
       pointer-events: none;
-      transition: width 0.5s linear;
+      z-index: 1;
     }
-    #sq-read > * { position: relative; z-index: 1; }
 
     /* Read modal */
+    .read-modal-content { width: min(92vw, 480px); display: flex; flex-direction: column; gap: 0; }
+    .read-bg-img {
+      width: 100%;
+      display: block;
+      border-radius: 8px;
+      object-fit: cover;
+      max-height: 200px;
+      margin-bottom: 0.75rem;
+    }
     .read-modal-subtitle {
       font-size: 0.82rem;
       color: var(--muted);
       text-align: center;
-      margin: -0.5rem 0 1rem;
+      margin: 0 0 0.75rem;
     }
     .read-book-list {
       display: flex;
@@ -895,30 +847,84 @@
       white-space: nowrap;
     }
 
-    /* Tavern rest progress fill */
-    .tavern-progress-fill {
+    /* Tavern progress fill */
+    #sq-tavern::before {
+      content: '';
       position: absolute;
       inset: 0;
-      width: 0%;
-      background: rgba(34, 197, 94, 0.35);
-      border-radius: inherit;
-      z-index: 0;
+      width: var(--tavern-progress, 0%);
+      background: rgba(80, 180, 60, 0.28);
+      transition: width 1s linear;
       pointer-events: none;
-      transition: width 0.5s linear;
+      z-index: 1;
     }
-    #sq-tavern > * { position: relative; z-index: 1; }
+
+    /* Adventure (dungeon) progress fill — elapsed timer, fills left-to-right */
+    #sq-dungeon::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      width: var(--dungeon-progress, 0%);
+      background: rgba(80, 180, 60, 0.28);
+      transition: width 1s linear;
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    /* Solo dungeon progress fill — pulses while in combat */
+    #sq-solo-dungeon::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: rgba(80, 180, 60, 0.28);
+      pointer-events: none;
+      z-index: 1;
+      opacity: 0;
+      will-change: opacity;
+      transition: opacity 0.3s;
+    }
+    #sq-solo-dungeon.active::before {
+      opacity: 1;
+      animation: pulse-fill 1.8s ease-in-out infinite;
+    }
+
+    @keyframes pulse-fill {
+      0%, 100% { opacity: 0.4; }
+      50%       { opacity: 1; }
+    }
 
     /* Tavern rest modal */
+    .tavern-modal-content {
+      width: min(92vw, 480px);
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+    }
+    .tavern-modal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 0.75rem;
+    }
+    .tavern-modal-header .modal-title { margin-bottom: 0; }
+    .tavern-bg-img {
+      width: 100%;
+      display: block;
+      border-radius: 8px;
+      object-fit: cover;
+      max-height: 180px;
+      margin-bottom: 0.75rem;
+    }
     .tavern-modal-subtitle {
       font-size: 0.82rem;
       color: var(--muted);
       text-align: center;
-      margin: -0.5rem 0 1rem;
+      margin: 0 0 0.6rem;
     }
     .tavern-rest-options {
       display: flex;
       flex-direction: column;
-      gap: 0.75rem;
+      gap: 0.5rem;
       margin-bottom: 0.5rem;
     }
     .tavern-rest-card {
@@ -926,9 +932,9 @@
       align-items: center;
       justify-content: space-between;
       gap: 1rem;
-      padding: 0.85rem 1rem;
+      padding: 0.5rem 0.85rem;
       border: 2px solid var(--border);
-      border-radius: 10px;
+      border-radius: 8px;
       background: var(--surface2);
       cursor: pointer;
       transition: border-color 0.15s, background 0.15s;
@@ -941,10 +947,14 @@
       opacity: 0.4;
       cursor: not-allowed;
     }
-    .tavern-rest-card-info { display: flex; flex-direction: column; gap: 2px; }
+    .tavern-rest-card.selected {
+      border-color: var(--accent);
+      background: rgba(192, 132, 252, 0.12);
+    }
+    .tavern-rest-card-info { display: flex; flex-direction: column; gap: 1px; }
     .tavern-rest-card-name {
       font-family: 'Cinzel', serif;
-      font-size: 0.9rem;
+      font-size: 0.85rem;
       color: var(--text);
     }
     .tavern-rest-card-desc {
@@ -978,8 +988,7 @@
       #wrap-attributes   { grid-column: 2 !important; grid-row: 4 !important; }
       #wrap-equipment    { grid-column: 3 !important; grid-row: 4 !important; }
       #wrap-market       { grid-column: 4 !important; grid-row: 4 !important; }
-      #wrap-castle       { grid-column: 1 !important; grid-row: 5 !important; }
-      #wrap-achievements { grid-column: 2 !important; grid-row: 5 !important; }
+      #wrap-achievements { grid-column: 1 !important; grid-row: 5 !important; }
       /* Reset fixed-px icon widths — they were tuned for 100px desktop buttons,
          on 60px mobile buttons they appear 2× too large */
       #sq-farm .sq-icon,
@@ -988,7 +997,6 @@
       #sq-attributes .sq-icon,
       #sq-equipment .sq-icon,
       #sq-market .sq-icon,
-      #sq-castle .sq-icon,
       #sq-achievements .sq-icon {
         width: 100% !important;
         height: 100% !important;
@@ -1003,10 +1011,6 @@
 
   <!-- Toast container -->
   <div class="toast-container" id="toast-container"></div>
-
-  <footer class="site-footer">
-    <span class="version-badge">Alpha v0.1</span>
-  </footer>
 
   <script src="/js/i18n.js?v=4"></script>
   <script src="/js/api.js?v=4"></script>

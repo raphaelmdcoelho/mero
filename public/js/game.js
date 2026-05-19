@@ -43,14 +43,14 @@ function itemIconHtml(itemId, itemIcon, itemName, gender, imgClass) {
 }
 
 const ATTRS = [
-  { key: 'strength',      labelKey: 'attr.strength',      icon: '⚔️',  hintKey: 'attr.strength_hint' },
-  { key: 'dexterity',     labelKey: 'attr.dexterity',     icon: '🏹',  hintKey: 'attr.dexterity_hint' },
-  { key: 'agility',       labelKey: 'attr.agility',       icon: '💨',  hintKey: 'attr.agility_hint' },
-  { key: 'vitality',      labelKey: 'attr.vitality',      icon: '❤️',  hintKey: 'attr.vitality_hint' },
-  { key: 'intelligence',  labelKey: 'attr.intelligence',  icon: '🔮',  hintKey: 'attr.intelligence_hint' },
-  { key: 'focus',         labelKey: 'attr.focus',         icon: '🎯',  hintKey: 'attr.focus_hint' },
-  { key: 'stamina',    labelKey: 'attr.stamina',    icon: '⚡', hintKey: 'attr.stamina_hint' },
-  { key: 'resistance', labelKey: 'attr.resistance', icon: '🌀', hintKey: 'attr.resistance_hint' },
+  { key: 'strength',      labelKey: 'attr.strength',      hintKey: 'attr.strength_hint' },
+  { key: 'dexterity',     labelKey: 'attr.dexterity',     hintKey: 'attr.dexterity_hint' },
+  { key: 'agility',       labelKey: 'attr.agility',       hintKey: 'attr.agility_hint' },
+  { key: 'vitality',      labelKey: 'attr.vitality',      hintKey: 'attr.vitality_hint' },
+  { key: 'intelligence',  labelKey: 'attr.intelligence',  hintKey: 'attr.intelligence_hint' },
+  { key: 'focus',         labelKey: 'attr.focus',         hintKey: 'attr.focus_hint' },
+  { key: 'stamina',       labelKey: 'attr.stamina',       hintKey: 'attr.stamina_hint' },
+  { key: 'resistance',    labelKey: 'attr.resistance',    hintKey: 'attr.resistance_hint' },
 ];
 
 const DUNGEONS = [
@@ -264,8 +264,7 @@ function renderAll(char) {
     startLocalTimer();
   } else if (char.activity !== 'reading' && readStartedAt) {
     readStartedAt = null;
-    const readFill = document.getElementById('read-progress-fill');
-    if (readFill) readFill.style.width = '0%';
+    document.getElementById('sq-read')?.style.setProperty('--read-progress', '0%');
   }
 
   updateActionSquares(char.activity, char.farmQueue && char.farmQueue.length > 0);
@@ -345,6 +344,7 @@ function updateActionSquares(activity, isFarming = false) {
   const resetEls = [dungeon, soloDungeon, farm, tavern, inv, eq, attrs, stats, read, fishing].filter(Boolean);
   resetEls.forEach(el => el.classList.remove('active', 'disabled'));
 
+
   document.getElementById('dungeon-label').textContent = t('game.js.dungeon_lbl');
   document.getElementById('tavern-label').textContent  = t('game.js.tavern_lbl');
   document.getElementById('farm-label').textContent    = t('game.js.farm_lbl');
@@ -411,7 +411,10 @@ function handleTavern() {
   if (!charState.activity) openTavernModal();
 }
 
+let selectedRestType = null;
+
 function openTavernModal() {
+  selectedRestType = null;
   const gold = Number(charState?.gold) || 0;
   const REST_TYPES = [
     { key: 'relax',    cost: 10, nameKey: 'tavern.rest.relax',    descKey: 'tavern.rest.relax_desc' },
@@ -421,8 +424,8 @@ function openTavernModal() {
   const container = document.getElementById('tavern-rest-options');
   container.innerHTML = REST_TYPES.map(r => {
     const canAfford = gold >= r.cost;
-    return `<div class="tavern-rest-card${canAfford ? '' : ' disabled'}"
-                 ${canAfford ? `onclick="startTavernRest('${r.key}')"` : ''}>
+    return `<div class="tavern-rest-card${canAfford ? '' : ' disabled'}" data-rest-key="${r.key}"
+                 ${canAfford ? `onclick="selectTavernRest('${r.key}')"` : ''}>
       <div class="tavern-rest-card-info">
         <span class="tavern-rest-card-name">${t(r.nameKey)}</span>
         <span class="tavern-rest-card-desc">${t(r.descKey)}</span>
@@ -430,10 +433,25 @@ function openTavernModal() {
       <span class="tavern-rest-card-cost">🪙 ${r.cost}g</span>
     </div>`;
   }).join('');
+  document.getElementById('tavern-start-btn').disabled = true;
   document.getElementById('tavern-modal').classList.add('open');
 }
 
+function selectTavernRest(key) {
+  selectedRestType = key;
+  document.querySelectorAll('.tavern-rest-card').forEach(el => {
+    el.classList.toggle('selected', el.dataset.restKey === key);
+  });
+  document.getElementById('tavern-start-btn').disabled = false;
+}
+
+function confirmTavernRest() {
+  if (!selectedRestType) return;
+  startTavernRest(selectedRestType);
+}
+
 function closeTavernModal() {
+  selectedRestType = null;
   document.getElementById('tavern-modal').classList.remove('open');
 }
 
@@ -459,10 +477,8 @@ async function stopActivity() {
   if (!res.ok) { showToast(data.error || t('game.js.failed_stop'), 'danger'); return; }
   tavernStartedAt = null;
   readStartedAt   = null;
-  const tavernFill = document.getElementById('tavern-progress-fill');
-  if (tavernFill) tavernFill.style.width = '0%';
-  const readFill = document.getElementById('read-progress-fill');
-  if (readFill) readFill.style.width = '0%';
+  document.getElementById('sq-tavern')?.style.setProperty('--tavern-progress', '0%');
+  document.getElementById('sq-read')?.style.setProperty('--read-progress', '0%');
   if (!dungeonEndsAt) stopLocalTimer();
   charState = data;
   renderAll(data);
@@ -714,11 +730,21 @@ function updateTimerDisplay() {
 let localTimerInterval = null;
 
 function updateTavernProgressBar() {
-  const fill = document.getElementById('tavern-progress-fill');
-  if (!fill) return;
-  if (!tavernStartedAt) { fill.style.width = '0%'; return; }
+  const btn = document.getElementById('sq-tavern');
+  if (!btn) return;
+  if (!tavernStartedAt) { btn.style.setProperty('--tavern-progress', '0%'); return; }
   const elapsedSec = (Date.now() - tavernStartedAt) / 1000;
-  fill.style.width = Math.min(100, (elapsedSec / 300) * 100) + '%';
+  btn.style.setProperty('--tavern-progress', Math.min(100, (elapsedSec / 300) * 100) + '%');
+}
+
+function updateDungeonButtonFill() {
+  const btn = document.getElementById('sq-dungeon');
+  if (!btn) return;
+  if (!dungeonEndsAt) { btn.style.setProperty('--dungeon-progress', '0%'); return; }
+  const totalMs     = DIFFICULTY_DURATIONS[charState?.dungeonRun?.difficulty] || DIFFICULTY_DURATIONS.easy;
+  const remainingMs = Math.max(0, dungeonEndsAt - Date.now());
+  const pct         = totalMs > 0 ? Math.min(100, ((totalMs - remainingMs) / totalMs) * 100).toFixed(1) : 0;
+  btn.style.setProperty('--dungeon-progress', pct + '%');
 }
 
 function startLocalTimer() {
@@ -727,6 +753,7 @@ function startLocalTimer() {
     if (dungeonEndsAt) updateTimerDisplay();
     updateTavernProgressBar();
     updateReadProgressBar();
+    updateDungeonButtonFill();
   }, 1000);
 }
 
@@ -747,6 +774,7 @@ function stopDungeonPoll() {
   dungeonPollInterval = null;
   stopLocalTimer();
   dungeonEndsAt = null;
+  updateDungeonButtonFill();
 }
 
 async function pollDungeonStatus() {
@@ -834,7 +862,7 @@ document.getElementById('loot-modal').addEventListener('click', function(e) {
 
 // ---- Combat Stats ----
 async function refreshCombatStats() {
-  const panel = document.getElementById('attr-panel');
+  const panel = document.getElementById('attr-modal');
   if (!panel.classList.contains('open')) return;
 
   const res = await api.get(`/api/game/${charId}/stats`);
@@ -881,7 +909,7 @@ function renderCombatStats(current, projected) {
 const PANEL_MAP = {
   inventory:  'inv-panel',
   equipment:  'eq-panel',
-  attributes: 'attr-panel',
+  attributes: 'attr-modal',
   battle:     'battle-panel',
   market:     'market-panel',
 };
@@ -902,6 +930,14 @@ function openPanel(type) {
 
 function eqOverlayClick(e) {
   if (e.target === document.getElementById('eq-panel')) closePanel('equipment');
+}
+
+function attrOverlayClick(e) {
+  if (e.target === document.getElementById('attr-modal')) closePanel('attributes');
+}
+
+function invOverlayClick(e) {
+  if (e.target === document.getElementById('inv-panel')) closePanel('inventory');
 }
 
 function closePanel(type) {
@@ -932,7 +968,7 @@ function equippedSlotMap(char) {
   };
 }
 
-const MAX_INVENTORY_SLOTS = 25;
+const MAX_INVENTORY_SLOTS = 40;
 
 // ---- Inventory ----
 function renderInventory(char) {
@@ -1253,14 +1289,13 @@ function renderAttributes(char) {
   document.getElementById('attr-confirm-row').classList.toggle('visible', pendingTotal > 0);
 
   const list = document.getElementById('attr-list');
-  list.innerHTML = ATTRS.map(({ key, labelKey, icon, hintKey }) => {
+  list.innerHTML = ATTRS.map(({ key, labelKey, hintKey }) => {
     const base  = Number(char[`attr_${key}`]) || 5;
     const delta = pendingAttrs[key] || 0;
     const label = t(labelKey) || key;
     const hint  = t(hintKey)  || '';
     return `
       <div class="attr-row">
-        <span class="attr-icon">${icon}</span>
         <span class="attr-name" title="${hint}">${label}</span>
         <span class="attr-value">${base}</span>
         ${unspent > 0 ? `
@@ -1363,11 +1398,11 @@ async function confirmStartReading() {
 }
 
 function updateReadProgressBar() {
-  const fill = document.getElementById('read-progress-fill');
-  if (!fill) return;
-  if (!readStartedAt) { fill.style.width = '0%'; return; }
+  const btn = document.getElementById('sq-read');
+  if (!btn) return;
+  if (!readStartedAt) { btn.style.setProperty('--read-progress', '0%'); return; }
   const elapsedSec = (Date.now() - readStartedAt) / 1000;
-  fill.style.width = Math.min(100, (elapsedSec / 3600) * 100) + '%';
+  btn.style.setProperty('--read-progress', Math.min(100, (elapsedSec / 3600) * 100) + '%');
 }
 
 document.getElementById('read-modal').addEventListener('click', function(e) {
