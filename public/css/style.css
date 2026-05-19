@@ -306,18 +306,18 @@ input:focus, select:focus {
   max-width: 100%;
 }
 
-/* Overlay sits exactly over the rendered image */
+/* Overlay sits exactly over the rendered image.
+   Percentages are relative to the .social-scene which is the same size as the image. */
 .leaderboard-overlay {
   position: absolute;
-  inset: 0;
+  /* row 1 top ≈ 27%, row 10 bottom ≈ 82%, name area: left ≈ 31%, right ≈ 69% */
+  top:    27%;
+  left:   31%;
+  width:  38%;
+  height: 55%;
   list-style: none;
   margin: 0;
   padding: 0;
-  /* board content area: left ~31%, right ~70%, top ~19%, bottom ~86% */
-  top:    19%;
-  left:   31%;
-  width:  39%;
-  height: 67%;
   display: flex;
   flex-direction: column;
 }
@@ -326,14 +326,11 @@ input:focus, select:focus {
   flex: 1;
   display: flex;
   align-items: center;
-  gap: 0.4em;
-  padding-left: 18%;
-  padding-right: 4%;
+  gap: 0.3em;
+  /* push content right of the number badges drawn in the image */
+  padding-left: 17%;
+  padding-right: 3%;
   overflow: hidden;
-}
-
-.leaderboard-row:first-child {
-  padding-left: 14%;
 }
 
 .lb-name {
