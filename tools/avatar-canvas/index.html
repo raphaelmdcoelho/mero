@@ -370,11 +370,40 @@
     transform: scale(1.04);
     pointer-events: none;
   }
+  .splash-logo-wrap {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 48px;
+  }
   #splash-logo {
     max-width: min(480px, 80vw);
     width: 100%;
     object-fit: contain;
     filter: drop-shadow(0 0 32px rgba(201,168,76,0.25));
+  }
+  .moon-orbit {
+    position: absolute;
+    inset: 0;
+    animation: moon-orbit 8s linear infinite;
+    pointer-events: none;
+  }
+  .moon {
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: transparent;
+    box-shadow: inset -9px 2px 0 2px #c9a84c;
+    filter: drop-shadow(0 0 8px rgba(201,168,76,0.65));
+  }
+  @keyframes moon-orbit {
+    from { transform: rotate(0deg); }
+    to   { transform: rotate(360deg); }
   }
   #splash-start {
     padding: 0.75rem 3rem;
@@ -510,7 +539,12 @@
 
 <!-- Splash / home screen -->
 <div id="splash">
-  <img id="splash-logo" src="" alt="ShedR" />
+  <div class="splash-logo-wrap">
+    <img id="splash-logo" src="" alt="ShedR" />
+    <div class="moon-orbit">
+      <div class="moon"></div>
+    </div>
+  </div>
   <button type="button" id="splash-start">Enter Studio</button>
 </div>
 
