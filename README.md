@@ -57,6 +57,32 @@ mero/
 └── DEPLOY.md
 ```
 
+## Dev Tools
+
+### Avatar Canvas
+
+A local-only tool for visually positioning equipment overlays on character avatars. Use it to find the correct `top`, `left`, `width`, and `height` percentages for each equipment slot, then copy the generated CSS directly into `public/css/style.css`.
+
+**No server needed — open directly in your browser:**
+
+```
+tools/avatar-canvas/index.html
+```
+
+Or via the file system:
+
+```
+C:\Repos\mero\tools\avatar-canvas\index.html
+```
+
+**Usage:**
+1. Pick a gender and avatar style in the left panel
+2. Toggle equipment items on/off in the right panel
+3. Drag overlays to reposition; drag the gold corner handle to resize
+4. Copy the generated CSS from the bottom panel into `public/css/style.css`
+
+Layout is saved automatically in `localStorage`. This file is not referenced by the game and is not included in any deployment.
+
 ## Game Mechanics
 
 | Mechanic | Details |
