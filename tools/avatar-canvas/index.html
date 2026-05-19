@@ -437,6 +437,7 @@ const EQUIPMENT = [
   { id: 15, name: 'Hunter Armor',    base: 'hunter_armor',    slot: 'armor'   },
   { id: 31, name: 'Iron Gauntlets',  base: 'iron_gauntlets',  slot: 'gauntlet'},
   { id: 33, name: 'Leather Boots',   base: 'boot_leather',    slot: 'boots'   },
+  { id: 35, name: 'Leather Helmet',  staticSrc: '/img/leather_helmet.png', slot: 'helmet' },
 ];
 
 // Slot render order (z-index): armor first (back), then gauntlet, shield, boots, helmet
@@ -538,6 +539,7 @@ document.querySelectorAll('.gender-btn').forEach(btn => {
 // ── Equipment list ────────────────────────────────────────────────────────────
 
 function equipImgSrc(eq) {
+  if (eq.staticSrc) return BASE + eq.staticSrc;
   return `${BASE}/items/${eq.base}_${state.gender}.png`;
 }
 
