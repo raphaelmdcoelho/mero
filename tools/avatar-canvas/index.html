@@ -236,9 +236,9 @@
     flex-shrink: 0;
   }
   #output-toolbar label { font-size: 0.7rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.1em; }
-  #copy-btn {
+  #apply-btn {
     margin-left: auto;
-    padding: 0.25rem 0.75rem;
+    padding: 0.25rem 0.9rem;
     background: var(--accent);
     color: #1a1a22;
     border: none;
@@ -247,9 +247,31 @@
     font-weight: 700;
     cursor: pointer;
     letter-spacing: 0.05em;
-    transition: opacity 0.15s;
+    transition: opacity 0.15s, background 0.2s;
   }
-  #copy-btn:hover { opacity: 0.85; }
+  #apply-btn:hover { opacity: 0.85; }
+  #apply-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+  #apply-btn.success { background: #4caf7d; color: #fff; }
+  #apply-btn.error   { background: #c0392b; color: #fff; }
+  #apply-status {
+    font-size: 0.68rem;
+    color: var(--muted);
+    flex: 1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  #copy-btn {
+    padding: 0.25rem 0.75rem;
+    background: transparent;
+    color: var(--muted);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    font-size: 0.75rem;
+    cursor: pointer;
+    transition: border-color 0.15s, color 0.15s;
+  }
+  #copy-btn:hover { border-color: var(--accent); color: var(--accent); }
   #css-output {
     flex: 1;
     overflow-y: auto;
@@ -317,6 +339,18 @@
     transition: border-color 0.15s, color 0.15s;
   }
   .size-step-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .style-title { margin-top: 0.5rem; }
+  .reset-btn {
+    margin-left: 0.5rem;
+    padding: 0.25rem 0.6rem;
+    background: transparent;
+    border: 1px solid #555;
+    color: #888;
+    border-radius: 4px;
+    font-size: 0.7rem;
+    cursor: pointer;
+  }
+  .reset-btn:hover { border-color: var(--accent); color: var(--accent); }
 </style>
 </head>
 <body>
@@ -336,11 +370,11 @@
   <div class="panel-title">Character</div>
 
   <div class="gender-btns">
-    <button class="gender-btn active" data-gender="male">Male</button>
-    <button class="gender-btn" data-gender="female">Female</button>
+    <button type="button" class="gender-btn active" data-gender="male">Male</button>
+    <button type="button" class="gender-btn" data-gender="female">Female</button>
   </div>
 
-  <div class="panel-title" style="margin-top:0.5rem">Style</div>
+  <div class="panel-title style-title">Style</div>
   <div class="avatar-thumb-grid" id="avatar-thumbs"></div>
 </aside>
 
@@ -379,7 +413,10 @@
 <div id="output-panel">
   <div id="output-toolbar">
     <label>Generated CSS</label>
-    <button id="copy-btn">Copy CSS</button>
+    <span id="apply-status"></span>
+    <button type="button" id="apply-btn">Apply to Game</button>
+    <button type="button" id="copy-btn">Copy CSS</button>
+    <button type="button" class="reset-btn" id="reset-btn">Reset</button>
   </div>
   <div id="css-output"></div>
 </div>
@@ -387,7 +424,9 @@
 <script>
 // ── Constants ─────────────────────────────────────────────────────────────────
 
-const BASE = '../../public';
+// When served via `npm run canvas` use the server's /public route;
+// fall back to relative path when opened directly as file://
+const BASE = location.protocol === 'file:' ? '../../public' : '/public';
 
 const AVATAR_STYLES = ['A', 'B', 'C'];
 
@@ -729,6 +768,38 @@ function updateCssOutput() {
   cssOutput.textContent = lines.join('\n');
 }
 
+// ── Apply to Game ─────────────────────────────────────────────────────────────
+
+const applyBtn    = document.getElementById('apply-btn');
+const applyStatus = document.getElementById('apply-status');
+
+applyBtn.addEventListener('click', async () => {
+  applyBtn.disabled = true;
+  applyStatus.textContent = 'Applying…';
+  try {
+    const res = await fetch('/apply', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ overlays: state.overlays }),
+    });
+    const data = await res.json();
+    if (res.ok && data.ok) {
+      applyBtn.classList.add('success');
+      applyStatus.textContent = data.message;
+    } else {
+      applyBtn.classList.add('error');
+      applyStatus.textContent = data.error || 'Failed';
+    }
+  } catch {
+    applyBtn.classList.add('error');
+    applyStatus.textContent = 'Server not running — use npm run canvas';
+  }
+  setTimeout(() => {
+    applyBtn.disabled = false;
+    applyBtn.classList.remove('success', 'error');
+  }, 3000);
+});
+
 // ── Copy button ───────────────────────────────────────────────────────────────
 
 copyBtn.addEventListener('click', () => {
@@ -737,7 +808,6 @@ copyBtn.addEventListener('click', () => {
     copyBtn.textContent = 'Copied!';
     setTimeout(() => copyBtn.textContent = orig, 1500);
   }).catch(() => {
-    // Fallback for file:// context
     const ta = document.createElement('textarea');
     ta.value = cssOutput.textContent;
     document.body.appendChild(ta);
@@ -750,18 +820,15 @@ copyBtn.addEventListener('click', () => {
   });
 });
 
-// ── Reset button for convenience ──────────────────────────────────────────────
-(function addResetBtn() {
-  const btn = document.createElement('button');
-  btn.textContent = 'Reset Positions';
-  btn.style.cssText = 'margin-left:0.5rem;padding:0.25rem 0.6rem;background:transparent;border:1px solid #555;color:#888;border-radius:4px;font-size:0.7rem;cursor:pointer;';
-  btn.addEventListener('click', () => {
-    state.overlays = {};
-    saveState();
-    rebuildOverlays();
-  });
-  document.getElementById('output-toolbar').appendChild(btn);
-})();
+// ── Reset button ──────────────────────────────────────────────────────────────
+
+document.getElementById('reset-btn').addEventListener('click', () => {
+  state.overlays = {};
+  selectedSlot = null;
+  saveState();
+  rebuildOverlays();
+  syncSizeControls();
+});
 
 // ── Size controls ────────────────────────────────────────────────────────────
 
