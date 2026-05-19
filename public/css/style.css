@@ -292,6 +292,10 @@ input:focus, select:focus {
   justify-content: center;
   gap: 1rem;
   color: var(--muted);
+  background-image: url('/img/social_background.png');
+  background-size: contain;
+  background-position: center;
+  background-repeat: no-repeat;
 }
 .social-placeholder-icon { font-size: 3rem; }
 .social-placeholder-label { font-family: 'Cinzel', serif; font-size: 1.1rem; }
@@ -604,6 +608,14 @@ input:focus, select:focus {
 .diff-stats { font-size: 0.8rem; color: var(--muted); margin-top: 0.5rem; line-height: 1.4; }
 
 /* ---- Game screen ---- */
+body.game-page {
+  background-image: url('/home_background.png');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+}
+
 .game-layout {
   display: flex;
   flex-direction: column;
@@ -612,14 +624,15 @@ input:focus, select:focus {
 
 .game-arena {
   display: flex;
-  align-items: flex-start;
+  flex: 1;
+  align-items: stretch;
   justify-content: center;
-  padding: 0.75rem 1rem 1rem;
+  padding: 0.75rem 1rem 3rem;
 }
 .action-grid {
   display: grid;
   grid-template-columns: repeat(7, 100px);
-  grid-template-rows: 120px 200px 120px;
+  grid-template-rows: 110px 1fr 110px;
   column-gap: 12px;
   row-gap: 8px;
   align-items: center;
@@ -692,10 +705,11 @@ input:focus, select:focus {
   font-family: 'Cinzel', serif;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  color: var(--muted);
+  color: #e2e8f0;
   text-align: center;
   white-space: nowrap;
   line-height: 1;
+  text-shadow: 0 1px 3px rgba(0,0,0,0.8);
 }
 
 /* Pixel-art icon buttons — image fills the full tile.
@@ -833,18 +847,30 @@ input:focus, select:focus {
   height: 200px;
   position: relative;
   padding-top: 1.5rem;
-}
-.avatar-display {
-  width: 100%;
-  height: 100%;
-  position: relative;
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: center;
 }
+.avatar-display {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: fit-content;
+  height: 100%;
+  border: 1px solid #38bdf8;
+  border-radius: 0;
+  box-shadow: 0 0 5px #38bdf8aa, 0 0 12px #38bdf855, inset 0 0 5px #38bdf811;
+  animation: avatar-shine 3s ease-in-out infinite alternate;
+}
+
+@keyframes avatar-shine {
+  0%   { box-shadow: 0 0 4px #38bdf8aa,  0 0 10px #38bdf855, inset 0 0 4px  #38bdf811; }
+  100% { box-shadow: 0 0 8px #38bdf8cc,  0 0 18px #38bdf877, inset 0 0 7px  #38bdf822; }
+}
 .avatar-display .char-avatar-img {
-  max-width: 100%;
-  max-height: 100%;
+  height: 100%;
+  width: auto;
   object-fit: contain;
   display: block;
 }
@@ -965,7 +991,7 @@ input:focus, select:focus {
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
   gap: 0.2rem;
   padding: 0.4rem 0.75rem;
   border-left: 1px solid var(--border);
