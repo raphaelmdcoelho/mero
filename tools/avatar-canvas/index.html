@@ -135,22 +135,22 @@
     position: relative;
   }
 
-  /* Avatar container — mirrors .char-avatar in game */
+  /* Avatar container — larger for the dev tool so the full character is visible */
   #avatar-container {
     position: relative;
-    width: 140px;
-    height: 140px;
-    border-radius: 50%;
+    width: 320px;
+    height: 420px;
+    border-radius: 12px;
     border: 2px solid var(--border);
     overflow: visible;
-    background: #111;
+    background: rgba(0,0,0,0.35);
     flex-shrink: 0;
   }
   #avatar-container img.base-avatar {
     width: 100%;
     height: 100%;
-    object-fit: cover;
-    border-radius: 50%;
+    object-fit: contain;
+    border-radius: 10px;
     display: block;
   }
 
