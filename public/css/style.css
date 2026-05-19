@@ -1052,8 +1052,8 @@ input:focus, select:focus {
 /* Inventory grid */
 .inv-grid {
   display: grid;
-  grid-template-columns: repeat(8, 1fr);
-  gap: 5px;
+  grid-template-columns: repeat(10, 1fr);
+  gap: 4px;
 }
 .inv-slot {
   aspect-ratio: 1;
