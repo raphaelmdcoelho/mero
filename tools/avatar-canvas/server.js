@@ -144,9 +144,9 @@ const server = http.createServer((req, res) => {
     if (url === '/' || url === '/index.html') {
       return serve(res, HTML_FILE);
     }
-    // Engine logo at repo root
+    // Engine logo (lives alongside index.html in the tool directory)
     if (url === '/shedr.png') {
-      return serve(res, path.join(REPO, 'shedr.png'));
+      return serve(res, path.join(__dirname, 'shedr.png'));
     }
     // Serve public/ assets: /public/items/..., /public/avatars/..., etc.
     if (url.startsWith('/public/')) {

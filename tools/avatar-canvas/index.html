@@ -624,7 +624,7 @@
 // ── Splash screen ────────────────────────────────────────────────────────────
 
 (function initSplash() {
-  const LOGO_SRC = location.protocol === 'file:' ? '../../shedr.png' : '/shedr.png';
+  const LOGO_SRC = location.protocol === 'file:' ? './shedr.png' : '/shedr.png';
   document.getElementById('splash-logo').src = LOGO_SRC;
 
   document.getElementById('splash-start').addEventListener('click', () => {
