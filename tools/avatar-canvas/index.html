@@ -4,7 +4,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Avatar Canvas — Dev Tool</title>
+<title>ShedR — Dev Tool</title>
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -351,12 +351,121 @@
     cursor: pointer;
   }
   .reset-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+  /* ── Add-equipment form ── */
+  .panel-title-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-bottom: 0.4rem;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 0.25rem;
+  }
+  .panel-title-row .panel-title { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
+  .add-equip-toggle {
+    width: 20px;
+    height: 20px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--muted);
+    border-radius: 4px;
+    font-size: 1rem;
+    line-height: 1;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    transition: border-color 0.15s, color 0.15s;
+  }
+  .add-equip-toggle:hover, .add-equip-toggle.open { border-color: var(--accent); color: var(--accent); }
+
+  #add-equip-form {
+    display: none;
+    flex-direction: column;
+    gap: 0.4rem;
+    padding: 0.6rem;
+    background: rgba(0,0,0,0.25);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    margin-bottom: 0.4rem;
+  }
+  #add-equip-form.open { display: flex; }
+  #add-equip-form label {
+    font-size: 0.62rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--muted);
+    margin-bottom: 0.1rem;
+  }
+  #add-equip-form input[type=text],
+  #add-equip-form select {
+    width: 100%;
+    padding: 0.25rem 0.4rem;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    color: var(--text);
+    font-size: 0.72rem;
+    outline: none;
+  }
+  #add-equip-form input[type=text]:focus,
+  #add-equip-form select:focus { border-color: var(--accent); }
+  .form-field { display: flex; flex-direction: column; gap: 0.15rem; }
+  .form-gender-type { display: flex; gap: 0.3rem; }
+  .form-gender-type label {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    font-size: 0.68rem;
+    text-transform: none;
+    letter-spacing: 0;
+    color: var(--text);
+    cursor: pointer;
+  }
+  .form-hint {
+    font-size: 0.6rem;
+    color: var(--muted);
+    line-height: 1.3;
+  }
+  .add-equip-submit {
+    padding: 0.3rem;
+    background: var(--accent);
+    color: #1a1a22;
+    border: none;
+    border-radius: 4px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    cursor: pointer;
+    margin-top: 0.2rem;
+  }
+  .add-equip-submit:hover { opacity: 0.85; }
+  .hidden { display: none !important; }
+
+  /* custom item delete button */
+  .equip-item-del {
+    margin-left: auto;
+    flex-shrink: 0;
+    width: 16px;
+    height: 16px;
+    border: 1px solid #555;
+    background: transparent;
+    color: #888;
+    border-radius: 3px;
+    font-size: 0.65rem;
+    line-height: 1;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .equip-item-del:hover { border-color: #c0392b; color: #c0392b; }
 </style>
 </head>
 <body>
 
 <header>
-  Avatar Canvas
+  ShedR
   <span>DEV TOOL — click overlay to select · drag to move · use size controls or corner handle to resize</span>
   <div class="zoom-controls">
     <button type="button" class="zoom-btn" id="zoom-out">−</button>
@@ -387,7 +496,47 @@
 
 <!-- Right: Equipment -->
 <aside class="panel right" id="right-panel">
-  <div class="panel-title">Equipment</div>
+  <div class="panel-title-row">
+    <div class="panel-title">Equipment</div>
+    <button type="button" class="add-equip-toggle" id="add-equip-toggle" title="Add equipment">+</button>
+  </div>
+
+  <!-- Add equipment form -->
+  <div id="add-equip-form">
+    <div class="form-field">
+      <label>Name</label>
+      <input type="text" id="eq-name" placeholder="e.g. Iron Helmet" />
+    </div>
+    <div class="form-field">
+      <label>Slot</label>
+      <select id="eq-slot">
+        <option value="armor">Armor</option>
+        <option value="shield">Shield</option>
+        <option value="helmet">Helmet</option>
+        <option value="gauntlet">Arm / Gauntlet</option>
+        <option value="boots">Boots</option>
+      </select>
+    </div>
+    <div class="form-field">
+      <label>Image type</label>
+      <div class="form-gender-type">
+        <label><input type="radio" name="eq-imgtype" value="gendered" checked /> Gender-specific</label>
+        <label><input type="radio" name="eq-imgtype" value="static" /> Single image</label>
+      </div>
+    </div>
+    <div class="form-field" id="eq-base-field">
+      <label>Base filename (no suffix)</label>
+      <input type="text" id="eq-base" placeholder="e.g. iron_helmet" />
+      <span class="form-hint">File must exist as items/iron_helmet_male.png and items/iron_helmet_female.png</span>
+    </div>
+    <div class="form-field hidden" id="eq-static-field">
+      <label>Image path (from public/)</label>
+      <input type="text" id="eq-static" placeholder="e.g. img/iron_helmet.png" />
+      <span class="form-hint">File must exist inside public/</span>
+    </div>
+    <button type="button" class="add-equip-submit" id="add-equip-submit">Add Equipment</button>
+  </div>
+
   <div id="equip-list"></div>
 
   <div id="size-controls">
@@ -460,9 +609,10 @@ const DEFAULTS = {
 let state = {
   gender: 'male',
   avatarStyle: 'A',
-  activeItems: new Set(),   // item id numbers
+  activeItems: new Set(),   // item id numbers (built-in) or custom id strings
   overlays: {},             // slot → { top, left, width, height } in %
   zoom: 1.0,
+  customEquipment: [],      // user-added items persisted in localStorage
 };
 
 const STORAGE_KEY = 'avatar-canvas-v1';
@@ -475,6 +625,7 @@ function loadState() {
     if (saved.activeItems) state.activeItems = new Set(saved.activeItems);
     if (saved.overlays) state.overlays = saved.overlays;
     if (saved.zoom) state.zoom = saved.zoom;
+    if (Array.isArray(saved.customEquipment)) state.customEquipment = saved.customEquipment;
   } catch (_) {}
 }
 
@@ -485,6 +636,7 @@ function saveState() {
     activeItems: [...state.activeItems],
     overlays: state.overlays,
     zoom: state.zoom,
+    customEquipment: state.customEquipment,
   }));
 }
 
@@ -543,25 +695,53 @@ function equipImgSrc(eq) {
   return `${BASE}/items/${eq.base}_${state.gender}.png`;
 }
 
+function allEquipment() {
+  return [...EQUIPMENT, ...state.customEquipment];
+}
+
 function buildEquipList() {
   equipList.innerHTML = '';
-  EQUIPMENT.forEach(eq => {
+  allEquipment().forEach(eq => {
     const active = state.activeItems.has(eq.id);
+    const isCustom = !EQUIPMENT.find(e => e.id === eq.id);
     const div = document.createElement('div');
     div.className = 'equip-item' + (active ? ' active' : '');
     div.dataset.id = eq.id;
-    div.innerHTML = `
-      <img src="${equipImgSrc(eq)}" alt="${eq.name}" onerror="this.style.opacity=0.3" />
-      <span class="equip-item-label">${eq.name}</span>
-    `;
+
+    const img = document.createElement('img');
+    img.src = equipImgSrc(eq);
+    img.alt = eq.name;
+    img.onerror = () => { img.style.opacity = '0.3'; };
+
+    const label = document.createElement('span');
+    label.className = 'equip-item-label';
+    label.textContent = eq.name;
+
+    div.appendChild(img);
+    div.appendChild(label);
+
+    if (isCustom) {
+      const del = document.createElement('button');
+      del.type = 'button';
+      del.className = 'equip-item-del';
+      del.title = 'Remove';
+      del.textContent = '×';
+      del.addEventListener('click', e => {
+        e.stopPropagation();
+        state.activeItems.delete(eq.id);
+        state.customEquipment = state.customEquipment.filter(c => c.id !== eq.id);
+        saveState();
+        buildEquipList();
+        rebuildOverlays();
+      });
+      div.appendChild(del);
+    }
+
     div.addEventListener('click', () => {
       if (state.activeItems.has(eq.id)) {
         state.activeItems.delete(eq.id);
-        // Remove overlay for this item's slot if no other item of same slot is active
-        const sameSlotActive = EQUIPMENT.filter(e => e.slot === eq.slot && state.activeItems.has(e.id));
-        if (sameSlotActive.length === 0) {
-          delete state.overlays[slotKey(eq.slot)];
-        }
+        const sameSlotActive = allEquipment().filter(e => e.slot === eq.slot && state.activeItems.has(e.id));
+        if (sameSlotActive.length === 0) delete state.overlays[slotKey(eq.slot)];
       } else {
         state.activeItems.add(eq.id);
       }
@@ -569,6 +749,7 @@ function buildEquipList() {
       buildEquipList();
       rebuildOverlays();
     });
+
     equipList.appendChild(div);
   });
 }
@@ -831,6 +1012,66 @@ document.getElementById('reset-btn').addEventListener('click', () => {
   rebuildOverlays();
   syncSizeControls();
 });
+
+// ── Add equipment form ────────────────────────────────────────────────────────
+
+(function initAddEquipForm() {
+  const toggle    = document.getElementById('add-equip-toggle');
+  const form      = document.getElementById('add-equip-form');
+  const nameInput = document.getElementById('eq-name');
+  const slotSel   = document.getElementById('eq-slot');
+  const baseField = document.getElementById('eq-base-field');
+  const baseInput = document.getElementById('eq-base');
+  const staticField = document.getElementById('eq-static-field');
+  const staticInput = document.getElementById('eq-static');
+  const submitBtn = document.getElementById('add-equip-submit');
+
+  toggle.addEventListener('click', () => {
+    const open = form.classList.toggle('open');
+    toggle.classList.toggle('open', open);
+    toggle.textContent = open ? '−' : '+';
+  });
+
+  document.querySelectorAll('input[name="eq-imgtype"]').forEach(radio => {
+    radio.addEventListener('change', () => {
+      const isStatic = radio.value === 'static';
+      baseField.classList.toggle('hidden', isStatic);
+      staticField.classList.toggle('hidden', !isStatic);
+    });
+  });
+
+  submitBtn.addEventListener('click', () => {
+    const name = nameInput.value.trim();
+    const slot = slotSel.value;
+    const imgType = document.querySelector('input[name="eq-imgtype"]:checked').value;
+    const isStatic = imgType === 'static';
+
+    if (!name) { nameInput.focus(); return; }
+
+    let eq;
+    if (isStatic) {
+      const src = staticInput.value.trim().replace(/^\//, '');
+      if (!src) { staticInput.focus(); return; }
+      eq = { id: 'custom_' + Date.now(), name, staticSrc: '/' + src, slot };
+    } else {
+      const base = baseInput.value.trim();
+      if (!base) { baseInput.focus(); return; }
+      eq = { id: 'custom_' + Date.now(), name, base, slot };
+    }
+
+    state.customEquipment.push(eq);
+    saveState();
+    buildEquipList();
+
+    // Reset form
+    nameInput.value = '';
+    baseInput.value = '';
+    staticInput.value = '';
+    form.classList.remove('open');
+    toggle.classList.remove('open');
+    toggle.textContent = '+';
+  });
+})();
 
 // ── Size controls ────────────────────────────────────────────────────────────
 

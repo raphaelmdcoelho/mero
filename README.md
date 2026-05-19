@@ -59,9 +59,9 @@ mero/
 
 ## Dev Tools
 
-### Avatar Canvas
+### ShedR
 
-A local-only tool for visually positioning equipment overlays on character avatars. Use it to find the correct `top`, `left`, `width`, and `height` percentages for each equipment slot, then copy the generated CSS directly into `public/css/style.css`.
+A local-only tool for visually positioning equipment overlays on character avatars. Use it to find the correct `top`, `left`, `width`, and `height` percentages for each equipment slot and apply them directly to `public/css/style.css` with one click.
 
 **No server needed — open directly in your browser:**
 
