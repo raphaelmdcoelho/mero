@@ -331,7 +331,7 @@ input:focus, select:focus {
   align-items: center;
   gap: 0.3em;
   /* push content right of the number badges drawn in the image */
-  padding-left: 17%;
+  padding-left: 24%;
   padding-right: 3%;
   overflow: hidden;
 }
