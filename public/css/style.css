@@ -1976,6 +1976,23 @@ input:focus, select:focus {
   color: var(--accent);
 }
 
+/* ── Inventory Modal ──────────────────────────────────────────────────────── */
+.inv-modal {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  width: min(95vw, 860px);
+  max-height: 90vh;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  padding: 1.25rem;
+  box-shadow: 0 20px 60px #000000cc, 0 0 40px #c084fc22;
+  transform: translateY(20px);
+  transition: transform 0.2s;
+}
+.modal-overlay.open .inv-modal { transform: translateY(0); }
+
 /* ── Equipment Modal (Diablo/PoE style) ───────────────────────────────────── */
 .eq-modal {
   background: var(--surface);

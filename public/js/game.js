@@ -936,6 +936,10 @@ function attrOverlayClick(e) {
   if (e.target === document.getElementById('attr-modal')) closePanel('attributes');
 }
 
+function invOverlayClick(e) {
+  if (e.target === document.getElementById('inv-panel')) closePanel('inventory');
+}
+
 function closePanel(type) {
   const panelId = PANEL_MAP[type];
   if (panelId) document.getElementById(panelId).classList.remove('open');
@@ -964,7 +968,7 @@ function equippedSlotMap(char) {
   };
 }
 
-const MAX_INVENTORY_SLOTS = 25;
+const MAX_INVENTORY_SLOTS = 40;
 
 // ---- Inventory ----
 function renderInventory(char) {

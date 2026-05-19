@@ -213,7 +213,7 @@
       'game.bp.stop':            '🚪 Stop Dungeon',
 
       // Inventory panel
-      'game.inv.hint':           'Max 10 slots · Gold border = equipped',
+      'game.inv.hint':           'Max 40 slots · Gold border = equipped',
 
       // Equipment panel
       'game.eq.weapon':          'Weapon',
@@ -586,7 +586,7 @@
       'game.bp.stop':            '🚪 Sair da Masmorra',
 
       // Inventory panel
-      'game.inv.hint':           'Máx. 10 espaços · Borda dourada = equipado',
+      'game.inv.hint':           'Máx. 40 espaços · Borda dourada = equipado',
 
       // Equipment panel
       'game.eq.weapon':          'Arma',
