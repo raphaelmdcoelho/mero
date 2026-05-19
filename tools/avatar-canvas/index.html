@@ -260,13 +260,70 @@
     white-space: pre;
     line-height: 1.6;
   }
+
+  /* ── Size controls (shown when an overlay is selected) ── */
+  #size-controls {
+    display: none;
+    flex-direction: column;
+    gap: 0.5rem;
+    padding: 0.6rem 0.5rem;
+    border-top: 1px solid var(--border);
+    margin-top: auto;
+  }
+  #size-controls.visible { display: flex; }
+  .size-controls-title {
+    font-size: 0.65rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--muted);
+  }
+  .size-row {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+  }
+  .size-row label {
+    font-size: 0.68rem;
+    color: var(--muted);
+    width: 14px;
+    flex-shrink: 0;
+  }
+  .size-row input[type=range] {
+    flex: 1;
+    accent-color: var(--accent);
+    height: 4px;
+    cursor: pointer;
+  }
+  .size-val {
+    font-size: 0.68rem;
+    color: var(--text);
+    width: 36px;
+    text-align: right;
+    flex-shrink: 0;
+  }
+  .size-step-btns {
+    display: flex;
+    gap: 0.3rem;
+  }
+  .size-step-btn {
+    flex: 1;
+    padding: 0.2rem 0;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--muted);
+    border-radius: 4px;
+    font-size: 0.8rem;
+    cursor: pointer;
+    transition: border-color 0.15s, color 0.15s;
+  }
+  .size-step-btn:hover { border-color: var(--accent); color: var(--accent); }
 </style>
 </head>
 <body>
 
 <header>
   Avatar Canvas
-  <span>DEV TOOL — drag overlays to position, resize from bottom-right corner</span>
+  <span>DEV TOOL — click overlay to select · drag to move · use size controls or corner handle to resize</span>
   <div class="zoom-controls">
     <button type="button" class="zoom-btn" id="zoom-out">−</button>
     <span id="zoom-label">100%</span>
@@ -298,6 +355,24 @@
 <aside class="panel right" id="right-panel">
   <div class="panel-title">Equipment</div>
   <div id="equip-list"></div>
+
+  <div id="size-controls">
+    <div class="size-controls-title">Size — <span id="size-slot-name">—</span></div>
+    <div class="size-row">
+      <label>W</label>
+      <input type="range" id="size-w" min="5" max="150" step="1" />
+      <span class="size-val" id="size-w-val">—</span>
+    </div>
+    <div class="size-row">
+      <label>H</label>
+      <input type="range" id="size-h" min="5" max="150" step="1" />
+      <span class="size-val" id="size-h-val">—</span>
+    </div>
+    <div class="size-step-btns">
+      <button type="button" class="size-step-btn" id="size-smaller">− Smaller</button>
+      <button type="button" class="size-step-btn" id="size-bigger">+ Bigger</button>
+    </div>
+  </div>
 </aside>
 
 <!-- Bottom: CSS output -->
@@ -525,6 +600,7 @@ function rebuildOverlays() {
       if (e.target === handle) return;
       selectedSlot = key;
       rebuildOverlays();
+      syncSizeControls();
       e.stopPropagation();
     });
   });
@@ -536,6 +612,7 @@ avatarContainer.addEventListener('mousedown', (e) => {
   if (e.target === avatarContainer || e.target === baseImg) {
     selectedSlot = null;
     rebuildOverlays();
+    syncSizeControls();
   }
 });
 
@@ -604,6 +681,7 @@ function makeResizable(handle, img, key) {
       state.overlays[key].height = newH;
       img.style.width  = newW + '%';
       img.style.height = newH + '%';
+      syncSizeControls();
       updateCssOutput();
       saveState();
     }
@@ -684,6 +762,78 @@ copyBtn.addEventListener('click', () => {
   });
   document.getElementById('output-toolbar').appendChild(btn);
 })();
+
+// ── Size controls ────────────────────────────────────────────────────────────
+
+const sizeControls  = document.getElementById('size-controls');
+const sizeSlotName  = document.getElementById('size-slot-name');
+const sizeWInput    = document.getElementById('size-w');
+const sizeHInput    = document.getElementById('size-h');
+const sizeWVal      = document.getElementById('size-w-val');
+const sizeHVal      = document.getElementById('size-h-val');
+
+const SLOT_LABELS = {
+  armor: 'Armor (male)', 'armor-f': 'Armor (female)',
+  shield: 'Shield', boots: 'Boots (male)', 'boots-f': 'Boots (female)',
+  gauntlet: 'Gauntlets', helmet: 'Helmet',
+};
+
+function syncSizeControls() {
+  if (!selectedSlot || !state.overlays[selectedSlot]) {
+    sizeControls.classList.remove('visible');
+    return;
+  }
+  const pos = state.overlays[selectedSlot];
+  sizeControls.classList.add('visible');
+  sizeSlotName.textContent = SLOT_LABELS[selectedSlot] || selectedSlot;
+  sizeWInput.value = pos.width;
+  sizeHInput.value = pos.height;
+  sizeWVal.textContent = pos.width.toFixed(1) + '%';
+  sizeHVal.textContent = pos.height.toFixed(1) + '%';
+}
+
+function applySizeToOverlay() {
+  if (!selectedSlot || !state.overlays[selectedSlot]) return;
+  const overlay = avatarContainer.querySelector(`.equip-overlay[data-slot="${selectedSlot}"]`);
+  if (overlay) {
+    overlay.style.width  = state.overlays[selectedSlot].width  + '%';
+    overlay.style.height = state.overlays[selectedSlot].height + '%';
+  }
+  sizeWVal.textContent = state.overlays[selectedSlot].width.toFixed(1)  + '%';
+  sizeHVal.textContent = state.overlays[selectedSlot].height.toFixed(1) + '%';
+  updateCssOutput();
+  saveState();
+}
+
+sizeWInput.addEventListener('input', () => {
+  if (!selectedSlot || !state.overlays[selectedSlot]) return;
+  state.overlays[selectedSlot].width = parseFloat(sizeWInput.value);
+  applySizeToOverlay();
+});
+
+sizeHInput.addEventListener('input', () => {
+  if (!selectedSlot || !state.overlays[selectedSlot]) return;
+  state.overlays[selectedSlot].height = parseFloat(sizeHInput.value);
+  applySizeToOverlay();
+});
+
+document.getElementById('size-smaller').addEventListener('click', () => {
+  if (!selectedSlot || !state.overlays[selectedSlot]) return;
+  const pos = state.overlays[selectedSlot];
+  pos.width  = parseFloat(Math.max(5, pos.width  - 5).toFixed(1));
+  pos.height = parseFloat(Math.max(5, pos.height - 5).toFixed(1));
+  syncSizeControls();
+  applySizeToOverlay();
+});
+
+document.getElementById('size-bigger').addEventListener('click', () => {
+  if (!selectedSlot || !state.overlays[selectedSlot]) return;
+  const pos = state.overlays[selectedSlot];
+  pos.width  = parseFloat(Math.min(150, pos.width  + 5).toFixed(1));
+  pos.height = parseFloat(Math.min(150, pos.height + 5).toFixed(1));
+  syncSizeControls();
+  applySizeToOverlay();
+});
 
 // ── Zoom ──────────────────────────────────────────────────────────────────────
 
