@@ -314,7 +314,7 @@ input:focus, select:focus {
   /* Measured from image pixels (1838×856):
      rows 1-10 span y≈195-655 → top 22.8%, height 53.7%
      name area  x≈555-1290  → left 30.2%, width 40.2% */
-  top:    23%;
+  top:    27%;
   left:   30%;
   width:  33%;
   height: 44%;
@@ -331,7 +331,7 @@ input:focus, select:focus {
   align-items: center;
   gap: 0.3em;
   /* push content right of the number badges drawn in the image */
-  padding-left: 24%;
+  padding-left: 25.5%;
   padding-right: 3%;
   overflow: hidden;
 }
