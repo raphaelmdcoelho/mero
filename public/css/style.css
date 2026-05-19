@@ -1014,38 +1014,41 @@ body.social-page {
 }
 .equip-overlay {
   position: absolute;
-  width: 65%;
-  height: 65%;
-  top: 40%;
-  left: 50%;
+  width: 65.00%;
+  height: 65.00%;
+  top: 40.00%;
+  left: 50.00%;
   transform: translate(-50%, -50%);
   object-fit: contain;
   pointer-events: none;
 }
 
 .equip-overlay-armor--female {
-  top: 44%;
+  top: 44.00%;
+  left: 50.00%;
+  width: 55.00%;
+  height: 55.00%;
 }
 
 .equip-overlay-boots {
-  top: 75%;
-  left: 49.5%;
-  width: 73%;
-  height: 49%;
+  top: 75.89%;
+  left: 49.89%;
+  width: 73.00%;
+  height: 49.00%;
 }
 
 .equip-overlay-boots--female {
-  top: 83%;
-  left: 49%;
-  width: 73%;
-  height: 49%;
+  top: 83.00%;
+  left: 49.00%;
+  width: 73.00%;
+  height: 49.00%;
 }
 
 .equip-overlay-shield {
-  top: 50%;
-  left: 72%;
-  width: 45%;
-  height: 45%;
+  top: 49.61%;
+  left: 76.06%;
+  width: 45.00%;
+  height: 45.00%;
   z-index: 3;
 }
 
@@ -1058,11 +1061,32 @@ body.social-page {
 }
 
 .equip-overlay-helmet {
-  top: 17%;
-  left: 50%;
-  width: 50%;
-  height: 50%;
+  top: 21.59%;
+  left: 49.62%;
+  width: 60.00%;
+  height: 60.00%;
   z-index: 4;
+}
+
+.equip-overlay-helmet--female {
+  top: 21.59%;
+  left: 49.62%;
+  width: 60.00%;
+  height: 60.00%;
+}
+
+.equip-overlay-shield--female {
+  top: 50%;
+  left: 72%;
+  width: 45%;
+  height: 45%;
+}
+
+.equip-overlay-gauntlet--female {
+  top: 50%;
+  left: 50%;
+  width: 45%;
+  height: 45%;
 }
 
 /* Status bar / footer taskbar */

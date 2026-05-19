@@ -595,13 +595,16 @@ const SLOT_ORDER = ['armor', 'gauntlet', 'boots', 'shield', 'helmet'];
 // Baseline offsets from style.css — expressed as percentages (matching game CSS)
 // These seed the tool so you adjust from a real baseline.
 const DEFAULTS = {
-  armor:        { top: 40,   left: 50,   width: 65,  height: 65  },
-  'armor-f':    { top: 44,   left: 50,   width: 65,  height: 65  },
-  shield:       { top: 50,   left: 72,   width: 45,  height: 45  },
-  boots:        { top: 75,   left: 49.5, width: 73,  height: 49  },
-  'boots-f':    { top: 83,   left: 49,   width: 73,  height: 49  },
-  gauntlet:     { top: 50,   left: 50,   width: 45,  height: 45  },
-  helmet:       { top: 17,   left: 50,   width: 50,  height: 50  },
+  armor:          { top: 40,    left: 50,    width: 65,  height: 65  },
+  'armor-f':      { top: 44,    left: 50,    width: 65,  height: 65  },
+  shield:         { top: 50,    left: 72,    width: 45,  height: 45  },
+  'shield-f':     { top: 50,    left: 72,    width: 45,  height: 45  },
+  boots:          { top: 75,    left: 49.5,  width: 73,  height: 49  },
+  'boots-f':      { top: 83,    left: 49,    width: 73,  height: 49  },
+  gauntlet:       { top: 50,    left: 50,    width: 45,  height: 45  },
+  'gauntlet-f':   { top: 50,    left: 50,    width: 45,  height: 45  },
+  helmet:         { top: 21.59, left: 49.62, width: 60,  height: 60  },
+  'helmet-f':     { top: 21.59, left: 49.62, width: 60,  height: 60  },
 };
 
 // ── State ─────────────────────────────────────────────────────────────────────
@@ -757,10 +760,7 @@ function buildEquipList() {
 // ── Slot key (accounts for gender variants) ───────────────────────────────────
 
 function slotKey(slot) {
-  if ((slot === 'armor' || slot === 'boots') && state.gender === 'female') {
-    return slot + '-f';
-  }
-  return slot;
+  return state.gender === 'female' ? slot + '-f' : slot;
 }
 
 function getSlotDefault(slot) {
@@ -926,17 +926,19 @@ function updateCssOutput() {
   const lines = [];
 
   const slotCssClass = {
-    armor:     '.equip-overlay',
-    'armor-f': '.equip-overlay-armor--female',
-    shield:    '.equip-overlay.equip-overlay-shield',
-    boots:     '.equip-overlay.equip-overlay-boots',
-    'boots-f': '.equip-overlay.equip-overlay-boots--female',
-    gauntlet:  '.equip-overlay.equip-overlay-gauntlet',
-    helmet:    '.equip-overlay.equip-overlay-helmet',
+    armor:          '.equip-overlay',
+    'armor-f':      '.equip-overlay-armor--female',
+    shield:         '.equip-overlay-shield',
+    'shield-f':     '.equip-overlay-shield--female',
+    boots:          '.equip-overlay-boots',
+    'boots-f':      '.equip-overlay-boots--female',
+    gauntlet:       '.equip-overlay-gauntlet',
+    'gauntlet-f':   '.equip-overlay-gauntlet--female',
+    helmet:         '.equip-overlay-helmet',
+    'helmet-f':     '.equip-overlay-helmet--female',
   };
 
-  // Show all defaults with current positions if active
-  const allSlots = ['armor', 'armor-f', 'shield', 'boots', 'boots-f', 'gauntlet', 'helmet'];
+  const allSlots = ['armor', 'armor-f', 'shield', 'shield-f', 'boots', 'boots-f', 'gauntlet', 'gauntlet-f', 'helmet', 'helmet-f'];
   allSlots.forEach(key => {
     const pos = state.overlays[key] || DEFAULTS[key];
     if (!pos) return;

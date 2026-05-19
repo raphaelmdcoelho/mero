@@ -51,13 +51,16 @@ function patchRule(css, selector, values) {
 
 // Map of overlay slot key → CSS selector
 const SLOT_SELECTORS = {
-  armor:     '.equip-overlay',
-  'armor-f': '.equip-overlay-armor--female',
-  shield:    '.equip-overlay-shield',
-  boots:     '.equip-overlay-boots',
-  'boots-f': '.equip-overlay-boots--female',
-  gauntlet:  '.equip-overlay-gauntlet',
-  helmet:    '.equip-overlay-helmet',
+  armor:          '.equip-overlay',
+  'armor-f':      '.equip-overlay-armor--female',
+  shield:         '.equip-overlay-shield',
+  'shield-f':     '.equip-overlay-shield--female',
+  boots:          '.equip-overlay-boots',
+  'boots-f':      '.equip-overlay-boots--female',
+  gauntlet:       '.equip-overlay-gauntlet',
+  'gauntlet-f':   '.equip-overlay-gauntlet--female',
+  helmet:         '.equip-overlay-helmet',
+  'helmet-f':     '.equip-overlay-helmet--female',
 };
 
 function applyOverlaysToCss(css, overlays) {

@@ -316,11 +316,15 @@ function renderCharAvatar(containerEl, char) {
     const armorGenderClass = char.gender === 'female' ? ' equip-overlay-armor--female' : '';
     armorOverlay = `<img class="equip-overlay${armorGenderClass}"${style} src="${escHtml(armorImg)}" alt="" />`;
   }
-  const shieldOverlay   = shieldImg   ? `<img class="equip-overlay equip-overlay-shield"   src="${escHtml(shieldImg)}"   alt="" />` : '';
-  const bootsGenderClass = char.gender === 'female' ? ' equip-overlay-boots--female' : '';
-  const bootsOverlay    = bootsImg    ? `<img class="equip-overlay equip-overlay-boots${bootsGenderClass}" src="${escHtml(bootsImg)}" alt="" />` : '';
-  const gauntletOverlay = gauntletImg ? `<img class="equip-overlay equip-overlay-gauntlet" src="${escHtml(gauntletImg)}" alt="" />` : '';
-  const helmetOverlay   = helmetImg   ? `<img class="equip-overlay equip-overlay-helmet"   src="${escHtml(helmetImg)}"   alt="" />` : '';
+  const isFemale = char.gender === 'female';
+  const shieldGenderClass   = isFemale ? ' equip-overlay-shield--female'   : '';
+  const bootsGenderClass    = isFemale ? ' equip-overlay-boots--female'    : '';
+  const gauntletGenderClass = isFemale ? ' equip-overlay-gauntlet--female' : '';
+  const helmetGenderClass   = isFemale ? ' equip-overlay-helmet--female'   : '';
+  const shieldOverlay   = shieldImg   ? `<img class="equip-overlay equip-overlay-shield${shieldGenderClass}"     src="${escHtml(shieldImg)}"   alt="" />` : '';
+  const bootsOverlay    = bootsImg    ? `<img class="equip-overlay equip-overlay-boots${bootsGenderClass}"       src="${escHtml(bootsImg)}"    alt="" />` : '';
+  const gauntletOverlay = gauntletImg ? `<img class="equip-overlay equip-overlay-gauntlet${gauntletGenderClass}" src="${escHtml(gauntletImg)}" alt="" />` : '';
+  const helmetOverlay   = helmetImg   ? `<img class="equip-overlay equip-overlay-helmet${helmetGenderClass}"     src="${escHtml(helmetImg)}"   alt="" />` : '';
   if (char.avatar_path) {
     containerEl.innerHTML = `<img class="char-avatar-img" src="${escHtml(char.avatar_path)}" alt="Avatar" />${armorOverlay}${shieldOverlay}${bootsOverlay}${gauntletOverlay}${helmetOverlay}`;
   } else {
