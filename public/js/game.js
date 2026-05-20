@@ -388,6 +388,7 @@ function updateActionSquares(activity, isFarming = false) {
       document.getElementById('read-label').textContent = t('game.js.stop_lbl');
     }
     dungeon.classList.add('disabled');
+    if (soloDungeon) soloDungeon.classList.add('disabled');
     tavern.classList.add('disabled');
     farm.classList.add('disabled');
     if (fishing) fishing.classList.add('disabled');
