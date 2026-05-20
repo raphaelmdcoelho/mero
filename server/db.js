@@ -189,6 +189,12 @@ async function initDb() {
     try { await client.execute(sql); } catch { /* column already exists — skip */ }
   }
 
+  // Make Fish a consumable that restores HP (idempotent UPDATE)
+  await client.execute({
+    sql:  "UPDATE items SET type = 'consumable', description = 'A freshly caught fish. Restores 3 HP.' WHERE id = 41",
+    args: [],
+  });
+
   // Migrate farm_queue to remove restrictive CHECK constraint (adds onion, corn support).
   // Test by inserting a dummy row with the new type; if it fails, recreate the table.
   try {

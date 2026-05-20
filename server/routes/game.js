@@ -5,7 +5,7 @@ const protect = require('../middleware/protect');
 const { fullChar } = require('../helpers');
 
 // item_id -> HP restored (consumable plants + health potion)
-const PLANT_ITEM_HP = { 5: 5, 6: 2, 7: 1, 29: 2, 30: 3 };
+const PLANT_ITEM_HP = { 5: 5, 6: 2, 7: 1, 29: 2, 30: 3, 41: 3 };
 const POINTS_PER_LEVEL = 5;
 
 const TAVERN_REST_TYPES = {

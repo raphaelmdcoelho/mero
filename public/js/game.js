@@ -1045,7 +1045,7 @@ function showItemInfo(idx) {
   const statLine = item.damage  ? `⚔️ ${item.damage} ${t('game.js.dmg_unit')}`
                  : item.defense ? `🛡️ ${item.defense} ${t('game.js.def_unit')}`
                  : '';
-  const CONSUMABLE_HP_IDS = new Set([5, 6, 7, 29, 30]);
+  const CONSUMABLE_HP_IDS = new Set([5, 6, 7, 29, 30, 41]);
   const isHealable = item.type === 'consumable' && CONSUMABLE_HP_IDS.has(Number(item.item_id));
   const hpFull     = isHealable && Number(charState?.hp) >= Number(charState?.max_hp);
 
