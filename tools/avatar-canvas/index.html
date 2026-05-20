@@ -1,0 +1,1295 @@
+<!-- DEV TOOL — not included in game build -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>ShedR — Dev Tool</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #1a1a22;
+    --surface: #23232e;
+    --border: #3a3a4a;
+    --accent: #c9a84c;
+    --text: #e8e0d0;
+    --muted: #888;
+    --gold: #c9a84c;
+    --panel-w: 200px;
+    --output-h: 180px;
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    font-size: 13px;
+    display: grid;
+    grid-template-columns: var(--panel-w) 1fr var(--panel-w);
+    grid-template-rows: 40px 1fr var(--output-h);
+    grid-template-areas:
+      "header header header"
+      "left   canvas right"
+      "output output output";
+    height: 100vh;
+    overflow: hidden;
+  }
+
+  /* ── Header ── */
+  header {
+    grid-area: header;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    padding: 0 1rem;
+    gap: 1rem;
+    font-family: 'Cinzel', Georgia, serif;
+    font-size: 0.85rem;
+    color: var(--gold);
+    letter-spacing: 0.08em;
+  }
+  header span { color: var(--muted); font-family: system-ui; font-size: 0.7rem; letter-spacing: 0; margin-right: auto; }
+
+  /* ── Zoom controls ── */
+  .zoom-controls {
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+  }
+  .zoom-btn {
+    width: 24px;
+    height: 24px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--text);
+    border-radius: 4px;
+    font-size: 1rem;
+    line-height: 1;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: border-color 0.15s, color 0.15s;
+  }
+  .zoom-btn:hover { border-color: var(--accent); color: var(--accent); }
+  #zoom-label {
+    font-family: system-ui;
+    font-size: 0.72rem;
+    color: var(--muted);
+    min-width: 38px;
+    text-align: center;
+    letter-spacing: 0;
+  }
+
+  /* ── Panels ── */
+  .panel {
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+    padding: 0.75rem;
+    gap: 0.5rem;
+  }
+  .panel.right { border-right: none; border-left: 1px solid var(--border); }
+  .panel-title {
+    font-size: 0.65rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--muted);
+    padding-bottom: 0.4rem;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 0.25rem;
+  }
+
+  /* ── Gender toggle ── */
+  .gender-btns { display: flex; gap: 0.4rem; }
+  .gender-btn {
+    flex: 1;
+    padding: 0.3rem;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--muted);
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.75rem;
+    transition: border-color 0.15s, color 0.15s;
+  }
+  .gender-btn.active {
+    border-color: var(--accent);
+    color: var(--accent);
+    font-weight: 600;
+  }
+
+  /* ── Avatar thumbnails ── */
+  .avatar-thumb-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.4rem; }
+  .avatar-thumb {
+    border: 2px solid var(--border);
+    border-radius: 6px;
+    overflow: hidden;
+    cursor: pointer;
+    aspect-ratio: 1;
+    background: #111;
+    transition: border-color 0.15s;
+  }
+  .avatar-thumb img { width: 100%; height: 100%; object-fit: cover; }
+  .avatar-thumb.active { border-color: var(--accent); }
+
+  /* ── Equipment items ── */
+  .equip-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.35rem 0.5rem;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    cursor: pointer;
+    transition: border-color 0.15s, background 0.15s;
+    user-select: none;
+  }
+  .equip-item:hover { border-color: var(--muted); }
+  .equip-item.active { border-color: var(--accent); background: rgba(201,168,76,0.08); }
+  .equip-item img { width: 32px; height: 32px; object-fit: contain; }
+  .equip-item-label { font-size: 0.7rem; color: var(--muted); line-height: 1.2; }
+  .equip-item.active .equip-item-label { color: var(--text); }
+
+  /* ── Canvas area ── */
+  #canvas-area {
+    grid-area: canvas;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: repeating-conic-gradient(#1f1f28 0% 25%, #222230 0% 50%) 0 0 / 20px 20px;
+    overflow: hidden;
+    position: relative;
+  }
+
+  /* Avatar container — larger for the dev tool so the full character is visible */
+  #avatar-container {
+    position: relative;
+    width: 320px;
+    height: 420px;
+    border-radius: 12px;
+    border: 2px solid var(--border);
+    overflow: visible;
+    background: rgba(0,0,0,0.35);
+    flex-shrink: 0;
+  }
+  #avatar-container img.base-avatar {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    border-radius: 10px;
+    display: block;
+  }
+
+  /* Overlay images — mirrors .equip-overlay in style.css */
+  .equip-overlay {
+    position: absolute;
+    width: 65%;
+    height: 65%;
+    top: 40%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    object-fit: contain;
+    cursor: grab;
+    box-sizing: border-box;
+  }
+  .equip-overlay.dragging { cursor: grabbing; opacity: 0.85; }
+  .equip-overlay.selected {
+    outline: 2px dashed var(--accent);
+    outline-offset: 2px;
+  }
+
+  /* Resize handle */
+  .resize-handle {
+    position: absolute;
+    width: 10px;
+    height: 10px;
+    background: var(--accent);
+    border: 1px solid #000;
+    border-radius: 2px;
+    bottom: -5px;
+    right: -5px;
+    cursor: se-resize;
+    z-index: 100;
+  }
+
+  /* ── Output panel ── */
+  #output-panel {
+    grid-area: output;
+    background: #111;
+    border-top: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  #output-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.4rem 0.75rem;
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+  }
+  #output-toolbar label { font-size: 0.7rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.1em; }
+  #apply-btn {
+    margin-left: auto;
+    padding: 0.25rem 0.9rem;
+    background: var(--accent);
+    color: #1a1a22;
+    border: none;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    cursor: pointer;
+    letter-spacing: 0.05em;
+    transition: opacity 0.15s, background 0.2s;
+  }
+  #apply-btn:hover { opacity: 0.85; }
+  #apply-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+  #apply-btn.success { background: #4caf7d; color: #fff; }
+  #apply-btn.error   { background: #c0392b; color: #fff; }
+  #apply-status {
+    font-size: 0.68rem;
+    color: var(--muted);
+    flex: 1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  #copy-btn {
+    padding: 0.25rem 0.75rem;
+    background: transparent;
+    color: var(--muted);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    font-size: 0.75rem;
+    cursor: pointer;
+    transition: border-color 0.15s, color 0.15s;
+  }
+  #copy-btn:hover { border-color: var(--accent); color: var(--accent); }
+  #css-output {
+    flex: 1;
+    overflow-y: auto;
+    padding: 0.5rem 0.75rem;
+    font-family: 'Consolas', 'Courier New', monospace;
+    font-size: 0.72rem;
+    color: #a8d8a8;
+    white-space: pre;
+    line-height: 1.6;
+  }
+
+  /* ── Size controls (shown when an overlay is selected) ── */
+  #size-controls {
+    display: none;
+    flex-direction: column;
+    gap: 0.5rem;
+    padding: 0.6rem 0.5rem;
+    border-top: 1px solid var(--border);
+    margin-top: auto;
+  }
+  #size-controls.visible { display: flex; }
+  .size-controls-title {
+    font-size: 0.65rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--muted);
+  }
+  .size-row {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+  }
+  .size-row label {
+    font-size: 0.68rem;
+    color: var(--muted);
+    width: 14px;
+    flex-shrink: 0;
+  }
+  .size-row input[type=range] {
+    flex: 1;
+    accent-color: var(--accent);
+    height: 4px;
+    cursor: pointer;
+  }
+  .size-val {
+    font-size: 0.68rem;
+    color: var(--text);
+    width: 36px;
+    text-align: right;
+    flex-shrink: 0;
+  }
+  .size-step-btns {
+    display: flex;
+    gap: 0.3rem;
+  }
+  .size-step-btn {
+    flex: 1;
+    padding: 0.2rem 0;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--muted);
+    border-radius: 4px;
+    font-size: 0.8rem;
+    cursor: pointer;
+    transition: border-color 0.15s, color 0.15s;
+  }
+  .size-step-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .style-title { margin-top: 0.5rem; }
+  .reset-btn {
+    margin-left: 0.5rem;
+    padding: 0.25rem 0.6rem;
+    background: transparent;
+    border: 1px solid #555;
+    color: #888;
+    border-radius: 4px;
+    font-size: 0.7rem;
+    cursor: pointer;
+  }
+  .reset-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+  /* ── Splash screen ── */
+  #splash {
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    background: var(--bg);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2.5rem;
+    transition: opacity 0.5s ease, transform 0.5s ease;
+  }
+  #splash.fade-out {
+    opacity: 0;
+    transform: scale(1.04);
+    pointer-events: none;
+  }
+  .splash-logo-wrap {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 64px;
+  }
+  #splash-logo {
+    max-width: min(480px, 80vw);
+    width: 100%;
+    object-fit: contain;
+    filter: drop-shadow(0 0 32px rgba(201,168,76,0.25));
+  }
+  .moon-orbit {
+    position: absolute;
+    inset: 0;
+    animation: orbit 20s linear infinite;
+    pointer-events: none;
+  }
+  .gamepad-spin {
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 48px;
+    line-height: 1;
+    filter: drop-shadow(0 0 8px rgba(201,168,76,0.65));
+  }
+  @keyframes orbit {
+    from { transform: rotate(0deg); }
+    to   { transform: rotate(360deg); }
+  }
+  #splash-start {
+    padding: 0.75rem 3rem;
+    background: transparent;
+    border: 2px solid var(--accent);
+    color: var(--accent);
+    font-family: 'Cinzel', Georgia, serif;
+    font-size: 1rem;
+    font-weight: 700;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background 0.2s, color 0.2s, box-shadow 0.2s;
+  }
+  #splash-start:hover {
+    background: var(--accent);
+    color: #1a1a22;
+    box-shadow: 0 0 24px rgba(201,168,76,0.4);
+  }
+
+  /* ── Add-equipment form ── */
+  .panel-title-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-bottom: 0.4rem;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 0.25rem;
+  }
+  .panel-title-row .panel-title { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
+  .add-equip-toggle {
+    width: 20px;
+    height: 20px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--muted);
+    border-radius: 4px;
+    font-size: 1rem;
+    line-height: 1;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    transition: border-color 0.15s, color 0.15s;
+  }
+  .add-equip-toggle:hover, .add-equip-toggle.open { border-color: var(--accent); color: var(--accent); }
+
+  #add-equip-form {
+    display: none;
+    flex-direction: column;
+    gap: 0.4rem;
+    padding: 0.6rem;
+    background: rgba(0,0,0,0.25);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    margin-bottom: 0.4rem;
+  }
+  #add-equip-form.open { display: flex; }
+  #add-equip-form label {
+    font-size: 0.62rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--muted);
+    margin-bottom: 0.1rem;
+  }
+  #add-equip-form input[type=text],
+  #add-equip-form select {
+    width: 100%;
+    padding: 0.25rem 0.4rem;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    color: var(--text);
+    font-size: 0.72rem;
+    outline: none;
+  }
+  #add-equip-form input[type=text]:focus,
+  #add-equip-form select:focus { border-color: var(--accent); }
+  .form-field { display: flex; flex-direction: column; gap: 0.15rem; }
+  .form-gender-type { display: flex; gap: 0.3rem; }
+  .form-gender-type label {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    font-size: 0.68rem;
+    text-transform: none;
+    letter-spacing: 0;
+    color: var(--text);
+    cursor: pointer;
+  }
+  .form-hint {
+    font-size: 0.6rem;
+    color: var(--muted);
+    line-height: 1.3;
+  }
+  .add-equip-submit {
+    padding: 0.3rem;
+    background: var(--accent);
+    color: #1a1a22;
+    border: none;
+    border-radius: 4px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    cursor: pointer;
+    margin-top: 0.2rem;
+  }
+  .add-equip-submit:hover { opacity: 0.85; }
+  .hidden { display: none !important; }
+
+  /* custom item delete button */
+  .equip-item-del {
+    margin-left: auto;
+    flex-shrink: 0;
+    width: 16px;
+    height: 16px;
+    border: 1px solid #555;
+    background: transparent;
+    color: #888;
+    border-radius: 3px;
+    font-size: 0.65rem;
+    line-height: 1;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .equip-item-del:hover { border-color: #c0392b; color: #c0392b; }
+</style>
+</head>
+<body>
+
+<!-- Splash / home screen -->
+<div id="splash">
+  <div class="splash-logo-wrap">
+    <img id="splash-logo" src="" alt="ShedR" />
+    <div class="moon-orbit">
+      <div class="gamepad-spin">🎮</div>
+    </div>
+  </div>
+  <button type="button" id="splash-start">Enter Studio</button>
+</div>
+
+<header>
+  ShedR
+  <span>DEV TOOL — click overlay to select · drag to move · use size controls or corner handle to resize</span>
+  <div class="zoom-controls">
+    <button type="button" class="zoom-btn" id="zoom-out">−</button>
+    <span id="zoom-label">100%</span>
+    <button type="button" class="zoom-btn" id="zoom-in">+</button>
+  </div>
+</header>
+
+<!-- Left: Avatar selector -->
+<aside class="panel" id="left-panel">
+  <div class="panel-title">Character</div>
+
+  <div class="gender-btns">
+    <button type="button" class="gender-btn active" data-gender="male">Male</button>
+    <button type="button" class="gender-btn" data-gender="female">Female</button>
+  </div>
+
+  <div class="panel-title style-title">Style</div>
+  <div class="avatar-thumb-grid" id="avatar-thumbs"></div>
+</aside>
+
+<!-- Center: Canvas -->
+<main id="canvas-area">
+  <div id="avatar-container">
+    <img class="base-avatar" id="base-img" src="" alt="Avatar" />
+  </div>
+</main>
+
+<!-- Right: Equipment -->
+<aside class="panel right" id="right-panel">
+  <div class="panel-title-row">
+    <div class="panel-title">Equipment</div>
+    <button type="button" class="add-equip-toggle" id="add-equip-toggle" title="Add equipment">+</button>
+  </div>
+
+  <!-- Add equipment form -->
+  <div id="add-equip-form">
+    <div class="form-field">
+      <label>Name</label>
+      <input type="text" id="eq-name" placeholder="e.g. Iron Helmet" />
+    </div>
+    <div class="form-field">
+      <label>Slot</label>
+      <select id="eq-slot">
+        <option value="armor">Armor</option>
+        <option value="shield">Shield</option>
+        <option value="helmet">Helmet</option>
+        <option value="gauntlet">Arm / Gauntlet</option>
+        <option value="boots">Boots</option>
+      </select>
+    </div>
+    <div class="form-field">
+      <label>Image type</label>
+      <div class="form-gender-type">
+        <label><input type="radio" name="eq-imgtype" value="gendered" checked /> Gender-specific</label>
+        <label><input type="radio" name="eq-imgtype" value="static" /> Single image</label>
+      </div>
+    </div>
+    <div class="form-field" id="eq-base-field">
+      <label>Base filename (no suffix)</label>
+      <input type="text" id="eq-base" placeholder="e.g. iron_helmet" />
+      <span class="form-hint">File must exist as items/iron_helmet_male.png and items/iron_helmet_female.png</span>
+    </div>
+    <div class="form-field hidden" id="eq-static-field">
+      <label>Image path (from public/)</label>
+      <input type="text" id="eq-static" placeholder="e.g. img/iron_helmet.png" />
+      <span class="form-hint">File must exist inside public/</span>
+    </div>
+    <button type="button" class="add-equip-submit" id="add-equip-submit">Add Equipment</button>
+  </div>
+
+  <div id="equip-list"></div>
+
+  <div id="size-controls">
+    <div class="size-controls-title">Size — <span id="size-slot-name">—</span></div>
+    <div class="size-row">
+      <label>W</label>
+      <input type="range" id="size-w" min="5" max="150" step="1" />
+      <span class="size-val" id="size-w-val">—</span>
+    </div>
+    <div class="size-row">
+      <label>H</label>
+      <input type="range" id="size-h" min="5" max="150" step="1" />
+      <span class="size-val" id="size-h-val">—</span>
+    </div>
+    <div class="size-step-btns">
+      <button type="button" class="size-step-btn" id="size-smaller">− Smaller</button>
+      <button type="button" class="size-step-btn" id="size-bigger">+ Bigger</button>
+    </div>
+  </div>
+</aside>
+
+<!-- Bottom: CSS output -->
+<div id="output-panel">
+  <div id="output-toolbar">
+    <label>Generated CSS</label>
+    <span id="apply-status"></span>
+    <button type="button" id="apply-btn">Apply to Game</button>
+    <button type="button" id="copy-btn">Copy CSS</button>
+    <button type="button" class="reset-btn" id="reset-btn">Reset</button>
+  </div>
+  <div id="css-output"></div>
+</div>
+
+<script>
+// ── Splash screen ────────────────────────────────────────────────────────────
+
+(function initSplash() {
+  const LOGO_SRC = location.protocol === 'file:' ? './shedr.png' : '/shedr.png';
+  document.getElementById('splash-logo').src = LOGO_SRC;
+
+  document.getElementById('splash-start').addEventListener('click', () => {
+    const splash = document.getElementById('splash');
+    splash.classList.add('fade-out');
+    splash.addEventListener('transitionend', () => splash.remove(), { once: true });
+  });
+})();
+
+// ── Constants ─────────────────────────────────────────────────────────────────
+
+// When served via `npm run canvas` use the server's /public route;
+// fall back to relative path when opened directly as file://
+const BASE = location.protocol === 'file:' ? '../../public' : '/public';
+
+const AVATAR_STYLES = ['A', 'B', 'C'];
+
+const EQUIPMENT = [
+  { id: 3,  name: 'Leather Armor',   base: 'leather_armor',   slot: 'armor'   },
+  { id: 4,  name: 'Iron Shield',     base: 'iron_shield',     slot: 'shield'  },
+  { id: 12, name: 'Oak Shield',      base: 'oak_shield',      slot: 'shield'  },
+  { id: 15, name: 'Hunter Armor',    base: 'hunter_armor',    slot: 'armor'   },
+  { id: 42, name: 'Elven Leaves Armor', base: 'elven_leaves_armor', slot: 'armor' },
+  { id: 31, name: 'Iron Gauntlets',  base: 'iron_gauntlets',  slot: 'gauntlet'},
+  { id: 33, name: 'Leather Boots',   base: 'boot_leather',    slot: 'boots'   },
+  { id: 35, name: 'Leather Helmet',  staticSrc: '/img/leather_helmet.png', slot: 'helmet' },
+];
+
+// Slot render order (z-index): armor first (back), then gauntlet, shield, boots, helmet
+const SLOT_ORDER = ['armor', 'gauntlet', 'boots', 'shield', 'helmet'];
+
+// Baseline offsets from style.css — expressed as percentages (matching game CSS)
+// These seed the tool so you adjust from a real baseline.
+const DEFAULTS = {
+  armor:          { top: 40,    left: 50,    width: 65,  height: 65  },
+  'armor-f':      { top: 44,    left: 50,    width: 65,  height: 65  },
+  shield:         { top: 50,    left: 72,    width: 45,  height: 45  },
+  'shield-f':     { top: 50,    left: 72,    width: 45,  height: 45  },
+  boots:          { top: 75,    left: 49.5,  width: 73,  height: 49  },
+  'boots-f':      { top: 83,    left: 49,    width: 73,  height: 49  },
+  gauntlet:       { top: 50,    left: 50,    width: 45,  height: 45  },
+  'gauntlet-f':   { top: 50,    left: 50,    width: 45,  height: 45  },
+  helmet:         { top: 21.59, left: 49.62, width: 60,  height: 60  },
+  'helmet-f':     { top: 21.59, left: 49.62, width: 60,  height: 60  },
+};
+
+// ── State ─────────────────────────────────────────────────────────────────────
+
+let state = {
+  gender: 'male',
+  avatarStyle: 'A',
+  activeItems: new Set(),   // item id numbers (built-in) or custom id strings
+  overlays: {},             // slot → { top, left, width, height } in %
+  zoom: 1.0,
+  customEquipment: [],      // user-added items persisted in localStorage
+};
+
+const STORAGE_KEY = 'avatar-canvas-v1';
+
+function loadState() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
+    if (saved.gender) state.gender = saved.gender;
+    if (saved.avatarStyle) state.avatarStyle = saved.avatarStyle;
+    if (saved.activeItems) state.activeItems = new Set(saved.activeItems);
+    if (saved.overlays) state.overlays = saved.overlays;
+    if (saved.zoom) state.zoom = saved.zoom;
+    if (Array.isArray(saved.customEquipment)) state.customEquipment = saved.customEquipment;
+  } catch (_) {}
+}
+
+function saveState() {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify({
+    gender: state.gender,
+    avatarStyle: state.avatarStyle,
+    activeItems: [...state.activeItems],
+    overlays: state.overlays,
+    zoom: state.zoom,
+    customEquipment: state.customEquipment,
+  }));
+}
+
+// ── DOM refs ──────────────────────────────────────────────────────────────────
+
+const baseImg        = document.getElementById('base-img');
+const avatarContainer = document.getElementById('avatar-container');
+const avatarThumbs   = document.getElementById('avatar-thumbs');
+const equipList      = document.getElementById('equip-list');
+const cssOutput      = document.getElementById('css-output');
+const copyBtn        = document.getElementById('copy-btn');
+
+// ── Avatar selector ───────────────────────────────────────────────────────────
+
+function buildAvatarThumbs() {
+  avatarThumbs.innerHTML = '';
+  AVATAR_STYLES.forEach(style => {
+    const src = `${BASE}/avatars/selection/${state.gender}_selection_${style}.png`;
+    const div = document.createElement('div');
+    div.className = 'avatar-thumb' + (state.avatarStyle === style ? ' active' : '');
+    div.dataset.style = style;
+    div.innerHTML = `<img src="${src}" alt="${state.gender} ${style}" />`;
+    div.addEventListener('click', () => {
+      state.avatarStyle = style;
+      saveState();
+      buildAvatarThumbs();
+      updateBaseAvatar();
+    });
+    avatarThumbs.appendChild(div);
+  });
+}
+
+function updateBaseAvatar() {
+  const src = `${BASE}/avatars/selection/${state.gender}_selection_${state.avatarStyle}.png`;
+  baseImg.src = src;
+}
+
+// ── Gender toggle ─────────────────────────────────────────────────────────────
+
+document.querySelectorAll('.gender-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    state.gender = btn.dataset.gender;
+    document.querySelectorAll('.gender-btn').forEach(b => b.classList.toggle('active', b === btn));
+    saveState();
+    buildAvatarThumbs();
+    updateBaseAvatar();
+    buildEquipList();
+    rebuildOverlays();
+  });
+});
+
+// ── Equipment list ────────────────────────────────────────────────────────────
+
+function equipImgSrc(eq) {
+  if (eq.staticSrc) return BASE + eq.staticSrc;
+  return `${BASE}/items/${eq.base}_${state.gender}.png`;
+}
+
+function allEquipment() {
+  return [...EQUIPMENT, ...state.customEquipment];
+}
+
+function buildEquipList() {
+  equipList.innerHTML = '';
+  allEquipment().forEach(eq => {
+    const active = state.activeItems.has(eq.id);
+    const isCustom = !EQUIPMENT.find(e => e.id === eq.id);
+    const div = document.createElement('div');
+    div.className = 'equip-item' + (active ? ' active' : '');
+    div.dataset.id = eq.id;
+
+    const img = document.createElement('img');
+    img.src = equipImgSrc(eq);
+    img.alt = eq.name;
+    img.onerror = () => { img.style.opacity = '0.3'; };
+
+    const label = document.createElement('span');
+    label.className = 'equip-item-label';
+    label.textContent = eq.name;
+
+    div.appendChild(img);
+    div.appendChild(label);
+
+    if (isCustom) {
+      const del = document.createElement('button');
+      del.type = 'button';
+      del.className = 'equip-item-del';
+      del.title = 'Remove';
+      del.textContent = '×';
+      del.addEventListener('click', e => {
+        e.stopPropagation();
+        state.activeItems.delete(eq.id);
+        state.customEquipment = state.customEquipment.filter(c => c.id !== eq.id);
+        saveState();
+        buildEquipList();
+        rebuildOverlays();
+      });
+      div.appendChild(del);
+    }
+
+    div.addEventListener('click', () => {
+      if (state.activeItems.has(eq.id)) {
+        state.activeItems.delete(eq.id);
+        const sameSlotActive = allEquipment().filter(e => e.slot === eq.slot && state.activeItems.has(e.id));
+        if (sameSlotActive.length === 0) delete state.overlays[slotKey(eq.slot)];
+      } else {
+        state.activeItems.add(eq.id);
+      }
+      saveState();
+      buildEquipList();
+      rebuildOverlays();
+    });
+
+    equipList.appendChild(div);
+  });
+}
+
+// ── Slot key (accounts for gender variants) ───────────────────────────────────
+
+function slotKey(slot) {
+  return state.gender === 'female' ? slot + '-f' : slot;
+}
+
+function getSlotDefault(slot) {
+  return { ...( DEFAULTS[slotKey(slot)] || DEFAULTS[slot] || { top: 50, left: 50, width: 60, height: 60 } ) };
+}
+
+// ── Overlay rendering & dragging ──────────────────────────────────────────────
+
+let selectedSlot = null;
+
+function rebuildOverlays() {
+  // Remove all existing overlays
+  avatarContainer.querySelectorAll('.equip-overlay').forEach(el => el.remove());
+
+  // Collect active items grouped by slot (last active wins per slot)
+  const activeBySlot = {};
+  EQUIPMENT.forEach(eq => {
+    if (state.activeItems.has(eq.id)) {
+      activeBySlot[eq.slot] = eq;
+    }
+  });
+
+  // Render in slot order
+  SLOT_ORDER.forEach((slot, zIdx) => {
+    const eq = activeBySlot[slot];
+    if (!eq) return;
+
+    const key = slotKey(slot);
+    if (!state.overlays[key]) {
+      state.overlays[key] = getSlotDefault(slot);
+    }
+    const pos = state.overlays[key];
+
+    const img = document.createElement('img');
+    img.className = 'equip-overlay' + (selectedSlot === key ? ' selected' : '');
+    img.dataset.slot = key;
+    img.src = equipImgSrc(eq);
+    img.alt = '';
+    img.style.cssText = `
+      top: ${pos.top}%;
+      left: ${pos.left}%;
+      width: ${pos.width}%;
+      height: ${pos.height}%;
+      z-index: ${zIdx + 1};
+    `;
+
+    // Resize handle
+    const handle = document.createElement('div');
+    handle.className = 'resize-handle';
+    handle.dataset.slot = key;
+
+    img.appendChild(handle);
+    avatarContainer.appendChild(img);
+
+    makeDraggable(img, key);
+    makeResizable(handle, img, key);
+
+    img.addEventListener('mousedown', (e) => {
+      if (e.target === handle) return;
+      selectedSlot = key;
+      rebuildOverlays();
+      syncSizeControls();
+      e.stopPropagation();
+    });
+  });
+
+  updateCssOutput();
+}
+
+avatarContainer.addEventListener('mousedown', (e) => {
+  if (e.target === avatarContainer || e.target === baseImg) {
+    selectedSlot = null;
+    rebuildOverlays();
+    syncSizeControls();
+  }
+});
+
+function makeDraggable(img, key) {
+  let startX, startY, startTop, startLeft;
+  const containerRect = () => avatarContainer.getBoundingClientRect();
+
+  img.addEventListener('mousedown', onDown);
+
+  function onDown(e) {
+    if (e.target.classList.contains('resize-handle')) return;
+    e.preventDefault();
+    selectedSlot = key;
+    rebuildOverlays();
+
+    const pos = state.overlays[key];
+    startX = e.clientX;
+    startY = e.clientY;
+    startTop  = pos.top;
+    startLeft = pos.left;
+
+    img.classList.add('dragging');
+
+    function onMove(e) {
+      const rect = containerRect();
+      const dx = ((e.clientX - startX) / rect.width)  * 100;
+      const dy = ((e.clientY - startY) / rect.height) * 100;
+      state.overlays[key].top  = parseFloat((startTop  + dy).toFixed(2));
+      state.overlays[key].left = parseFloat((startLeft + dx).toFixed(2));
+      img.style.top  = state.overlays[key].top  + '%';
+      img.style.left = state.overlays[key].left + '%';
+      updateCssOutput();
+      saveState();
+    }
+
+    function onUp() {
+      img.classList.remove('dragging');
+      document.removeEventListener('mousemove', onMove);
+      document.removeEventListener('mouseup', onUp);
+    }
+
+    document.addEventListener('mousemove', onMove);
+    document.addEventListener('mouseup', onUp);
+  }
+}
+
+function makeResizable(handle, img, key) {
+  handle.addEventListener('mousedown', onDown);
+
+  function onDown(e) {
+    e.preventDefault();
+    e.stopPropagation();
+
+    const rect = avatarContainer.getBoundingClientRect();
+    const startX = e.clientX;
+    const startY = e.clientY;
+    const startW = state.overlays[key].width;
+    const startH = state.overlays[key].height;
+
+    function onMove(e) {
+      const dw = ((e.clientX - startX) / rect.width)  * 100;
+      const dh = ((e.clientY - startY) / rect.height) * 100;
+      const newW = Math.max(5, parseFloat((startW + dw).toFixed(2)));
+      const newH = Math.max(5, parseFloat((startH + dh).toFixed(2)));
+      state.overlays[key].width  = newW;
+      state.overlays[key].height = newH;
+      img.style.width  = newW + '%';
+      img.style.height = newH + '%';
+      syncSizeControls();
+      updateCssOutput();
+      saveState();
+    }
+
+    function onUp() {
+      document.removeEventListener('mousemove', onMove);
+      document.removeEventListener('mouseup', onUp);
+    }
+
+    document.addEventListener('mousemove', onMove);
+    document.addEventListener('mouseup', onUp);
+  }
+}
+
+// ── CSS output ────────────────────────────────────────────────────────────────
+
+function formatVal(n) { return parseFloat(n.toFixed(2)) + '%'; }
+
+function updateCssOutput() {
+  const lines = [];
+
+  const slotCssClass = {
+    armor:          '.equip-overlay',
+    'armor-f':      '.equip-overlay-armor--female',
+    shield:         '.equip-overlay-shield',
+    'shield-f':     '.equip-overlay-shield--female',
+    boots:          '.equip-overlay-boots',
+    'boots-f':      '.equip-overlay-boots--female',
+    gauntlet:       '.equip-overlay-gauntlet',
+    'gauntlet-f':   '.equip-overlay-gauntlet--female',
+    helmet:         '.equip-overlay-helmet',
+    'helmet-f':     '.equip-overlay-helmet--female',
+  };
+
+  const allSlots = ['armor', 'armor-f', 'shield', 'shield-f', 'boots', 'boots-f', 'gauntlet', 'gauntlet-f', 'helmet', 'helmet-f'];
+  allSlots.forEach(key => {
+    const pos = state.overlays[key] || DEFAULTS[key];
+    if (!pos) return;
+    const cls = slotCssClass[key] || `.equip-overlay-${key}`;
+    lines.push(`${cls} {`);
+    lines.push(`  top: ${formatVal(pos.top)}; left: ${formatVal(pos.left)};`);
+    lines.push(`  width: ${formatVal(pos.width)}; height: ${formatVal(pos.height)};`);
+    lines.push(`}`);
+    lines.push('');
+  });
+
+  cssOutput.textContent = lines.join('\n');
+}
+
+// ── Apply to Game ─────────────────────────────────────────────────────────────
+
+const applyBtn    = document.getElementById('apply-btn');
+const applyStatus = document.getElementById('apply-status');
+
+applyBtn.addEventListener('click', async () => {
+  applyBtn.disabled = true;
+  applyStatus.textContent = 'Applying…';
+  try {
+    const res = await fetch('/apply', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ overlays: state.overlays }),
+    });
+    const data = await res.json();
+    if (res.ok && data.ok) {
+      applyBtn.classList.add('success');
+      applyStatus.textContent = data.message;
+    } else {
+      applyBtn.classList.add('error');
+      applyStatus.textContent = data.error || 'Failed';
+    }
+  } catch {
+    applyBtn.classList.add('error');
+    applyStatus.textContent = 'Server not running — use npm run canvas';
+  }
+  setTimeout(() => {
+    applyBtn.disabled = false;
+    applyBtn.classList.remove('success', 'error');
+  }, 3000);
+});
+
+// ── Copy button ───────────────────────────────────────────────────────────────
+
+copyBtn.addEventListener('click', () => {
+  navigator.clipboard.writeText(cssOutput.textContent).then(() => {
+    const orig = copyBtn.textContent;
+    copyBtn.textContent = 'Copied!';
+    setTimeout(() => copyBtn.textContent = orig, 1500);
+  }).catch(() => {
+    const ta = document.createElement('textarea');
+    ta.value = cssOutput.textContent;
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand('copy');
+    ta.remove();
+    const orig = copyBtn.textContent;
+    copyBtn.textContent = 'Copied!';
+    setTimeout(() => copyBtn.textContent = orig, 1500);
+  });
+});
+
+// ── Reset button ──────────────────────────────────────────────────────────────
+
+document.getElementById('reset-btn').addEventListener('click', () => {
+  state.overlays = {};
+  selectedSlot = null;
+  saveState();
+  rebuildOverlays();
+  syncSizeControls();
+});
+
+// ── Add equipment form ────────────────────────────────────────────────────────
+
+(function initAddEquipForm() {
+  const toggle    = document.getElementById('add-equip-toggle');
+  const form      = document.getElementById('add-equip-form');
+  const nameInput = document.getElementById('eq-name');
+  const slotSel   = document.getElementById('eq-slot');
+  const baseField = document.getElementById('eq-base-field');
+  const baseInput = document.getElementById('eq-base');
+  const staticField = document.getElementById('eq-static-field');
+  const staticInput = document.getElementById('eq-static');
+  const submitBtn = document.getElementById('add-equip-submit');
+
+  toggle.addEventListener('click', () => {
+    const open = form.classList.toggle('open');
+    toggle.classList.toggle('open', open);
+    toggle.textContent = open ? '−' : '+';
+  });
+
+  document.querySelectorAll('input[name="eq-imgtype"]').forEach(radio => {
+    radio.addEventListener('change', () => {
+      const isStatic = radio.value === 'static';
+      baseField.classList.toggle('hidden', isStatic);
+      staticField.classList.toggle('hidden', !isStatic);
+    });
+  });
+
+  submitBtn.addEventListener('click', () => {
+    const name = nameInput.value.trim();
+    const slot = slotSel.value;
+    const imgType = document.querySelector('input[name="eq-imgtype"]:checked').value;
+    const isStatic = imgType === 'static';
+
+    if (!name) { nameInput.focus(); return; }
+
+    let eq;
+    if (isStatic) {
+      const src = staticInput.value.trim().replace(/^\//, '');
+      if (!src) { staticInput.focus(); return; }
+      eq = { id: 'custom_' + Date.now(), name, staticSrc: '/' + src, slot };
+    } else {
+      const base = baseInput.value.trim();
+      if (!base) { baseInput.focus(); return; }
+      eq = { id: 'custom_' + Date.now(), name, base, slot };
+    }
+
+    state.customEquipment.push(eq);
+    saveState();
+    buildEquipList();
+
+    // Reset form
+    nameInput.value = '';
+    baseInput.value = '';
+    staticInput.value = '';
+    form.classList.remove('open');
+    toggle.classList.remove('open');
+    toggle.textContent = '+';
+  });
+})();
+
+// ── Size controls ────────────────────────────────────────────────────────────
+
+const sizeControls  = document.getElementById('size-controls');
+const sizeSlotName  = document.getElementById('size-slot-name');
+const sizeWInput    = document.getElementById('size-w');
+const sizeHInput    = document.getElementById('size-h');
+const sizeWVal      = document.getElementById('size-w-val');
+const sizeHVal      = document.getElementById('size-h-val');
+
+const SLOT_LABELS = {
+  armor: 'Armor (male)', 'armor-f': 'Armor (female)',
+  shield: 'Shield', boots: 'Boots (male)', 'boots-f': 'Boots (female)',
+  gauntlet: 'Gauntlets', helmet: 'Helmet',
+};
+
+function syncSizeControls() {
+  if (!selectedSlot || !state.overlays[selectedSlot]) {
+    sizeControls.classList.remove('visible');
+    return;
+  }
+  const pos = state.overlays[selectedSlot];
+  sizeControls.classList.add('visible');
+  sizeSlotName.textContent = SLOT_LABELS[selectedSlot] || selectedSlot;
+  sizeWInput.value = pos.width;
+  sizeHInput.value = pos.height;
+  sizeWVal.textContent = pos.width.toFixed(1) + '%';
+  sizeHVal.textContent = pos.height.toFixed(1) + '%';
+}
+
+function applySizeToOverlay() {
+  if (!selectedSlot || !state.overlays[selectedSlot]) return;
+  const overlay = avatarContainer.querySelector(`.equip-overlay[data-slot="${selectedSlot}"]`);
+  if (overlay) {
+    overlay.style.width  = state.overlays[selectedSlot].width  + '%';
+    overlay.style.height = state.overlays[selectedSlot].height + '%';
+  }
+  sizeWVal.textContent = state.overlays[selectedSlot].width.toFixed(1)  + '%';
+  sizeHVal.textContent = state.overlays[selectedSlot].height.toFixed(1) + '%';
+  updateCssOutput();
+  saveState();
+}
+
+sizeWInput.addEventListener('input', () => {
+  if (!selectedSlot || !state.overlays[selectedSlot]) return;
+  state.overlays[selectedSlot].width = parseFloat(sizeWInput.value);
+  applySizeToOverlay();
+});
+
+sizeHInput.addEventListener('input', () => {
+  if (!selectedSlot || !state.overlays[selectedSlot]) return;
+  state.overlays[selectedSlot].height = parseFloat(sizeHInput.value);
+  applySizeToOverlay();
+});
+
+document.getElementById('size-smaller').addEventListener('click', () => {
+  if (!selectedSlot || !state.overlays[selectedSlot]) return;
+  const pos = state.overlays[selectedSlot];
+  pos.width  = parseFloat(Math.max(5, pos.width  - 5).toFixed(1));
+  pos.height = parseFloat(Math.max(5, pos.height - 5).toFixed(1));
+  syncSizeControls();
+  applySizeToOverlay();
+});
+
+document.getElementById('size-bigger').addEventListener('click', () => {
+  if (!selectedSlot || !state.overlays[selectedSlot]) return;
+  const pos = state.overlays[selectedSlot];
+  pos.width  = parseFloat(Math.min(150, pos.width  + 5).toFixed(1));
+  pos.height = parseFloat(Math.min(150, pos.height + 5).toFixed(1));
+  syncSizeControls();
+  applySizeToOverlay();
+});
+
+// ── Zoom ──────────────────────────────────────────────────────────────────────
+
+const ZOOM_MIN  = 0.4;
+const ZOOM_MAX  = 3.0;
+const ZOOM_STEP = 0.1;
+
+const zoomLabel = document.getElementById('zoom-label');
+
+function applyZoom() {
+  avatarContainer.style.transform       = `scale(${state.zoom})`;
+  avatarContainer.style.transformOrigin = 'center center';
+  zoomLabel.textContent = Math.round(state.zoom * 100) + '%';
+  saveState();
+}
+
+document.getElementById('zoom-in').addEventListener('click', () => {
+  state.zoom = parseFloat(Math.min(ZOOM_MAX, state.zoom + ZOOM_STEP).toFixed(2));
+  applyZoom();
+});
+
+document.getElementById('zoom-out').addEventListener('click', () => {
+  state.zoom = parseFloat(Math.max(ZOOM_MIN, state.zoom - ZOOM_STEP).toFixed(2));
+  applyZoom();
+});
+
+// Scroll wheel on canvas area
+document.getElementById('canvas-area').addEventListener('wheel', (e) => {
+  e.preventDefault();
+  const delta = e.deltaY < 0 ? ZOOM_STEP : -ZOOM_STEP;
+  state.zoom = parseFloat(Math.min(ZOOM_MAX, Math.max(ZOOM_MIN, state.zoom + delta)).toFixed(2));
+  applyZoom();
+}, { passive: false });
+
+// ── Init ──────────────────────────────────────────────────────────────────────
+
+loadState();
+
+// Sync gender buttons
+document.querySelectorAll('.gender-btn').forEach(b => {
+  b.classList.toggle('active', b.dataset.gender === state.gender);
+});
+
+buildAvatarThumbs();
+updateBaseAvatar();
+buildEquipList();
+rebuildOverlays();
+updateCssOutput();
+applyZoom();
+</script>
+</body>
+</html>

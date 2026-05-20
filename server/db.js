@@ -182,11 +182,18 @@ async function initDb() {
     'ALTER TABLE characters ADD COLUMN helmet_id INTEGER REFERENCES items(id)',
     "ALTER TABLE characters ADD COLUMN rest_type        TEXT    DEFAULT NULL",
     'ALTER TABLE characters ADD COLUMN stamina_regen_at INTEGER DEFAULT NULL',
+    'ALTER TABLE characters ADD COLUMN tavern_level     INTEGER NOT NULL DEFAULT 0',
   ];
 
   for (const sql of additiveMigrations) {
     try { await client.execute(sql); } catch { /* column already exists — skip */ }
   }
+
+  // Make Fish a consumable that restores HP (idempotent UPDATE)
+  await client.execute({
+    sql:  "UPDATE items SET type = 'consumable', description = 'A freshly caught fish. Restores 3 HP.' WHERE id = 41",
+    args: [],
+  });
 
   // Migrate farm_queue to remove restrictive CHECK constraint (adds onion, corn support).
   // Test by inserting a dummy row with the new type; if it fails, recreate the table.

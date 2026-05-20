@@ -4,14 +4,14 @@ const { client } = require('../db');
 const protect = require('../middleware/protect');
 const { fullChar } = require('../helpers');
 
-// item_id -> HP restored (farm plants)
-const PLANT_ITEM_HP = { 6: 2, 7: 1 };
+// item_id -> HP restored (consumable plants + health potion)
+const PLANT_ITEM_HP = { 5: 5, 6: 2, 7: 1, 29: 2, 30: 3, 41: 3 };
 const POINTS_PER_LEVEL = 5;
 
 const TAVERN_REST_TYPES = {
-  relax:    { staminaRate: 1, cost: 10 },
-  break:    { staminaRate: 3, cost: 30 },
-  recovery: { staminaRate: 6, cost: 70 },
+  relax:    { staminaRate: 3,  hpRate: 3,  cost: 10 },
+  break:    { staminaRate: 5,  hpRate: 5,  cost: 30 },
+  recovery: { staminaRate: 10, hpRate: 10, cost: 70 },
 };
 
 const SET_UNLOCK_LEVEL = { 1: 1, 2: 20, 3: 30, 4: 40, 5: 50, 6: 5, 7: 10, 8: 15 };
@@ -376,14 +376,24 @@ function applyTavernTick(char) {
   const attrStamina = Number(char.attr_stamina)  || 5;
   xp = Number(xp); level = Number(level);
 
-  const upd         = levelUp({ xp, xp_to_next, level, hp, unspent_points, attr_vitality: vitality, attr_stamina: attrStamina });
-  const max_stamina = upd.max_stamina;
-  const restType    = TAVERN_REST_TYPES[char.rest_type] || TAVERN_REST_TYPES.relax;
+  const upd          = levelUp({ xp, xp_to_next, level, hp, unspent_points, attr_vitality: vitality, attr_stamina: attrStamina });
+  const max_stamina  = upd.max_stamina;
+  const max_hp       = upd.max_hp;
+  const restType     = TAVERN_REST_TYPES[char.rest_type] || TAVERN_REST_TYPES.relax;
+  const tavernLevel  = Number(char.tavern_level) || 0;
+  const multiplier   = Math.pow(1.8, tavernLevel);
+  const stRate       = restType.staminaRate * multiplier;
+  const hpRate       = restType.hpRate      * multiplier;
+
   // Restore to full on level-up; otherwise accumulate regen
-  const stamina     = upd.leveled
+  const stamina = upd.leveled
     ? max_stamina
-    : Math.min(max_stamina, (Number(char.stamina) || 0) + (restType.staminaRate * elapsed) / 60);
-  return { ...upd, stamina, max_stamina, last_tick_at: now };
+    : Math.min(max_stamina, (Number(char.stamina) || 0) + (stRate * elapsed) / 60);
+  const newHp = upd.leveled
+    ? max_hp
+    : Math.min(max_hp, (Number(upd.hp) || 0) + (hpRate * elapsed) / 60);
+
+  return { ...upd, hp: newHp, stamina, max_stamina, last_tick_at: now };
 }
 
 // Compute stamina regen based on elapsed time since last regen point was awarded.
@@ -496,6 +506,31 @@ router.post('/:characterId/stop', async (req, res) => {
   res.json(await fullChar(char.id));
 });
 
+// POST /api/game/:characterId/tavern-upgrade
+router.post('/:characterId/tavern-upgrade', async (req, res) => {
+  const char = await ownedChar(req, res);
+  if (!char) return;
+
+  if (char.activity) {
+    return res.status(400).json({ error: 'Cannot upgrade while in an activity' });
+  }
+
+  const currentLevel = Number(char.tavern_level) || 0;
+  const upgradeCost  = (currentLevel + 1) * 1000;
+  const gold         = Number(char.gold) || 0;
+
+  if (gold < upgradeCost) {
+    return res.status(400).json({ error: `Not enough gold (need ${upgradeCost}g, have ${gold}g)` });
+  }
+
+  await client.execute({
+    sql:  'UPDATE characters SET tavern_level = ?, gold = gold - ? WHERE id = ?',
+    args: [currentLevel + 1, upgradeCost, char.id],
+  });
+
+  res.json(await fullChar(char.id));
+});
+
 // GET /api/game/:characterId/tick  (tavern HP regen tick + harvest + stamina regen)
 router.get('/:characterId/tick', async (req, res) => {
   const char = await ownedChar(req, res);
@@ -557,6 +592,42 @@ router.get('/:characterId/tick', async (req, res) => {
   }
 
   res.json(await fullChar(char.id));
+});
+
+// ── Use consumable item ──────────────────────────────────────────────────────
+
+// POST /api/game/:characterId/use-item   body: { invId }
+router.post('/:characterId/use-item', async (req, res) => {
+  const char = await ownedChar(req, res);
+  if (!char) return;
+
+  const invId = Number(req.body.invId);
+  if (!invId) return res.status(400).json({ error: 'invId required' });
+
+  const invR = await client.execute({
+    sql:  'SELECT * FROM inventory WHERE id = ? AND character_id = ?',
+    args: [invId, char.id],
+  });
+  const invRow = invR.rows[0];
+  if (!invRow) return res.status(404).json({ error: 'Item not found in inventory' });
+
+  const hpRestore = PLANT_ITEM_HP[Number(invRow.item_id)];
+  if (!hpRestore) return res.status(400).json({ error: 'This item cannot be used to restore HP' });
+
+  const maxHp  = Number(char.max_hp) || 20;
+  const currHp = Number(char.hp)     || 0;
+  if (currHp >= maxHp) return res.status(400).json({ error: 'HP is already full' });
+
+  const newHp = Math.min(maxHp, currHp + hpRestore);
+
+  if (Number(invRow.quantity) <= 1) {
+    await client.execute({ sql: 'DELETE FROM inventory WHERE id = ?', args: [invId] });
+  } else {
+    await client.execute({ sql: 'UPDATE inventory SET quantity = quantity - 1 WHERE id = ?', args: [invId] });
+  }
+  await client.execute({ sql: 'UPDATE characters SET hp = ? WHERE id = ?', args: [newHp, char.id] });
+
+  res.json({ hp: newHp, max_hp: maxHp, hpRestored: newHp - currHp, char: await fullChar(char.id) });
 });
 
 // ── Fishing ─────────────────────────────────────────────────────────────────

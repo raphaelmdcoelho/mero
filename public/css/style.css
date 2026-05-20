@@ -631,6 +631,33 @@ input:focus, select:focus {
 .modal-header .modal-title { margin-bottom: 0; }
 .modal-footer { display: flex; gap: 0.5rem; justify-content: flex-end; margin-top: 1.25rem; }
 
+.tavern-modal-footer {
+  justify-content: space-between;
+  align-items: center;
+}
+.tavern-footer-actions { display: flex; gap: 0.5rem; }
+.btn-upgrade {
+  background: linear-gradient(135deg, #78350f, #92400e);
+  border: 1px solid #b45309;
+  color: #fcd34d;
+  font-size: 0.78rem;
+  font-weight: 600;
+  padding: 0.45rem 0.85rem;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+.btn-upgrade:hover:not(:disabled) {
+  background: linear-gradient(135deg, #92400e, #b45309);
+  border-color: #fcd34d;
+  box-shadow: 0 0 8px #fcd34d44;
+}
+.btn-upgrade:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
 /* Class selector */
 .class-grid {
   display: grid;
@@ -977,21 +1004,20 @@ body.social-page {
 .avatar-cell {
   grid-column: 2;
   grid-row: 2;
-  width: 200px;
-  height: 200px;
+  width: 340px;
+  height: 380px;
   position: relative;
-  padding-top: 1.5rem;
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: center;
 }
 .avatar-display {
   position: relative;
-  display: inline-flex;
+  display: flex;
   align-items: center;
   justify-content: center;
-  width: fit-content;
-  height: 100%;
+  width: 220px;
+  height: 320px;
   border: 1px solid #38bdf8;
   border-radius: 0;
   box-shadow: 0 0 5px #38bdf8aa, 0 0 12px #38bdf855, inset 0 0 5px #38bdf811;
@@ -1003,8 +1029,8 @@ body.social-page {
   100% { box-shadow: 0 0 8px #38bdf8cc,  0 0 18px #38bdf877, inset 0 0 7px  #38bdf822; }
 }
 .avatar-display .char-avatar-img {
+  width: 100%;
   height: 100%;
-  width: auto;
   object-fit: contain;
   display: block;
 }
@@ -1014,38 +1040,41 @@ body.social-page {
 }
 .equip-overlay {
   position: absolute;
-  width: 65%;
-  height: 65%;
-  top: 40%;
-  left: 50%;
+  width: 50.00%;
+  height: 50.00%;
+  top: 40.00%;
+  left: 50.00%;
   transform: translate(-50%, -50%);
   object-fit: contain;
   pointer-events: none;
 }
 
 .equip-overlay-armor--female {
-  top: 44%;
+  top: 43.76%;
+  left: 50.00%;
+  width: 45.00%;
+  height: 45.00%;
 }
 
 .equip-overlay-boots {
-  top: 75%;
-  left: 49.5%;
-  width: 73%;
-  height: 49%;
+  top: 75.89%;
+  left: 49.89%;
+  width: 73.00%;
+  height: 49.00%;
 }
 
 .equip-overlay-boots--female {
-  top: 83%;
-  left: 49%;
-  width: 73%;
-  height: 49%;
+  top: 83.00%;
+  left: 49.00%;
+  width: 73.00%;
+  height: 49.00%;
 }
 
 .equip-overlay-shield {
-  top: 50%;
-  left: 72%;
-  width: 45%;
-  height: 45%;
+  top: 49.61%;
+  left: 76.06%;
+  width: 45.00%;
+  height: 45.00%;
   z-index: 3;
 }
 
@@ -1058,11 +1087,32 @@ body.social-page {
 }
 
 .equip-overlay-helmet {
-  top: 17%;
-  left: 50%;
-  width: 50%;
-  height: 50%;
+  top: 17.76%;
+  left: 49.62%;
+  width: 60.00%;
+  height: 60.00%;
   z-index: 4;
+}
+
+.equip-overlay-helmet--female {
+  top: 21.59%;
+  left: 49.62%;
+  width: 60.00%;
+  height: 60.00%;
+}
+
+.equip-overlay-shield--female {
+  top: 50.00%;
+  left: 72.00%;
+  width: 45.00%;
+  height: 45.00%;
+}
+
+.equip-overlay-gauntlet--female {
+  top: 50%;
+  left: 50%;
+  width: 45%;
+  height: 45%;
 }
 
 /* Status bar / footer taskbar */
@@ -1440,6 +1490,7 @@ body.social-page {
 .item-tt-type { color: var(--muted); font-size: 0.75rem; margin-left: 0.5rem; }
 .item-tt-desc { color: var(--muted); margin-top: 0.25rem; }
 .item-tt-eq   { color: var(--gold); font-size: 0.8rem; }
+.btn-use-item { margin-top: 0.6rem; width: 100%; font-size: 0.8rem; padding: 0.3rem 0.6rem; }
 .btn-mt       { margin-top: 0.5rem; }
 .muted-sm     { color: var(--muted); font-size: 0.85rem; }
 
@@ -1645,12 +1696,13 @@ body.social-page {
   .game-arena { padding: 0.75rem 0.5rem; }
   .action-grid {
     grid-template-columns: repeat(4, 62px);
-    grid-template-rows: 74px 74px 150px 74px 74px;
+    grid-template-rows: 74px 74px 300px 74px 74px;
     gap: 6px;
   }
   .action-sq { width: 60px; height: 60px; font-size: 0.55rem; }
   .action-sq .sq-icon { font-size: 1.4rem; }
-  .avatar-cell { width: 140px; height: 150px; grid-column: 1 / 5 !important; grid-row: 3 !important; }
+  .avatar-cell { width: 100%; height: 300px; grid-column: 1 / 5 !important; grid-row: 3 !important; }
+  .avatar-display { width: 180px !important; height: 260px !important; }
   /* Top row — first 4 */
   #wrap-dungeon      { grid-column: 1 !important; grid-row: 1 !important; }
   #wrap-farm         { grid-column: 2 !important; grid-row: 1 !important; }
@@ -1668,6 +1720,27 @@ body.social-page {
   /* Bottom row — remaining 2, below avatar */
   #wrap-castle       { grid-column: 1 !important; grid-row: 5 !important; }
   #wrap-achievements { grid-column: 2 !important; grid-row: 5 !important; }
+  #sq-dungeon .sq-icon,
+  #sq-solo-dungeon .sq-icon,
+  #sq-farm .sq-icon,
+  #sq-tavern .sq-icon,
+  #sq-read .sq-icon,
+  #sq-fishing .sq-icon,
+  #sq-inventory .sq-icon,
+  #sq-research .sq-icon,
+  #sq-attributes .sq-icon,
+  #sq-equipment .sq-icon,
+  #sq-castle .sq-icon,
+  #sq-market .sq-icon,
+  #sq-achievements .sq-icon {
+    width: 46px !important;
+    height: auto !important;
+    top: 50% !important;
+    left: 50% !important;
+    transform: translate(-50%, -50%) !important;
+    object-fit: contain !important;
+  }
+  #sq-fishing .sq-icon { top: 15% !important; }
   .pickaxe-wrap { width: 38px; height: 38px; }
   .pickaxe-wrap svg { width: 38px; height: 38px; }
   .char-grid { grid-template-columns: 1fr 1fr; }
@@ -2260,8 +2333,8 @@ body.social-page {
 /* Center avatar area — outer ring provides the circular border/glow.
    No overflow:hidden here so the equip-overlay can extend past the circle. */
 .eq-doll-avatar {
-  width: 120px;
-  height: 120px;
+  width: 220px;
+  height: 220px;
   border-radius: 50%;
   border: 3px solid var(--border);
   background: var(--surface2);
@@ -2339,7 +2412,7 @@ body.social-page {
 
 @media (max-width: 480px) {
   .eq-doll-slot { width: 76px; min-height: 76px; }
-  .eq-doll-avatar { width: 96px; height: 96px; }
+  .eq-doll-avatar { width: 150px; height: 150px; }
 }
 
 /* ---- Fishing Modal ---- */

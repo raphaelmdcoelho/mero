@@ -144,7 +144,7 @@ async function init() {
   if (data.activity === 'dungeon_solo' && data.soloBattle) {
     resumeSoloBattle(data.soloBattle, data);
   }
-  // Resume tavern progress bar if resting
+  // Resume tavern timer if resting (needed to keep localTimer running for read bar)
   if (data.activity === 'tavern' && data.activity_started_at) {
     tavernStartedAt = Number(data.activity_started_at) * 1000;
     startLocalTimer();
@@ -271,7 +271,7 @@ function renderAll(char) {
 
   const farmLock = document.getElementById('farm-lock-badge');
   const level = Number(char.level) || 1;
-  const farmBlockedByActivity = ['tavern', 'dungeon', 'reading'].includes(char.activity) || (char.farmQueue && char.farmQueue.length > 0);
+  const farmBlockedByActivity = ['tavern', 'dungeon', 'dungeon_solo', 'reading'].includes(char.activity) || (char.farmQueue && char.farmQueue.length > 0);
   if (level < 3) {
     farmLock.style.display = 'flex';
     document.getElementById('sq-farm').classList.add('disabled');
@@ -316,11 +316,15 @@ function renderCharAvatar(containerEl, char) {
     const armorGenderClass = char.gender === 'female' ? ' equip-overlay-armor--female' : '';
     armorOverlay = `<img class="equip-overlay${armorGenderClass}"${style} src="${escHtml(armorImg)}" alt="" />`;
   }
-  const shieldOverlay   = shieldImg   ? `<img class="equip-overlay equip-overlay-shield"   src="${escHtml(shieldImg)}"   alt="" />` : '';
-  const bootsGenderClass = char.gender === 'female' ? ' equip-overlay-boots--female' : '';
-  const bootsOverlay    = bootsImg    ? `<img class="equip-overlay equip-overlay-boots${bootsGenderClass}" src="${escHtml(bootsImg)}" alt="" />` : '';
-  const gauntletOverlay = gauntletImg ? `<img class="equip-overlay equip-overlay-gauntlet" src="${escHtml(gauntletImg)}" alt="" />` : '';
-  const helmetOverlay   = helmetImg   ? `<img class="equip-overlay equip-overlay-helmet"   src="${escHtml(helmetImg)}"   alt="" />` : '';
+  const isFemale = char.gender === 'female';
+  const shieldGenderClass   = isFemale ? ' equip-overlay-shield--female'   : '';
+  const bootsGenderClass    = isFemale ? ' equip-overlay-boots--female'    : '';
+  const gauntletGenderClass = isFemale ? ' equip-overlay-gauntlet--female' : '';
+  const helmetGenderClass   = isFemale ? ' equip-overlay-helmet--female'   : '';
+  const shieldOverlay   = shieldImg   ? `<img class="equip-overlay equip-overlay-shield${shieldGenderClass}"     src="${escHtml(shieldImg)}"   alt="" />` : '';
+  const bootsOverlay    = bootsImg    ? `<img class="equip-overlay equip-overlay-boots${bootsGenderClass}"       src="${escHtml(bootsImg)}"    alt="" />` : '';
+  const gauntletOverlay = gauntletImg ? `<img class="equip-overlay equip-overlay-gauntlet${gauntletGenderClass}" src="${escHtml(gauntletImg)}" alt="" />` : '';
+  const helmetOverlay   = helmetImg   ? `<img class="equip-overlay equip-overlay-helmet${helmetGenderClass}"     src="${escHtml(helmetImg)}"   alt="" />` : '';
   if (char.avatar_path) {
     containerEl.innerHTML = `<img class="char-avatar-img" src="${escHtml(char.avatar_path)}" alt="Avatar" />${armorOverlay}${shieldOverlay}${bootsOverlay}${gauntletOverlay}${helmetOverlay}`;
   } else {
@@ -356,6 +360,7 @@ function updateActionSquares(activity, isFarming = false) {
     tavern.classList.add('disabled');
     if (read) read.classList.add('disabled');
     if (fishing) fishing.classList.add('disabled');
+    if (activity === 'dungeon' || activity === 'dungeon_solo') farm.classList.add('disabled');
   } else if (activity === 'dungeon') {
     dungeon.classList.add('active');
     if (soloDungeon) soloDungeon.classList.add('disabled');
@@ -374,6 +379,7 @@ function updateActionSquares(activity, isFarming = false) {
     tavern.classList.add('active');
     document.getElementById('tavern-label').textContent = t('game.js.stop_lbl');
     dungeon.classList.add('disabled');
+    if (soloDungeon) soloDungeon.classList.add('disabled');
     farm.classList.add('disabled');
     if (read) read.classList.add('disabled');
     if (fishing) fishing.classList.add('disabled');
@@ -383,6 +389,7 @@ function updateActionSquares(activity, isFarming = false) {
       document.getElementById('read-label').textContent = t('game.js.stop_lbl');
     }
     dungeon.classList.add('disabled');
+    if (soloDungeon) soloDungeon.classList.add('disabled');
     tavern.classList.add('disabled');
     farm.classList.add('disabled');
     if (fishing) fishing.classList.add('disabled');
@@ -415,24 +422,39 @@ let selectedRestType = null;
 
 function openTavernModal() {
   selectedRestType = null;
-  const gold = Number(charState?.gold) || 0;
+  const gold        = Number(charState?.gold) || 0;
+  const tavernLevel = Number(charState?.tavern_level) || 0;
+  const multiplier  = Math.pow(1.8, tavernLevel);
+  const fmt         = v => Number.isInteger(Math.round(v)) ? Math.round(v) : v.toFixed(1);
+
+  const BASE_RATES = { relax: 3, break: 5, recovery: 10 };
   const REST_TYPES = [
-    { key: 'relax',    cost: 10, nameKey: 'tavern.rest.relax',    descKey: 'tavern.rest.relax_desc' },
-    { key: 'break',    cost: 30, nameKey: 'tavern.rest.break',    descKey: 'tavern.rest.break_desc' },
-    { key: 'recovery', cost: 70, nameKey: 'tavern.rest.recovery', descKey: 'tavern.rest.recovery_desc' },
+    { key: 'relax',    cost: 10, nameKey: 'tavern.rest.relax',    rate: BASE_RATES.relax    },
+    { key: 'break',    cost: 30, nameKey: 'tavern.rest.break',    rate: BASE_RATES.break    },
+    { key: 'recovery', cost: 70, nameKey: 'tavern.rest.recovery', rate: BASE_RATES.recovery },
   ];
   const container = document.getElementById('tavern-rest-options');
   container.innerHTML = REST_TYPES.map(r => {
-    const canAfford = gold >= r.cost;
+    const canAfford  = gold >= r.cost;
+    const effectiveRate = fmt(r.rate * multiplier);
+    const desc = `+${effectiveRate} ST+HP/min`;
     return `<div class="tavern-rest-card${canAfford ? '' : ' disabled'}" data-rest-key="${r.key}"
                  ${canAfford ? `onclick="selectTavernRest('${r.key}')"` : ''}>
       <div class="tavern-rest-card-info">
         <span class="tavern-rest-card-name">${t(r.nameKey)}</span>
-        <span class="tavern-rest-card-desc">${t(r.descKey)}</span>
+        <span class="tavern-rest-card-desc">${desc}</span>
       </div>
       <span class="tavern-rest-card-cost">🪙 ${r.cost}g</span>
     </div>`;
   }).join('');
+
+  const upgradeCost = (tavernLevel + 1) * 1000;
+  const upgradeBtn  = document.getElementById('tavern-upgrade-btn');
+  const canUpgrade  = gold >= upgradeCost;
+  upgradeBtn.textContent = `⬆ Lv${tavernLevel + 1} · ${upgradeCost}g`;
+  upgradeBtn.disabled    = !canUpgrade;
+  upgradeBtn.title       = canUpgrade ? `Upgrade to level ${tavernLevel + 1}` : `Need ${upgradeCost}g`;
+
   document.getElementById('tavern-start-btn').disabled = true;
   document.getElementById('tavern-modal').classList.add('open');
 }
@@ -453,6 +475,19 @@ function confirmTavernRest() {
 function closeTavernModal() {
   selectedRestType = null;
   document.getElementById('tavern-modal').classList.remove('open');
+}
+
+async function upgradeTavern() {
+  const res = await api.post(`/api/game/${charId}/tavern-upgrade`);
+  if (!res) return;
+  const data = await res.json();
+  if (!res.ok) { showToast(data.error || t('game.js.failed'), 'danger'); return; }
+  charState = data;
+  renderAll(data);
+  document.getElementById('gold-display').textContent = `🪙 ${Number(data.gold) || 0}g`;
+  const newLevel = Number(data.tavern_level) || 0;
+  showToast(`Tavern upgraded to level ${newLevel}!`, 'success');
+  openTavernModal();
 }
 
 async function startTavernRest(restType) {
@@ -477,7 +512,6 @@ async function stopActivity() {
   if (!res.ok) { showToast(data.error || t('game.js.failed_stop'), 'danger'); return; }
   tavernStartedAt = null;
   readStartedAt   = null;
-  document.getElementById('sq-tavern')?.style.setProperty('--tavern-progress', '0%');
   document.getElementById('sq-read')?.style.setProperty('--read-progress', '0%');
   if (!dungeonEndsAt) stopLocalTimer();
   charState = data;
@@ -729,14 +763,6 @@ function updateTimerDisplay() {
 // Local 1-second timer update (purely cosmetic — server is authoritative)
 let localTimerInterval = null;
 
-function updateTavernProgressBar() {
-  const btn = document.getElementById('sq-tavern');
-  if (!btn) return;
-  if (!tavernStartedAt) { btn.style.setProperty('--tavern-progress', '0%'); return; }
-  const elapsedSec = (Date.now() - tavernStartedAt) / 1000;
-  btn.style.setProperty('--tavern-progress', Math.min(100, (elapsedSec / 300) * 100) + '%');
-}
-
 function updateDungeonButtonFill() {
   const btn = document.getElementById('sq-dungeon');
   if (!btn) return;
@@ -751,7 +777,6 @@ function startLocalTimer() {
   if (localTimerInterval) clearInterval(localTimerInterval);
   localTimerInterval = setInterval(() => {
     if (dungeonEndsAt) updateTimerDisplay();
-    updateTavernProgressBar();
     updateReadProgressBar();
     updateDungeonButtonFill();
   }, 1000);
@@ -1020,13 +1045,28 @@ function showItemInfo(idx) {
   const statLine = item.damage  ? `⚔️ ${item.damage} ${t('game.js.dmg_unit')}`
                  : item.defense ? `🛡️ ${item.defense} ${t('game.js.def_unit')}`
                  : '';
+  const CONSUMABLE_HP_IDS = new Set([5, 6, 7, 29, 30, 41]);
+  const isHealable = CONSUMABLE_HP_IDS.has(Number(item.item_id));
+  const hpFull     = isHealable && Number(charState?.hp) >= Number(charState?.max_hp);
+
   tooltip.style.display = 'block';
   tooltip.innerHTML = `
     <strong class="item-tt-name">${itemIconHtml(item.item_id || item.id, item.icon, '', charState?.gender, 'item-tt-icon-img')} ${escHtml(tItemName(item))}</strong>
     <span class="item-tt-type">${tItemType(item)}</span>
     <p class="item-tt-desc">${escHtml(tItemDesc(item))}${statLine ? ' ' + statLine : ''}</p>
     ${item.quantity > 1 ? `<div class="item-tt-qty">${t('game.js.qty')}: ${item.quantity}</div>` : ''}
-    ${item.sell_price ? `<div class="item-tt-price">🪙 ${item.sell_price}g</div>` : ''}`;
+    ${item.sell_price ? `<div class="item-tt-price">🪙 ${item.sell_price}g</div>` : ''}
+    ${isHealable ? `<button type="button" class="btn btn-primary btn-use-item" onclick="useItem(${item.id})" ${hpFull ? 'disabled title="HP is full"' : ''}>Use</button>` : ''}`;
+}
+
+async function useItem(invId) {
+  const res = await api.post(`/api/game/${charId}/use-item`, { invId });
+  if (!res) return;
+  const data = await res.json();
+  if (!res.ok) { showToast(data.error || t('game.js.failed'), 'danger'); return; }
+  charState = data.char;
+  renderAll(data.char);
+  showToast(`+${data.hpRestored} HP restored`, 'success');
 }
 
 // ---- Equipment Modal ----

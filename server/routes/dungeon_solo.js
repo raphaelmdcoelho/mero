@@ -223,7 +223,7 @@ router.post('/:characterId/turn', async (req, res) => {
             WHERE id = ?`,
       args: [
         xp, xp_to_next, level, unspent_points,
-        newMaxHp, Math.min(turn.newHeroHp, newMaxHp),
+        newMaxHp, leveled ? newMaxHp : Math.min(turn.newHeroHp, newMaxHp),
         leveled ? 1 : 0, newMaxStamina,
         leveled ? 1 : 0, newMaxStamina,
         char.id,
