@@ -850,18 +850,6 @@
       white-space: nowrap;
     }
 
-    /* Tavern progress fill */
-    #sq-tavern::before {
-      content: '';
-      position: absolute;
-      inset: 0;
-      width: var(--tavern-progress, 0%);
-      background: rgba(80, 180, 60, 0.28);
-      transition: width 1s linear;
-      pointer-events: none;
-      z-index: 1;
-    }
-
     /* Adventure (dungeon) progress fill — elapsed timer, fills left-to-right */
     #sq-dungeon::before {
       content: '';

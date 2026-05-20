@@ -144,7 +144,7 @@ async function init() {
   if (data.activity === 'dungeon_solo' && data.soloBattle) {
     resumeSoloBattle(data.soloBattle, data);
   }
-  // Resume tavern progress bar if resting
+  // Resume tavern timer if resting (needed to keep localTimer running for read bar)
   if (data.activity === 'tavern' && data.activity_started_at) {
     tavernStartedAt = Number(data.activity_started_at) * 1000;
     startLocalTimer();
@@ -510,7 +510,6 @@ async function stopActivity() {
   if (!res.ok) { showToast(data.error || t('game.js.failed_stop'), 'danger'); return; }
   tavernStartedAt = null;
   readStartedAt   = null;
-  document.getElementById('sq-tavern')?.style.setProperty('--tavern-progress', '0%');
   document.getElementById('sq-read')?.style.setProperty('--read-progress', '0%');
   if (!dungeonEndsAt) stopLocalTimer();
   charState = data;
@@ -762,14 +761,6 @@ function updateTimerDisplay() {
 // Local 1-second timer update (purely cosmetic — server is authoritative)
 let localTimerInterval = null;
 
-function updateTavernProgressBar() {
-  const btn = document.getElementById('sq-tavern');
-  if (!btn) return;
-  if (!tavernStartedAt) { btn.style.setProperty('--tavern-progress', '0%'); return; }
-  const elapsedSec = (Date.now() - tavernStartedAt) / 1000;
-  btn.style.setProperty('--tavern-progress', Math.min(100, (elapsedSec / 300) * 100) + '%');
-}
-
 function updateDungeonButtonFill() {
   const btn = document.getElementById('sq-dungeon');
   if (!btn) return;
@@ -784,7 +775,6 @@ function startLocalTimer() {
   if (localTimerInterval) clearInterval(localTimerInterval);
   localTimerInterval = setInterval(() => {
     if (dungeonEndsAt) updateTimerDisplay();
-    updateTavernProgressBar();
     updateReadProgressBar();
     updateDungeonButtonFill();
   }, 1000);
