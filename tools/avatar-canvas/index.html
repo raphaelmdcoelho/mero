@@ -370,11 +370,37 @@
     transform: scale(1.04);
     pointer-events: none;
   }
+  .splash-logo-wrap {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 64px;
+  }
   #splash-logo {
     max-width: min(480px, 80vw);
     width: 100%;
     object-fit: contain;
     filter: drop-shadow(0 0 32px rgba(201,168,76,0.25));
+  }
+  .moon-orbit {
+    position: absolute;
+    inset: 0;
+    animation: orbit 20s linear infinite;
+    pointer-events: none;
+  }
+  .gamepad-spin {
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 48px;
+    line-height: 1;
+    filter: drop-shadow(0 0 8px rgba(201,168,76,0.65));
+  }
+  @keyframes orbit {
+    from { transform: rotate(0deg); }
+    to   { transform: rotate(360deg); }
   }
   #splash-start {
     padding: 0.75rem 3rem;
@@ -510,7 +536,12 @@
 
 <!-- Splash / home screen -->
 <div id="splash">
-  <img id="splash-logo" src="" alt="ShedR" />
+  <div class="splash-logo-wrap">
+    <img id="splash-logo" src="" alt="ShedR" />
+    <div class="moon-orbit">
+      <div class="gamepad-spin">🎮</div>
+    </div>
+  </div>
   <button type="button" id="splash-start">Enter Studio</button>
 </div>
 
@@ -647,6 +678,7 @@ const EQUIPMENT = [
   { id: 4,  name: 'Iron Shield',     base: 'iron_shield',     slot: 'shield'  },
   { id: 12, name: 'Oak Shield',      base: 'oak_shield',      slot: 'shield'  },
   { id: 15, name: 'Hunter Armor',    base: 'hunter_armor',    slot: 'armor'   },
+  { id: 42, name: 'Elven Leaves Armor', base: 'elven_leaves_armor', slot: 'armor' },
   { id: 31, name: 'Iron Gauntlets',  base: 'iron_gauntlets',  slot: 'gauntlet'},
   { id: 33, name: 'Leather Boots',   base: 'boot_leather',    slot: 'boots'   },
   { id: 35, name: 'Leather Helmet',  staticSrc: '/img/leather_helmet.png', slot: 'helmet' },
