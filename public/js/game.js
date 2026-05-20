@@ -360,6 +360,7 @@ function updateActionSquares(activity, isFarming = false) {
     tavern.classList.add('disabled');
     if (read) read.classList.add('disabled');
     if (fishing) fishing.classList.add('disabled');
+    if (activity === 'dungeon' || activity === 'dungeon_solo') farm.classList.add('disabled');
   } else if (activity === 'dungeon') {
     dungeon.classList.add('active');
     if (soloDungeon) soloDungeon.classList.add('disabled');
