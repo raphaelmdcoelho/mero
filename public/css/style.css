@@ -1490,6 +1490,7 @@ body.social-page {
 .item-tt-type { color: var(--muted); font-size: 0.75rem; margin-left: 0.5rem; }
 .item-tt-desc { color: var(--muted); margin-top: 0.25rem; }
 .item-tt-eq   { color: var(--gold); font-size: 0.8rem; }
+.btn-use-item { margin-top: 0.6rem; width: 100%; font-size: 0.8rem; padding: 0.3rem 0.6rem; }
 .btn-mt       { margin-top: 0.5rem; }
 .muted-sm     { color: var(--muted); font-size: 0.85rem; }
 

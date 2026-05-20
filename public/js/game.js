@@ -1045,13 +1045,28 @@ function showItemInfo(idx) {
   const statLine = item.damage  ? `⚔️ ${item.damage} ${t('game.js.dmg_unit')}`
                  : item.defense ? `🛡️ ${item.defense} ${t('game.js.def_unit')}`
                  : '';
+  const CONSUMABLE_HP_IDS = new Set([5, 6, 7, 29, 30]);
+  const isHealable = item.type === 'consumable' && CONSUMABLE_HP_IDS.has(Number(item.item_id));
+  const hpFull     = isHealable && Number(charState?.hp) >= Number(charState?.max_hp);
+
   tooltip.style.display = 'block';
   tooltip.innerHTML = `
     <strong class="item-tt-name">${itemIconHtml(item.item_id || item.id, item.icon, '', charState?.gender, 'item-tt-icon-img')} ${escHtml(tItemName(item))}</strong>
     <span class="item-tt-type">${tItemType(item)}</span>
     <p class="item-tt-desc">${escHtml(tItemDesc(item))}${statLine ? ' ' + statLine : ''}</p>
     ${item.quantity > 1 ? `<div class="item-tt-qty">${t('game.js.qty')}: ${item.quantity}</div>` : ''}
-    ${item.sell_price ? `<div class="item-tt-price">🪙 ${item.sell_price}g</div>` : ''}`;
+    ${item.sell_price ? `<div class="item-tt-price">🪙 ${item.sell_price}g</div>` : ''}
+    ${isHealable ? `<button type="button" class="btn btn-primary btn-use-item" onclick="useItem(${item.id})" ${hpFull ? 'disabled title="HP is full"' : ''}>Use</button>` : ''}`;
+}
+
+async function useItem(invId) {
+  const res = await api.post(`/api/game/${charId}/use-item`, { invId });
+  if (!res) return;
+  const data = await res.json();
+  if (!res.ok) { showToast(data.error || t('game.js.failed'), 'danger'); return; }
+  charState = data.char;
+  renderAll(data.char);
+  showToast(`+${data.hpRestored} HP restored`, 'success');
 }
 
 // ---- Equipment Modal ----

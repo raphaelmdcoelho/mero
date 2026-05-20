@@ -4,8 +4,8 @@ const { client } = require('../db');
 const protect = require('../middleware/protect');
 const { fullChar } = require('../helpers');
 
-// item_id -> HP restored (farm plants)
-const PLANT_ITEM_HP = { 6: 2, 7: 1 };
+// item_id -> HP restored (consumable plants + health potion)
+const PLANT_ITEM_HP = { 5: 5, 6: 2, 7: 1, 29: 2, 30: 3 };
 const POINTS_PER_LEVEL = 5;
 
 const TAVERN_REST_TYPES = {
@@ -592,6 +592,42 @@ router.get('/:characterId/tick', async (req, res) => {
   }
 
   res.json(await fullChar(char.id));
+});
+
+// ── Use consumable item ──────────────────────────────────────────────────────
+
+// POST /api/game/:characterId/use-item   body: { invId }
+router.post('/:characterId/use-item', async (req, res) => {
+  const char = await ownedChar(req, res);
+  if (!char) return;
+
+  const invId = Number(req.body.invId);
+  if (!invId) return res.status(400).json({ error: 'invId required' });
+
+  const invR = await client.execute({
+    sql:  'SELECT * FROM inventory WHERE id = ? AND character_id = ?',
+    args: [invId, char.id],
+  });
+  const invRow = invR.rows[0];
+  if (!invRow) return res.status(404).json({ error: 'Item not found in inventory' });
+
+  const hpRestore = PLANT_ITEM_HP[Number(invRow.item_id)];
+  if (!hpRestore) return res.status(400).json({ error: 'This item cannot be used to restore HP' });
+
+  const maxHp  = Number(char.max_hp) || 20;
+  const currHp = Number(char.hp)     || 0;
+  if (currHp >= maxHp) return res.status(400).json({ error: 'HP is already full' });
+
+  const newHp = Math.min(maxHp, currHp + hpRestore);
+
+  if (Number(invRow.quantity) <= 1) {
+    await client.execute({ sql: 'DELETE FROM inventory WHERE id = ?', args: [invId] });
+  } else {
+    await client.execute({ sql: 'UPDATE inventory SET quantity = quantity - 1 WHERE id = ?', args: [invId] });
+  }
+  await client.execute({ sql: 'UPDATE characters SET hp = ? WHERE id = ?', args: [newHp, char.id] });
+
+  res.json({ hp: newHp, max_hp: maxHp, hpRestored: newHp - currHp, char: await fullChar(char.id) });
 });
 
 // ── Fishing ─────────────────────────────────────────────────────────────────
