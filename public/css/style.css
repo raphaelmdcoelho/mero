@@ -1013,8 +1013,8 @@ body.social-page {
 }
 .equip-overlay {
   position: absolute;
-  width: 65.00%;
-  height: 65.00%;
+  width: 50.00%;
+  height: 50.00%;
   top: 40.00%;
   left: 50.00%;
   transform: translate(-50%, -50%);
@@ -1023,10 +1023,10 @@ body.social-page {
 }
 
 .equip-overlay-armor--female {
-  top: 44.00%;
+  top: 43.76%;
   left: 50.00%;
-  width: 55.00%;
-  height: 55.00%;
+  width: 45.00%;
+  height: 45.00%;
 }
 
 .equip-overlay-boots {
