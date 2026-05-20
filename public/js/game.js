@@ -271,7 +271,7 @@ function renderAll(char) {
 
   const farmLock = document.getElementById('farm-lock-badge');
   const level = Number(char.level) || 1;
-  const farmBlockedByActivity = ['tavern', 'dungeon', 'reading'].includes(char.activity) || (char.farmQueue && char.farmQueue.length > 0);
+  const farmBlockedByActivity = ['tavern', 'dungeon', 'dungeon_solo', 'reading'].includes(char.activity) || (char.farmQueue && char.farmQueue.length > 0);
   if (level < 3) {
     farmLock.style.display = 'flex';
     document.getElementById('sq-farm').classList.add('disabled');
