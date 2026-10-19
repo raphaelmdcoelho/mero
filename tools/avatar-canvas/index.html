@@ -225,6 +225,35 @@
   .cell .msg { font-size: 0.62rem; line-height: 1.3; text-align: center; width: 100%; }
   .cell.ok .msg { color: var(--ok); } .cell.bad .msg { color: #f08a86; }
 
+  /* ── Prompts view ── */
+  #view-prompts { padding: 1rem 1.2rem; width: 100%; height: 100%; overflow: auto; align-self: flex-start; }
+  .pr-layout { display: grid; grid-template-columns: 330px 1fr; gap: 1.2rem; align-items: start; max-width: 1200px; margin: 0 auto; }
+  .pr-card { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 0.9rem; display: flex; flex-direction: column; gap: 0.7rem; }
+  .pr-card h3 { font-family: 'Cinzel', Georgia, serif; font-size: 0.9rem; color: var(--accent); }
+  .slot-btns { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.35rem; }
+  .slot-btn { padding: 0.4rem 0.2rem; border: 1px solid var(--border); background: transparent; color: var(--muted); border-radius: 5px; cursor: pointer; font-size: 0.72rem; display: flex; flex-direction: column; align-items: center; gap: 0.1rem; }
+  .slot-btn small { font-size: 0.58rem; opacity: 0.8; }
+  .slot-btn:hover { border-color: var(--muted); color: var(--text); }
+  .slot-btn.active { border-color: var(--accent); color: var(--accent); background: rgba(201,168,76,0.08); }
+  .chips { display: flex; flex-wrap: wrap; gap: 0.25rem; }
+  .chip { padding: 0.1rem 0.5rem; border: 1px solid var(--border); border-radius: 99px; font-size: 0.66rem; color: var(--muted); cursor: pointer; background: transparent; }
+  .chip:hover { border-color: var(--accent); color: var(--accent); }
+  textarea { width: 100%; padding: 0.35rem 0.45rem; background: var(--bg); border: 1px solid var(--border); border-radius: 4px; color: var(--text); font-size: 0.72rem; outline: none; resize: vertical; font-family: inherit; }
+  textarea:focus { border-color: var(--accent); }
+  .pr-out { display: flex; flex-direction: column; gap: 0.9rem; min-width: 0; }
+  .pr-prompt-head { display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; }
+  .pr-prompt-head h3 { flex: 1; }
+  .meta { display: flex; gap: 0.35rem; flex-wrap: wrap; }
+  .meta span { font-size: 0.64rem; padding: 0.05rem 0.45rem; border-radius: 4px; background: var(--bg); border: 1px solid var(--border); color: var(--muted); }
+  .meta span b { color: var(--text); font-weight: 600; }
+  .pr-text { font-family: Consolas, 'Courier New', monospace; font-size: 0.7rem; line-height: 1.5; min-height: 240px; white-space: pre-wrap; color: #cfe8cf; }
+  .pr-errors { color: #f08a86; font-size: 0.76rem; }
+  .pr-notes { font-size: 0.74rem; line-height: 1.55; padding-left: 1.1rem; display: flex; flex-direction: column; gap: 0.2rem; }
+  .pr-vars { font-size: 0.7rem; color: var(--muted); }
+  .pr-vars code { background: #111; padding: 0 0.25rem; border-radius: 3px; color: #a8d8a8; }
+  details.raw summary { cursor: pointer; font-size: 0.74rem; color: var(--muted); }
+  details.raw[open] summary { margin-bottom: 0.5rem; }
+
   /* ── Output / checks ── */
   #output-panel { grid-area: output; background: #111; border-top: 1px solid var(--border); display: flex; flex-direction: column; overflow: hidden; }
   #output-toolbar { display: flex; align-items: center; gap: 0.5rem; padding: 0.35rem 0.75rem; border-bottom: 1px solid var(--border); flex-shrink: 0; }
@@ -293,6 +322,7 @@
   <div class="tabs" id="tabs">
     <button type="button" class="tab active" data-mode="fit" title="Ver e ajustar os equipamentos no personagem">Fit</button>
     <button type="button" class="tab" data-mode="landmarks" title="Marcar head / torso / hands / feet / shield de cada avatar">Landmarks</button>
+ <button type="button" class="tab" data-mode="prompts" title="Gerar prompts de imagem para novos itens">Prompts</button>
     <button type="button" class="tab" data-mode="check" title="Testar todos os itens em todos os avatares">Check all<span class="count hidden" id="check-count"></span></button>
   </div>
   <span class="spacer"></span>
@@ -331,6 +361,7 @@
 <main id="canvas-area">
   <div id="stage-wrap"></div>
   <div id="view-check" class="hidden"></div>
+  <div id="view-prompts" class="hidden"></div>
 </main>
 
 <!-- Right -->
@@ -439,6 +470,7 @@
 </div>
 
 <script src="/public/js/avatar-fit.js"></script>
+<script src="/prompt-builder.js"></script>
 <script>
 'use strict';
 
@@ -617,7 +649,7 @@ function setOverride(item, patch, key = avatarKey()) {
 function renderStage() {
   const wrap = $('stage-wrap');
   wrap.innerHTML = '';
-  if (ui.mode === 'check') return;
+  if (ui.mode === 'check' || ui.mode === 'prompts') return;
   const key = avatarKey();
   const showItems = ui.mode === 'fit' || ui.showPreview;
   const { stage, placed } = makeStage(key, showItems ? activeItems() : [], Math.round(560 * ui.zoom));
@@ -926,15 +958,16 @@ function renderCheckView() {
 function setMode(mode) {
   ui.mode = mode;
   document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.mode === mode));
-  const isCheck = mode === 'check', isLm = mode === 'landmarks', isFit = mode === 'fit';
-  $('stage-wrap').classList.toggle('hidden', isCheck);
+  const isCheck = mode === 'check', isLm = mode === 'landmarks', isFit = mode === 'fit', isPrompts = mode === 'prompts';
+  $('stage-wrap').classList.toggle('hidden', isCheck || isPrompts);
   $('view-check').classList.toggle('hidden', !isCheck);
+  $('view-prompts').classList.toggle('hidden', !isPrompts);
   $('lm-panel').classList.toggle('hidden', !isLm);
   $('opt-preview-row').classList.toggle('hidden', !isLm);
   $('lm-edit-panel').classList.toggle('hidden', !isLm);
   $('rule-panel').classList.toggle('hidden', !isFit);
   $('override-panel').classList.toggle('hidden', !isFit);
-  document.querySelector('.zoom-controls').classList.toggle('hidden', isCheck);
+  document.querySelector('.zoom-controls').classList.toggle('hidden', isCheck || isPrompts);
   renderAll();
 }
 
@@ -950,6 +983,7 @@ function renderAll() {
   renderStage();
   renderChecks();
   if (ui.mode === 'check') renderCheckView(); else updateCheckBadge();
+  if (ui.mode === 'prompts') renderPromptsView();
   updateDirty();
 }
 
@@ -1085,6 +1119,153 @@ async function save() {
 $('save-btn').addEventListener('click', save);
 
 // ════════════════════════════════════════════════════════════════════════════
+//  Prompts — ready-made image-generation prompts for new equipment
+//  Templates live in tools/avatar-canvas/prompts.json (edit them to evolve the style guide).
+// ════════════════════════════════════════════════════════════════════════════
+
+let promptCfg = null;
+const PROMPT_FORM_KEY = 'avatar-studio-prompt-form';
+const PROMPT_SLOT_ICON = { armor: '🛡️', helmet: '⛑️', shield: '🔰', gauntlet: '🧤', boots: '🥾' };
+const promptForm = Object.assign({ slot: 'armor', name: '', style: '', gender: 'both', details: '', reference: false, chroma: false, refAvatar: 'male_A' },
+  (() => { try { return JSON.parse(localStorage.getItem(PROMPT_FORM_KEY) || '{}'); } catch (_) { return {}; } })());
+function savePromptForm() { try { localStorage.setItem(PROMPT_FORM_KEY, JSON.stringify(promptForm)); } catch (_) {} }
+
+async function copyText(text, btn) {
+  try { await navigator.clipboard.writeText(text); }
+  catch (_) { const t = document.createElement('textarea'); t.value = text; document.body.appendChild(t); t.select(); document.execCommand('copy'); t.remove(); }
+  const old = btn.textContent; btn.textContent = 'Copiado ✓'; setTimeout(() => { btn.textContent = old; }, 1400);
+}
+
+function renderPromptsView() {
+  const view = $('view-prompts');
+  if (!promptCfg) { view.innerHTML = '<p class="hint" style="padding:1rem">Não consegui carregar <code>tools/avatar-canvas/prompts.json</code>.</p>'; return; }
+  const cfg = promptCfg;
+  const f = promptForm;
+  const el = (html) => { const d = document.createElement('div'); d.innerHTML = html.trim(); return d.firstElementChild; };
+  view.innerHTML = '';
+  const layout = el('<div class="pr-layout"></div>');
+
+  // ── Form ──
+  const form = el(`<div class="pr-card">
+    <h3>Variáveis do prompt</h3>
+    <div class="field"><label>Tipo de item</label><div class="slot-btns" id="pr-slots"></div></div>
+    <div class="field"><label>Nome do item</label><input type="text" id="pr-name" placeholder="ex.: dragon-armor, samurai helmet" value=""></div>
+    <div class="field"><label>Estilo / tema</label><input type="text" id="pr-style" placeholder="ex.: dragon, steel, samurai, light" value="">
+      <div class="chips" id="pr-chips"></div></div>
+    <div class="field"><label>Gênero</label>
+      <div class="radio-row">
+        <label><input type="radio" name="pr-gender" value="male"> Masculino</label>
+        <label><input type="radio" name="pr-gender" value="female"> Feminino</label>
+        <label><input type="radio" name="pr-gender" value="both"> Ambos</label>
+      </div></div>
+    <div class="field"><label>Detalhes extras (opcional)</label><textarea id="pr-details" rows="3" placeholder="cores, materiais, símbolos… ex.: scales in dark red, gold trim, glowing eyes on the pauldrons"></textarea></div>
+    <label class="check-row"><input type="checkbox" id="pr-reference"> Pré-alinhado: usar imagem do avatar como referência</label>
+    <p class="hint" id="pr-ref-hint">Desligado = <b>sprite solto</b> (recomendado): o studio encaixa no corpo sozinho.</p>
+    <div class="field hidden" id="pr-ref-field"><label>Avatar de referência</label><select id="pr-refavatar"></select>
+      <a id="pr-reflink" class="btn small" style="text-align:center;text-decoration:none" download>⬇ Baixar avatar de referência</a></div>
+    <label class="check-row"><input type="checkbox" id="pr-chroma"> Meu gerador não faz fundo transparente (usar fundo magenta)</label>
+  </div>`);
+  layout.appendChild(form);
+
+  const slotBox = form.querySelector('#pr-slots');
+  Object.entries(cfg.slots).forEach(([k, sl]) => {
+    const b = el(`<button type="button" class="slot-btn ${f.slot === k ? 'active' : ''}">${PROMPT_SLOT_ICON[k] || '•'}<span>${sl.label.split(' ').pop()}</span><small>${sl.width}×${sl.height}</small></button>`);
+    b.addEventListener('click', () => { f.slot = k; savePromptForm(); renderPromptsView(); });
+    slotBox.appendChild(b);
+  });
+  const chips = form.querySelector('#pr-chips');
+  (cfg.styleSuggestions || []).forEach(sg => {
+    const c = el(`<button type="button" class="chip">${sg}</button>`);
+    c.addEventListener('click', () => { f.style = sg.split(' / ')[0]; savePromptForm(); renderPromptsView(); });
+    chips.appendChild(c);
+  });
+  const bind = (id, key, ev = 'input') => {
+    const n = form.querySelector(id); n.value = f[key];
+    n.addEventListener(ev, () => { f[key] = n.value; savePromptForm(); renderPromptOutput(out); });
+  };
+  bind('#pr-name', 'name'); bind('#pr-style', 'style'); bind('#pr-details', 'details');
+  form.querySelectorAll('input[name=pr-gender]').forEach(r => {
+    r.checked = r.value === f.gender;
+    r.addEventListener('change', () => { f.gender = r.value; savePromptForm(); renderPromptOutput(out); });
+  });
+  const ref = form.querySelector('#pr-reference'); ref.checked = f.reference;
+  const refField = form.querySelector('#pr-ref-field');
+  const refSel = form.querySelector('#pr-refavatar');
+  ['male', 'female'].forEach(g => AVATAR_STYLES.forEach(st => refSel.add(new Option(`${g} ${st}`, `${g}_${st}`))));
+  refSel.value = f.refAvatar;
+  const updRef = () => {
+    refField.classList.toggle('hidden', !f.reference);
+    const [g, st] = f.refAvatar.split('_');
+    form.querySelector('#pr-reflink').href = `${BASE}/avatars/selection/${g}_selection_${st}.png`;
+    form.querySelector('#pr-reflink').download = `${g}_selection_${st}.png`;
+    form.querySelector('#pr-ref-hint').innerHTML = f.reference
+      ? 'Ligado: a IA desenha só o equipamento <b>já no lugar</b>, no canvas 1024×1536 do avatar. Exige gerador com imagem de referência.'
+      : 'Desligado = <b>sprite solto</b> (recomendado): o studio encaixa no corpo sozinho.';
+  };
+  ref.addEventListener('change', () => { f.reference = ref.checked; savePromptForm(); updRef(); renderPromptOutput(out); });
+  refSel.addEventListener('change', () => { f.refAvatar = refSel.value; savePromptForm(); updRef(); });
+  updRef();
+  const chroma = form.querySelector('#pr-chroma'); chroma.checked = f.chroma;
+  chroma.addEventListener('change', () => { f.chroma = chroma.checked; savePromptForm(); renderPromptOutput(out); });
+
+  const out = el('<div class="pr-out"></div>');
+  layout.appendChild(out);
+  view.appendChild(layout);
+  renderPromptOutput(out);
+}
+
+function renderPromptOutput(out) {
+  const r = PromptBuilder.build(promptCfg, promptForm);
+  out.innerHTML = '';
+  const add = html => { const d = document.createElement('div'); d.innerHTML = html.trim(); const n = d.firstElementChild; out.appendChild(n); return n; };
+  if (r.errors.length) {
+    add(`<div class="pr-card"><h3>Preencha as variáveis</h3><div class="pr-errors">${r.errors.map(e => '• ' + e).join('<br>')}</div>
+      <p class="hint">Os prompts aparecem aqui assim que o tipo, o nome e o estilo estiverem preenchidos. O <b>estilo visual</b> do jogo já vem embutido em todos eles.</p></div>`);
+  } else {
+    r.prompts.forEach(p => {
+      const card = add(`<div class="pr-card">
+        <div class="pr-prompt-head"><h3>${p.title}</h3><button type="button" class="btn small primary">Copiar prompt</button></div>
+        <div class="meta"><span>tamanho <b>${p.width}×${p.height}</b></span><span>fundo <b>${promptForm.chroma ? 'magenta (remover)' : 'transparente'}</b></span><span>arquivo <b>${p.file.split('  ')[0]}</b></span></div>
+        <textarea class="pr-text" readonly></textarea></div>`);
+      const ta = card.querySelector('textarea'); ta.value = p.text;
+      ta.style.height = Math.min(520, 40 + p.text.split('\n').length * 17) + 'px';
+      card.querySelector('button').addEventListener('click', e => copyText(p.text, e.target));
+    });
+    if (r.prompts.length > 1) {
+      const all = add('<div><button type="button" class="btn small">Copiar todos os prompts</button></div>');
+      all.querySelector('button').addEventListener('click', e => copyText(r.prompts.map(p => `### ${p.title}\n\n${p.text}`).join('\n\n\n'), e.target));
+    }
+    const base = PromptBuilder.slugify(promptForm.name);
+    const next = add(`<div class="pr-card"><h3>Depois de gerar</h3>
+      <ul class="pr-notes">${r.notes.map(n => `<li>${n}</li>`).join('')}
+        <li>Salve em <code>${r.prompts.map(p => p.file.split('  ')[0]).join('</code> e <code>')}</code>.</li>
+        <li>Adicione no studio e rode <b>Check all</b>:</li></ul>
+      <div class="btn-row"><button type="button" class="btn small primary" id="pr-prefill">Preencher “Add Equipment” →</button></div></div>`);
+    next.querySelector('#pr-prefill').addEventListener('click', () => prefillAddForm({
+      name: PromptBuilder.titleCase(promptForm.name), slot: promptForm.slot, base, prealigned: promptForm.reference,
+    }));
+  }
+  const raw = add(`<div class="pr-card"><details class="raw"><summary>Ver o template bruto com as variáveis (<code>prompts.json</code>)</summary>
+    <p class="pr-vars">Variáveis: ${['name', 'style', 'slot_label', 'gender_label', 'subject', 'details', 'composition', 'genderNote', 'width', 'height', 'orientation', 'background', 'styleGuide', 'technical', 'negative', 'reference'].map(v => `<code>{{${v}}}</code>`).join(' ')}.
+    Para mudar o estilo de <b>todos</b> os prompts, edite <code>styleGuide</code> em <code>tools/avatar-canvas/prompts.json</code> e recarregue o studio.</p>
+    <textarea class="pr-text" readonly style="min-height:260px"></textarea>
+    <div class="btn-row" style="margin-top:.4rem"><button type="button" class="btn small">Copiar template</button></div></details></div>`);
+  raw.querySelector('textarea').value = promptCfg.main;
+  raw.querySelector('button').addEventListener('click', e => copyText(promptCfg.main, e.target));
+}
+
+function prefillAddForm({ name, slot, base, prealigned }) {
+  setMode('fit');
+  $('add-equip-form').classList.add('open'); $('add-equip-toggle').classList.add('open');
+  $('eq-name').value = name; $('eq-slot').value = slot; $('eq-base').value = base;
+  document.querySelector('input[name=eq-imgtype][value=gendered]').checked = true;
+  $('eq-base-field').classList.remove('hidden'); $('eq-static-field').classList.add('hidden');
+  $('eq-prealigned').checked = !!prealigned;
+  $('eq-name').scrollIntoView({ block: 'center' });
+  setStatus('Formulário preenchido — coloque os PNGs em public/items/ e clique em Add Equipment');
+}
+
+// ════════════════════════════════════════════════════════════════════════════
 //  Tutorial — spotlight tour + help recipes
 // ════════════════════════════════════════════════════════════════════════════
 
@@ -1205,10 +1386,24 @@ const TOUR = [
       <p class="tip">Os avisos são calculados pelo mesmo código do jogo, então <b>o que você vê aqui é exatamente o que o jogador vê</b>.</p>`,
   },
   {
+    title: 'Prompts: gerar a arte do item',
+    mode: 'prompts',
+    target: '#view-prompts',
+    place: 'left',
+    body: `<p>Antes de adicionar um item, você precisa da imagem. A aba <b>Prompts</b> monta o prompt completo para a IA de imagem.</p>
+      <ul>
+        <li>Escolha o <b>tipo</b> (armor, helmet, shield, gauntlet, boots) — o tamanho do canvas já vem certo.</li>
+        <li>Preencha <b>nome</b> (<code>dragon-armor</code>), <b>estilo</b> (<code>dragon</code>, <code>samurai</code>, <code>light</code>…) e o <b>gênero</b>.</li>
+        <li>O <b>estilo visual do jogo</b>, o fundo transparente, a composição e o que evitar já vão embutidos.</li>
+        <li>Ao terminar, <b>Preencher “Add Equipment”</b> leva você direto ao cadastro do item.</li>
+      </ul>
+      <p class="tip">Quer mudar o visual de todos os prompts? Edite <code>styleGuide</code> em <code>tools/avatar-canvas/prompts.json</code>.</p>`,
+  },
+  {
     title: 'Receita: equipamento novo',
     center: true,
     body: `<ol style="padding-left:1.1rem;display:flex;flex-direction:column;gap:0.25rem">
-        <li>Coloque os PNGs em <code>public/items/nome_male.png</code> e <code>nome_female.png</code> (ou um único PNG em <code>public/img/</code>).</li>
+        <li>Gere a arte (aba <b>Prompts</b>) e coloque os PNGs em <code>public/items/nome_male.png</code> e <code>nome_female.png</code> (ou um único PNG em <code>public/img/</code>).</li>
         <li>No painel <b>Equipment</b>, clique em <b>+</b> e preencha nome, slot e arquivo. O studio mede a caixa visível sozinho.</li>
         <li>Abra <b>Check all</b>. Se tudo estiver verde, pronto.</li>
         <li>Se algum avatar ficar vermelho: ajuste a <b>regra do slot</b> (afeta todos) ou crie uma <b>exceção</b>.</li>
@@ -1322,6 +1517,7 @@ const booted = (async function boot() {
     document.body.innerHTML = `<p style="padding:2rem">Não consegui carregar <code>public/data/avatar-fit.json</code> (${e.message}). Abra o studio com <code>npm run canvas</code>.</p>`;
     return;
   }
+  try { promptCfg = await (await fetch('/prompts.json', { cache: 'no-store' })).json(); } catch (_) { promptCfg = null; }
   fit.overrides = fit.overrides || {};
   fit.sprites = fit.sprites || {};
   savedJson = JSON.stringify(fit);
