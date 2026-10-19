@@ -40,7 +40,7 @@ function renderChars(chars) {
     grid.innerHTML = `
       <div class="empty-state">
         <h2>${t('char.no_heroes')}</h2>
-        <p style="color:var(--muted);margin-bottom:1rem;">${t('char.legend')}</p>
+        <p>${t('char.legend')}</p>
         <button class="btn btn-primary" onclick="openCreateModal()">${t('char.create_first')}</button>
       </div>`;
     return;
@@ -49,7 +49,7 @@ function renderChars(chars) {
   grid.innerHTML = chars.map(c => {
     const hpPct = Math.round((c.hp / c.max_hp) * 100);
     const activity = c.activity
-      ? `<span style="font-size:0.75rem;color:var(--accent);">${c.activity === 'dungeon' ? t('char.in_dungeon') : t('char.resting')}</span>`
+      ? (c.activity === 'dungeon' ? t('char.in_dungeon') : t('char.resting'))
       : '';
     const avatarHtml = c.avatar_path
       ? `<div class="char-avatar"><img src="${escHtml(c.avatar_path)}" alt="${escHtml(c.name)}" /></div>`
@@ -58,15 +58,15 @@ function renderChars(chars) {
       <div class="char-card">
         ${avatarHtml}
         <div class="char-name">${escHtml(c.name)}</div>
-        <div style="text-align:center;">${activity}</div>
-        <div style="display:flex;align-items:center;gap:0.5rem;justify-content:center;">
+        <div class="char-activity">${activity}</div>
+        <div class="char-meta">
           <span class="char-level-badge">Lv ${c.level}</span>
-          <span style="font-size:0.75rem;color:var(--muted);">${c.class}</span>
+          <span class="char-class">${c.class}</span>
         </div>
         <div class="char-hp-bar" title="${Math.round(c.hp)}/${c.max_hp} HP">
-          <div class="char-hp-bar-fill" style="width:${hpPct}%;background:${hpPct < 30 ? 'var(--danger)' : 'var(--success)'}"></div>
+          <div class="char-hp-bar-fill${hpPct < 30 ? ' low' : ''}" style="width:${hpPct}%"></div>
         </div>
-        <div style="font-size:0.75rem;color:var(--muted);text-align:center;">${Math.round(c.hp)}/${c.max_hp} HP</div>
+        <div class="char-hp-text">${Math.round(c.hp)}/${c.max_hp} HP</div>
         <div class="char-actions">
           <button class="btn btn-primary btn-sm" onclick="playChar(${c.id})">${t('char.play')}</button>
           <button class="btn btn-danger btn-sm" onclick="deleteChar(${c.id}, '${escHtml(c.name)}')">${t('char.delete')}</button>

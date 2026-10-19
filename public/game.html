@@ -5,8 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Mero — Adventure</title>
   <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-  <script src="https://cdn.tailwindcss.com"></script>
-  <link rel="stylesheet" href="/css/style.css?v=6" />
+  <link rel="stylesheet" href="/css/style.css?v=9" />
 </head>
 <body class="game-page">
 
@@ -183,7 +182,7 @@
   <div class="modal-overlay" id="tavern-modal">
     <div class="modal tavern-modal-content">
       <div class="modal-header tavern-modal-header">
-        <h2 class="modal-title" data-i18n="tavern.modal.title">Rest at the Tavern</h2>
+        <h2 class="modal-title"><img class="title-icon" src="/tavern-icon.png" alt="" /> <span data-i18n="tavern.modal.title">Rest at the Tavern</span></h2>
         <button type="button" class="close-btn" onclick="closeTavernModal()">✕</button>
       </div>
       <img src="/img/tavern_background.png" class="tavern-bg-img" alt="Tavern" />
@@ -205,7 +204,7 @@
   <div class="modal-overlay" id="read-modal">
     <div class="modal read-modal-content">
       <div class="modal-header">
-        <h2 class="modal-title">Choose a Book</h2>
+        <h2 class="modal-title"><img class="title-icon" src="/read-icon.png" alt="" /> Choose a Book</h2>
         <button type="button" class="close-btn" onclick="closeReadModal()">✕</button>
       </div>
       <img src="/img/read_background.png" class="read-bg-img" alt="Library" />
@@ -224,7 +223,7 @@
   <div class="modal-overlay" id="fishing-modal">
     <div class="modal">
       <div class="modal-header">
-        <h2 class="modal-title">Go Fishing</h2>
+        <h2 class="modal-title"><img class="title-icon" src="/img/fish_icon_1.png" alt="" /> Go Fishing</h2>
         <button type="button" class="close-btn" onclick="closeFishingModal()">✕</button>
       </div>
       <p class="fishing-modal-subtitle">Choose your bait</p>
@@ -255,7 +254,7 @@
   <!-- Battle Panel -->
   <div class="side-panel" id="battle-panel">
     <div class="side-panel-header">
-      <span class="side-panel-title" id="battle-title">⚔️ Dungeon</span>
+      <span class="side-panel-title" id="battle-title">Dungeon</span>
       <button class="close-btn" onclick="closePanel('battle')">✕</button>
     </div>
     <div class="side-panel-body">
@@ -279,7 +278,7 @@
 
       <!-- Stop button -->
       <div class="battle-actions">
-        <button type="button" class="btn btn-danger battle-attack-btn" id="stop-btn" onclick="stopDungeon()">🚪 Stop Dungeon</button>
+        <button type="button" class="btn btn-danger battle-attack-btn" id="stop-btn" onclick="stopDungeon()">Stop Dungeon</button>
       </div>
     </div>
   </div>
@@ -302,7 +301,7 @@
   <div class="modal-overlay" id="solo-dungeon-modal">
     <div class="modal">
       <div class="modal-header">
-        <h2 class="modal-title">⚔️ Dungeon</h2>
+        <h2 class="modal-title"><img class="title-icon" src="/dungeon-icon.png" alt="" /> Dungeon</h2>
         <button type="button" class="close-btn" onclick="closeSoloDungeonModal()">✕</button>
       </div>
       <p class="solo-modal-sub">Choose your opponent</p>
@@ -331,7 +330,7 @@
 
       <div class="modal-footer">
         <button type="button" class="btn btn-outline" onclick="closeSoloDungeonModal()">Cancel</button>
-        <button type="button" class="btn btn-primary" id="solo-fight-btn" onclick="startSoloBattle()">⚔️ Fight!</button>
+        <button type="button" class="btn btn-primary" id="solo-fight-btn" onclick="startSoloBattle()">Fight!</button>
       </div>
     </div>
   </div>
@@ -339,7 +338,7 @@
   <!-- Solo Dungeon — Battle Panel -->
   <div class="side-panel" id="solo-battle-panel">
     <div class="side-panel-header">
-      <span class="side-panel-title" id="solo-battle-title">⚔️ Dungeon</span>
+      <span class="side-panel-title" id="solo-battle-title">Dungeon</span>
       <button class="close-btn" onclick="closeSoloBattlePanel()">✕</button>
     </div>
     <div class="side-panel-body">
@@ -373,7 +372,7 @@
 
       <!-- Actions -->
       <div class="battle-actions">
-        <button type="button" class="btn btn-danger battle-attack-btn" id="solo-flee-btn" onclick="fleeSoloBattle()">🚪 Flee</button>
+        <button type="button" class="btn btn-danger battle-attack-btn" id="solo-flee-btn" onclick="fleeSoloBattle()">Flee</button>
       </div>
     </div>
   </div>
@@ -394,10 +393,10 @@
   <div class="modal-overlay" id="inv-panel" onclick="invOverlayClick(event)">
     <div class="inv-modal">
       <div class="modal-header">
-        <span class="side-panel-title">🎒 Inventory</span>
+        <span class="side-panel-title"><img class="title-icon" src="/inventory-icon.png" alt="" /> Inventory</span>
         <button type="button" class="close-btn" onclick="closePanel('inventory')">✕</button>
       </div>
-      <p style="font-size:0.8rem;color:var(--muted);margin-bottom:0.75rem;" data-i18n="game.inv.hint">
+      <p class="inv-hint" data-i18n="game.inv.hint">
         Max 40 slots · Gold border = equipped
       </p>
       <div class="inv-modal-body">
@@ -411,7 +410,7 @@
   <div class="modal-overlay" id="eq-panel" onclick="eqOverlayClick(event)">
     <div class="eq-modal">
       <div class="eq-modal-header">
-        <span class="side-panel-title">🛡️ <span data-i18n="game.equipment">Equipment</span></span>
+        <span class="side-panel-title"><img class="title-icon" src="/equipment-icon.png" alt="" /> <span data-i18n="game.equipment">Equipment</span></span>
         <button type="button" class="close-btn" onclick="closePanel('equipment')">✕</button>
       </div>
       <div class="eq-modal-body">
@@ -483,7 +482,7 @@
   <div class="modal-overlay" id="attr-modal" onclick="attrOverlayClick(event)">
     <div class="modal attr-modal-content">
       <div class="modal-header">
-        <h2 class="modal-title">Attributes</h2>
+        <h2 class="modal-title"><img class="title-icon" src="/attributes-icon.png" alt="" /> Attributes</h2>
         <button type="button" class="close-btn" onclick="closePanel('attributes')">✕</button>
       </div>
       <div id="attr-unspent-bar" class="attr-unspent-bar">
@@ -516,7 +515,7 @@
   <!-- Market Panel -->
   <div class="side-panel" id="market-panel">
     <div class="side-panel-header">
-      <span class="side-panel-title">🏪 Market</span>
+      <span class="side-panel-title"><img class="title-icon" src="/market-icon.png" alt="" /> Market</span>
       <button type="button" class="close-btn" onclick="closePanel('market')">✕</button>
     </div>
     <div class="side-panel-body">
@@ -553,7 +552,7 @@
     <div class="modal farm-modal-content">
 
       <div class="modal-header">
-        <h2 class="modal-title">🌱 Farm</h2>
+        <h2 class="modal-title"><img class="title-icon" src="/farm-icon.png" alt="" /> Farm</h2>
         <button type="button" class="close-btn" onclick="closeFarmModal()">✕</button>
       </div>
 
@@ -588,7 +587,7 @@
       <!-- Growing view (shown when grow is in progress) -->
       <div id="farm-growing-view" style="display:none;">
         <div class="farm-growing-status">
-          <p class="farm-growing-title">🌱 Your plants are growing…</p>
+          <p class="farm-growing-title">Your plants are growing…</p>
           <div id="farm-modal-timer" class="farm-modal-timer"></div>
           <div id="farm-growing-list" class="farm-growing-list"></div>
         </div>
@@ -600,419 +599,12 @@
     </div>
   </div>
 
-  <style>
-    .farm-modal-content {
-      width: min(92vw, 660px);
-      max-height: 90vh;
-      overflow-y: auto;
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-    }
-    .farm-modal-content .modal-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-    }
-    .farm-modal-content .modal-title {
-      margin-bottom: 0;
-    }
-    .farm-modal-content .modal-footer {
-      justify-content: space-between;
-      align-items: center;
-    }
-    .farm-xp-section {
-      padding: 8px 16px 12px;
-      border-bottom: 1px solid var(--border);
-    }
-    .farm-xp-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: baseline;
-      margin-bottom: 5px;
-      font-size: 0.75rem;
-    }
-    #farm-level-label { font-weight: 700; color: #a0c878; }
-    #farm-xp-text { color: var(--muted); }
-    .farm-xp-track {
-      height: 6px;
-      background: rgba(255,255,255,0.1);
-      border-radius: 3px;
-      overflow: hidden;
-    }
-    .farm-xp-fill {
-      height: 100%;
-      width: 0%;
-      background: linear-gradient(90deg, #4a8c30, #7fc850);
-      border-radius: 3px;
-      transition: width 0.4s ease;
-    }
-    .farm-palette-title {
-      font-size: 0.82rem;
-      font-weight: 600;
-      color: var(--text);
-      text-align: center;
-      margin: 0 0 6px;
-      letter-spacing: 0.03em;
-    }
-    .farm-plant-palette {
-      display: flex;
-      gap: 10px;
-      justify-content: center;
-      flex-wrap: wrap;
-      padding: 6px 0 2px;
-    }
-    .plant-card {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 2px;
-      cursor: grab;
-      padding: 5px 8px;
-      border: 2px solid transparent;
-      border-radius: 8px;
-      background: rgba(255,255,255,0.05);
-      -webkit-user-select: none;
-      user-select: none;
-      transition: border-color 0.15s, background 0.15s;
-    }
-    .plant-card:hover { border-color: #a0c878; background: rgba(160,200,120,0.1); }
-    .plant-card img { width: 40px; height: 40px; object-fit: contain; pointer-events: none; }
-    .plant-card span { font-size: 0.65rem; color: #ccc; }
-    .farm-hint { font-size: 0.72rem; color: var(--muted); text-align: center; margin: 10px 0 0; }
-    .farm-grid-wrapper { position: relative; width: 100%; margin-top: 16px; }
-    .farm-bg-img { width: 100%; display: block; border-radius: 8px; }
-    /* Overlay sits exactly over the 4×3 soil squares in farm_background_1.png (1402×1122px).
-       Measured from pixel scan: soil grid x=308–1108 (22%–79%), y=325–762 (29%–68%).
-       column-gap/row-gap are % of grid container width (CSS always uses inline-size for % gaps).
-       column-gap: 33px/800px = 4.1%;  row-gap: 22px/800px = 2.75% (keeps correct aspect). */
-    .farm-slots {
-      position: absolute;
-      top: 29%;
-      left: 22%;
-      right: 21%;
-      bottom: 32%;
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      grid-template-rows: repeat(3, 1fr);
-      column-gap: 4.1%;
-      row-gap: 2.75%;
-    }
-    .farm-slot {
-      position: relative;
-      border: 2px dashed rgba(255,255,255,0.25);
-      border-radius: 4px;
-      background: rgba(0,0,0,0.0);
-      transition: background 0.12s, border-color 0.12s;
-      cursor: pointer;
-      overflow: hidden;
-    }
-    .farm-slot.drag-over {
-      background: rgba(160,200,120,0.45);
-      border-color: #a0c878;
-      border-style: solid;
-    }
-    .farm-slot-locked {
-      background: rgba(0,0,0,0.45);
-      border-color: rgba(255,255,255,0.06);
-      cursor: not-allowed;
-    }
-    .farm-slot.occupied {
-      border-color: rgba(140,200,80,0.55);
-      border-style: solid;
-      background: rgba(50,110,30,0.15);
-    }
-    /* Plant image fills 80% of the slot via absolute inset — works regardless of parent height */
-    .farm-slot img {
-      position: absolute;
-      top: 10%; left: 10%; right: 10%; bottom: 10%;
-      width: 80%;
-      height: 80%;
-      object-fit: contain;
-      pointer-events: none;
-      filter: drop-shadow(0 1px 3px rgba(0,0,0,0.6));
-    }
-    .farm-slot-count { font-size: 0.83rem; color: var(--muted); }
-    .farm-growing-status {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 14px;
-      padding: 20px 0 10px;
-    }
-    .farm-growing-title { font-size: 1rem; font-weight: 600; margin: 0; }
-    .farm-modal-timer { font-size: 1.5rem; font-weight: 700; color: #a0c878; letter-spacing: 0.05em; }
-    .farm-growing-list {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-      justify-content: center;
-    }
-    .farm-growing-item {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 4px;
-      background: rgba(255,255,255,0.05);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 8px 14px;
-      font-size: 0.8rem;
-    }
-    .farm-growing-item img { width: 36px; height: 36px; object-fit: contain; }
-    .farm-stop-footer { justify-content: center; }
-    .farm-stop-btn { color: #e07070; border-color: #e07070; }
-    #sq-farm::before {
-      content: '';
-      position: absolute;
-      inset: 0;
-      width: var(--farm-progress, 0%);
-      background: rgba(80, 180, 60, 0.28);
-      transition: width 1s linear;
-      pointer-events: none;
-      z-index: 1;
-    }
-
-    /* Read progress fill */
-    #sq-read::before {
-      content: '';
-      position: absolute;
-      inset: 0;
-      width: var(--read-progress, 0%);
-      background: rgba(80, 180, 60, 0.28);
-      transition: width 1s linear;
-      pointer-events: none;
-      z-index: 1;
-    }
-
-    /* Read modal */
-    .read-modal-content { width: min(92vw, 480px); display: flex; flex-direction: column; gap: 0; }
-    .read-bg-img {
-      width: 100%;
-      display: block;
-      border-radius: 8px;
-      object-fit: cover;
-      max-height: 200px;
-      margin-bottom: 0.75rem;
-    }
-    .read-modal-subtitle {
-      font-size: 0.82rem;
-      color: var(--muted);
-      text-align: center;
-      margin: 0 0 0.75rem;
-    }
-    .read-book-list {
-      display: flex;
-      flex-direction: column;
-      gap: 0.75rem;
-      margin-bottom: 0.5rem;
-    }
-    .read-book-card {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 1rem;
-      padding: 0.85rem 1rem;
-      border: 2px solid var(--border);
-      border-radius: 10px;
-      background: var(--surface2);
-      cursor: pointer;
-      transition: border-color 0.15s, background 0.15s;
-    }
-    .read-book-card:hover {
-      border-color: var(--accent);
-      background: rgba(192, 132, 252, 0.08);
-    }
-    .read-book-card.selected {
-      border-color: #63b3ed;
-      background: rgba(99, 179, 237, 0.1);
-    }
-    .read-book-card-left {
-      display: flex;
-      align-items: center;
-      gap: 0.75rem;
-    }
-    .read-book-icon { font-size: 1.5rem; }
-    .read-book-info { display: flex; flex-direction: column; gap: 2px; }
-    .read-book-name {
-      font-family: 'Cinzel', serif;
-      font-size: 0.9rem;
-      color: var(--text);
-    }
-    .read-book-desc {
-      font-size: 0.75rem;
-      color: var(--muted);
-    }
-    .read-book-reward {
-      font-family: 'Cinzel', serif;
-      font-size: 0.85rem;
-      color: #63b3ed;
-      white-space: nowrap;
-    }
-
-    /* Adventure (dungeon) progress fill — elapsed timer, fills left-to-right */
-    #sq-dungeon::before {
-      content: '';
-      position: absolute;
-      inset: 0;
-      width: var(--dungeon-progress, 0%);
-      background: rgba(80, 180, 60, 0.28);
-      transition: width 1s linear;
-      pointer-events: none;
-      z-index: 1;
-    }
-
-    /* Solo dungeon progress fill — pulses while in combat */
-    #sq-solo-dungeon::before {
-      content: '';
-      position: absolute;
-      inset: 0;
-      background: rgba(80, 180, 60, 0.28);
-      pointer-events: none;
-      z-index: 1;
-      opacity: 0;
-      will-change: opacity;
-      transition: opacity 0.3s;
-    }
-    #sq-solo-dungeon.active::before {
-      opacity: 1;
-      animation: pulse-fill 1.8s ease-in-out infinite;
-    }
-
-    @keyframes pulse-fill {
-      0%, 100% { opacity: 0.4; }
-      50%       { opacity: 1; }
-    }
-
-    /* Tavern rest modal */
-    .tavern-modal-content {
-      width: min(92vw, 480px);
-      display: flex;
-      flex-direction: column;
-      gap: 0;
-    }
-    .tavern-modal-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-bottom: 0.75rem;
-    }
-    .tavern-modal-header .modal-title { margin-bottom: 0; }
-    .tavern-bg-img {
-      width: 100%;
-      display: block;
-      border-radius: 8px;
-      object-fit: cover;
-      max-height: 180px;
-      margin-bottom: 0.75rem;
-    }
-    .tavern-modal-subtitle {
-      font-size: 0.82rem;
-      color: var(--muted);
-      text-align: center;
-      margin: 0 0 0.6rem;
-    }
-    .tavern-rest-options {
-      display: flex;
-      flex-direction: column;
-      gap: 0.5rem;
-      margin-bottom: 0.5rem;
-    }
-    .tavern-rest-card {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 1rem;
-      padding: 0.5rem 0.85rem;
-      border: 2px solid var(--border);
-      border-radius: 8px;
-      background: var(--surface2);
-      cursor: pointer;
-      transition: border-color 0.15s, background 0.15s;
-    }
-    .tavern-rest-card:hover:not(.disabled) {
-      border-color: var(--accent);
-      background: rgba(192, 132, 252, 0.08);
-    }
-    .tavern-rest-card.disabled {
-      opacity: 0.4;
-      cursor: not-allowed;
-    }
-    .tavern-rest-card.selected {
-      border-color: var(--accent);
-      background: rgba(192, 132, 252, 0.12);
-    }
-    .tavern-rest-card-info { display: flex; flex-direction: column; gap: 1px; }
-    .tavern-rest-card-name {
-      font-family: 'Cinzel', serif;
-      font-size: 0.85rem;
-      color: var(--text);
-    }
-    .tavern-rest-card-desc {
-      font-size: 0.75rem;
-      color: var(--muted);
-    }
-    .tavern-rest-card-cost {
-      font-family: 'Cinzel', serif;
-      font-size: 0.95rem;
-      color: #f5c842;
-      white-space: nowrap;
-    }
-
-    @media (max-width: 640px) {
-      .game-arena { padding: 0.75rem 0.5rem; }
-      .action-grid {
-        grid-template-columns: repeat(4, 62px) !important;
-        grid-template-rows: 74px 74px 300px 74px 74px !important;
-        gap: 6px !important;
-      }
-      .action-sq { width: 60px !important; height: 60px !important; }
-      .avatar-cell { width: 100% !important; height: 300px !important; grid-column: 1 / 5 !important; grid-row: 3 !important; }
-      .avatar-display { width: 180px !important; height: 260px !important; }
-      #wrap-dungeon      { grid-column: 1 !important; grid-row: 1 !important; }
-      #wrap-farm         { grid-column: 2 !important; grid-row: 1 !important; }
-      #wrap-tavern       { grid-column: 3 !important; grid-row: 1 !important; }
-      #wrap-read         { grid-column: 4 !important; grid-row: 1 !important; }
-      #wrap-fishing      { grid-column: 1 !important; grid-row: 2 !important; }
-      #wrap-solo-dungeon { grid-column: 2 !important; grid-row: 2 !important; }
-      #wrap-research     { grid-column: 3 !important; grid-row: 2 !important; }
-      #wrap-inventory    { grid-column: 1 !important; grid-row: 4 !important; }
-      #wrap-attributes   { grid-column: 2 !important; grid-row: 4 !important; }
-      #wrap-equipment    { grid-column: 3 !important; grid-row: 4 !important; }
-      #wrap-market       { grid-column: 4 !important; grid-row: 4 !important; }
-      #wrap-castle       { grid-column: 1 !important; grid-row: 5 !important; }
-      #wrap-achievements { grid-column: 2 !important; grid-row: 5 !important; }
-      /* Reset fixed-px icon widths — they were tuned for 100px desktop buttons,
-         on 60px mobile buttons they appear 2× too large */
-      #sq-dungeon .sq-icon,
-      #sq-solo-dungeon .sq-icon,
-      #sq-farm .sq-icon,
-      #sq-tavern .sq-icon,
-      #sq-read .sq-icon,
-      #sq-fishing .sq-icon,
-      #sq-inventory .sq-icon,
-      #sq-research .sq-icon,
-      #sq-attributes .sq-icon,
-      #sq-equipment .sq-icon,
-      #sq-castle .sq-icon,
-      #sq-market .sq-icon,
-      #sq-achievements .sq-icon {
-        width: 46px !important;
-        height: auto !important;
-        top: 50% !important;
-        left: 50% !important;
-        transform: translate(-50%, -50%) !important;
-        object-fit: contain !important;
-      }
-      #sq-fishing .sq-icon { top: 15% !important; }
-    }
-  </style>
 
   <!-- Toast container -->
   <div class="toast-container" id="toast-container"></div>
 
-  <script src="/js/i18n.js?v=4"></script>
+  <script src="/js/i18n.js?v=6"></script>
   <script src="/js/api.js?v=4"></script>
-  <script src="/js/game.js?v=5"></script>
+  <script src="/js/game.js?v=6"></script>
 </body>
 </html>

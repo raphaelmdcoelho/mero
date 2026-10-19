@@ -43,6 +43,7 @@
       'char.modal_title':        'Forge a New Hero',
       'char.hero_name':          'Hero Name',
       'char.hero_name_ph':       'Name your hero…',
+      'char.choose_gender':      'Choose Gender & Avatar',
       'char.choose_class':       'Choose Class',
       'char.cancel':             'Cancel',
       'char.create_hero':        'Create Hero',
@@ -210,7 +211,7 @@
       // Battle panel
       'game.bp.hero':            '🧙 Hero',
       'game.bp.press_attack':    'Press Attack to begin!',
-      'game.bp.stop':            '🚪 Stop Dungeon',
+      'game.bp.stop':            'Stop Dungeon',
 
       // Inventory panel
       'game.inv.hint':           'Max 40 slots · Gold border = equipped',
@@ -416,6 +417,7 @@
       'char.modal_title':        'Forjar um Novo Herói',
       'char.hero_name':          'Nome do Herói',
       'char.hero_name_ph':       'Nome do seu herói…',
+      'char.choose_gender':      'Escolha Gênero e Avatar',
       'char.choose_class':       'Escolha a Classe',
       'char.cancel':             'Cancelar',
       'char.create_hero':        'Criar Herói',
@@ -583,7 +585,7 @@
       // Battle panel
       'game.bp.hero':            '🧙 Herói',
       'game.bp.press_attack':    'Pressione Atacar para começar!',
-      'game.bp.stop':            '🚪 Sair da Masmorra',
+      'game.bp.stop':            'Sair da Masmorra',
 
       // Inventory panel
       'game.inv.hint':           'Máx. 40 espaços · Borda dourada = equipado',
