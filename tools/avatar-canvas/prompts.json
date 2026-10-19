@@ -1,0 +1,71 @@
+{
+  "_help": "Templates used by the studio's Prompts tab. Edit freely: {{variables}} are filled by the studio, {{#key}}...{{/key}} blocks only appear when that variable is not empty. Prompts are in English on purpose — image models follow English best. Reload the studio after editing.",
+
+  "styleSuggestions": ["dragon", "steel", "samurai", "light / holy", "elven", "bone", "shadow", "royal gold", "frost", "volcanic", "wolf fur", "mage cloth"],
+
+  "styleGuide": "High-detail 2D fantasy RPG item illustration in a polished 16-bit-inspired HD pixel-art style: visible but fine pixel clusters, hand-painted shading, a crisp 1–2 px dark-brown outline, strong top-left key light with a subtle cool rim highlight, soft ambient occlusion in the creases. Warm earthy palette (leather browns, aged bronze and brass, steel greys with cool highlights, small accents of gem or enamel color). Worn, weathered materials with rivets, stitching, scratches and tiny dents. Same look and level of detail as the existing items of this game: a studded leather armor, a round riveted iron shield, a horned leather helmet, fur-trimmed leather boots and spiked iron gauntlets.",
+
+  "technical": "PNG with an alpha channel, one single object (or one matching pair), sharp edges with no glow or blur outside the outline, no anti-aliased halo.",
+
+  "backgroundTransparent": "Background: fully TRANSPARENT (real alpha channel). No floor, no cast shadow on the ground, no backdrop.",
+  "backgroundChroma": "Background: one flat solid pure magenta (#FF00FF) fill with no gradient, no shadow and no texture, so it can be removed later (use this only if the generator cannot output transparency; magenta must not appear anywhere on the item).",
+
+  "negative": "no character, no body parts, no mannequin, no hanger or stand, no hands or feet inside the item, no text, no logo, no watermark, no signature, no frame or border, no UI, no ground shadow, no background scenery, no motion blur, no 3D render look, no photorealism, no cropping of the item at the canvas edges.",
+
+  "main": "Create ONE {{slot_label}} game asset for a 2D fantasy RPG paper-doll equipment system.\n\nITEM\n- Name: {{name}}\n- Theme / style: {{style}}\n- Version: {{gender_label}}\n- What it is: {{subject}}\n{{#details}}- Extra details: {{details}}\n{{/details}}\nART STYLE (must match the existing game items)\n{{styleGuide}}\n\nCOMPOSITION\n{{composition}}\n{{#genderNote}}{{genderNote}}\n{{/genderNote}}\nTECHNICAL\n- Canvas: {{width}} × {{height}} px ({{orientation}}), PNG.\n- {{background}}\n- {{technical}}\n{{#reference}}\nREFERENCE IMAGE (attached)\n{{reference}}\n{{/reference}}\nAVOID\n{{negative}}",
+
+  "referenceBlock": "The attached image is the character body on a 1024 × 1536 canvas. Draw ONLY the equipment, on a transparent canvas of exactly the same size, placed exactly where it would be worn on that body: same position, same scale and same pose, so that the equipment layer overlays the character perfectly. Do not redraw, repaint or include the character itself.",
+
+  "slots": {
+    "armor": {
+      "label": "chest armor",
+      "width": 1024,
+      "height": 1536,
+      "genderMode": "separate",
+      "subject": "a body armor / torso outfit with shoulder pieces and a short skirt or tasset reaching the upper thighs",
+      "composition": "- Front view, perfectly frontal and symmetrical, drawn as if worn by an invisible adult human torso (the inside is simply empty; do not draw the body, a mannequin or a hanger).\n- Include shoulder guards, chest, belt and the short lower skirt/shorts as ONE connected piece.\n- Centered on the canvas, occupying roughly 80% of the canvas width and 55–60% of its height, with an even transparent margin around it.\n- Natural proportions of a worn armor: the width must clearly cover a full adult human torso plus shoulders.",
+      "male": "Tailored for an adult muscular male silhouette: broad shoulders, straight waist, boxy cut.",
+      "female": "Tailored for an adult female silhouette: narrower shoulders, defined waist, slightly flared short skirt. Keep the SAME design language, materials, colors and ornaments as the male version."
+    },
+    "helmet": {
+      "label": "helmet",
+      "width": 1024,
+      "height": 1536,
+      "genderMode": "shared",
+      "subject": "a head-covering helmet; a visor, face opening or eye slits are visible and dark inside (no face)",
+      "composition": "- Front view, perfectly frontal and symmetrical, centered on the canvas.\n- Include every horn, crest, plume or wing inside the visible shape; the whole object spans roughly 85% of the canvas width and about 40% of its height, vertically centered.\n- Drawn at the size of a real helmet for an adult head (the head itself is NOT drawn, the inside is simply dark and empty).",
+      "male": "One design is used for every character; keep it gender-neutral.",
+      "female": "One design is used for every character; keep it gender-neutral."
+    },
+    "shield": {
+      "label": "shield",
+      "width": 1024,
+      "height": 1024,
+      "genderMode": "shared",
+      "subject": "a hand-held shield (round, kite or heater shape) with a central boss or emblem",
+      "composition": "- Flat front view, facing the viewer directly, centered on a SQUARE canvas.\n- The shield fills about 85–90% of the canvas, with a small even margin.\n- No arm, no hand, no straps visible (this is the outside face of the shield).",
+      "male": "One design is used for every character; keep it gender-neutral.",
+      "female": "One design is used for every character; keep it gender-neutral."
+    },
+    "gauntlet": {
+      "label": "gauntlets",
+      "width": 1536,
+      "height": 1024,
+      "genderMode": "separate",
+      "subject": "a matching PAIR of armored forearm gauntlets / gloves, one for each arm",
+      "composition": "- Two gauntlets, mirrored left and right, drawn as if hanging at the sides of a standing character: each tilted diagonally with the fingers pointing downward and slightly inward.\n- Spread the pair widely apart horizontally on a LANDSCAPE canvas, together spanning about 85% of the canvas width and about 45–50% of its height, vertically centered.\n- Both gauntlets share exactly the same design, size and lighting. No arms or hands inside, no body.",
+      "male": "Sized for adult male forearms: thicker, broader cuffs.",
+      "female": "Sized for adult female forearms: slimmer, slightly more tapered cuffs. Keep the SAME design language, materials and colors as the male version."
+    },
+    "boots": {
+      "label": "boots",
+      "width": 1024,
+      "height": 1536,
+      "genderMode": "separate",
+      "subject": "a matching PAIR of tall boots, one for each leg",
+      "composition": "- Front view of two boots standing upright side by side, soles on the same horizontal baseline, with a clear gap between them.\n- Together they span about 85–90% of the canvas width and about 50% of its height, centered on the canvas.\n- Both boots share exactly the same design, size and lighting. No legs or feet inside, no ground.",
+      "male": "Sized for adult male legs: flat sturdy sole, broad shaft.",
+      "female": "Sized for adult female legs: slimmer shaft, slightly raised heel. Keep the SAME design language, materials and colors as the male version."
+    }
+  }
+}

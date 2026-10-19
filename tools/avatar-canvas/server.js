@@ -114,6 +114,9 @@ const server = http.createServer((req, res) => {
     if (url === '/' || url === '/index.html') {
       return serve(res, HTML_FILE);
     }
+    // Prompt templates + builder (live next to index.html)
+    if (url === '/prompts.json')       return serve(res, path.join(__dirname, 'prompts.json'));
+    if (url === '/prompt-builder.js')  return serve(res, path.join(__dirname, 'prompt-builder.js'));
     // Engine logo (lives alongside index.html in the tool directory)
     if (url === '/shedr.png') {
       return serve(res, path.join(__dirname, 'shedr.png'));

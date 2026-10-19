@@ -76,7 +76,7 @@ npm run canvas        # http://localhost:3001
 ```
 
 The studio has an interactive tutorial (opens on first visit; reopen with the **?** button) and a
-**Check all** view that tests every item on every avatar and flags bad fits. Workflow:
+**Check all** view that tests every item on every avatar and flags bad fits, plus a **Prompts** tab that builds ready-to-paste image-generation prompts for new items (type, name, style, gender → correct canvas size, transparent background, and this game's art style). Templates live in `tools/avatar-canvas/prompts.json`. Workflow:
 **Landmarks → Fit → Check all → Save**, then commit the JSON. Adding a new item usually needs no manual positioning.
 
 This tool and its data are not part of any deployment except `avatar-fit.json`, which the game reads at runtime.
