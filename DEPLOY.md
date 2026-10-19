@@ -33,6 +33,8 @@ In the Render dashboard → **Environment** tab, add:
 |-----|-------|
 | `JWT_SECRET` | A long random string (e.g. 64 hex chars) |
 | `JWT_REFRESH_SECRET` | Another long random string |
+| `TURSO_URL` | `libsql://<db>-<org>.turso.io` |
+| `TURSO_AUTH_TOKEN` | Token of the Turso database |
 | `NODE_ENV` | `production` |
 
 Generate secrets with: `node -e "console.log(require('crypto').randomBytes(64).toString('hex'))"`
@@ -44,14 +46,15 @@ Your live URL will be: `https://mero-<hash>.onrender.com`
 
 Render also auto-deploys whenever you push to `main`.
 
-## Important: SQLite Persistence Warning
+## Continuous integration
 
-> **Free tier uses an ephemeral disk.** Data (mero.db) will reset on every redeploy or service restart.
+`.github/workflows/ci.yml` runs `npm test` (Node 22) on every pull request and push to `development` and `main`. It needs no secrets: `tests/setup.js` injects fake values.
 
-**Options for persistence:**
-1. **Render Persistent Disk** (paid): Add a disk in the Render dashboard and set `DB_PATH` env var to `/data/mero.db`, update `server/db.js` to use `process.env.DB_PATH`.
-2. **Render PostgreSQL** (free 90-day trial): Migrate queries to `pg` driver.
-3. **Turso** (free SQLite-compatible cloud DB): Drop-in replacement for `better-sqlite3` using their libSQL client.
+To block broken deploys: in Render → **Settings** → **Build & Deploy** → **Auto-Deploy**, choose **After CI Checks Pass**. Optionally, in GitHub → **Settings** → **Branches**, protect `main` and require the `Tests (Node 22)` check.
+
+## Database
+
+Data lives in Turso (libSQL), so it survives redeploys and restarts of the Render free tier. Locally, use `TURSO_URL=file:./dev.db`.
 
 ## Custom Domain (optional)
 In Render dashboard → **Settings** → **Custom Domain** → add your domain and follow DNS instructions.
