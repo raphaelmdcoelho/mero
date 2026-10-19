@@ -5,3 +5,7 @@ mero.db-wal
 mero.db-shm
 public/avatars/*.jpg
 trees/
+
+# Avatar Studio backups / temp files
+public/data/*.bak
+public/data/*.tmp

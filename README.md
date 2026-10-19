@@ -59,56 +59,24 @@ mero/
 
 ## Dev Tools
 
-### ShedR
+### ShedR — Avatar Studio
 
-A local-only tool for visually positioning equipment overlays on character avatars. Use it to find the correct `top`, `left`, `width`, and `height` percentages for each equipment slot and apply them directly to `public/css/style.css` with one click.
+Local-only tool that makes equipment sit correctly on **every** avatar, instead of hand-tuning CSS per slot.
+Instead of storing one position per slot, it stores:
 
-**No server needed — open directly in your browser:**
+1. **Landmarks** per avatar — boxes for `head`, `torso`, `hands`, `feet`, `shield` (measured once per body)
+2. **Rules** per slot — how a sprite's *visible* area is fitted into a landmark (armor = torso width, etc.)
+3. **Overrides** — rare per-sprite, per-avatar nudges
 
-```
-tools/avatar-canvas/index.html
-```
-
-Or via the file system:
-
-```
-C:\Repos\mero\tools\avatar-canvas\index.html
-```
-
-**Usage:**
-1. Pick a gender and avatar style in the left panel
-2. Toggle equipment items on/off in the right panel
-3. Drag overlays to reposition; drag the gold corner handle to resize
-4. Copy the generated CSS from the bottom panel into `public/css/style.css`
-
-Layout is saved automatically in `localStorage`. This file is not referenced by the game and is not included in any deployment.
-
-## Game Mechanics
-
-| Mechanic | Details |
-|----------|---------|
-| **Classes** | Warrior ⚔️, Mage 🔮, Rogue 🗡️, Cleric ✝️ |
-| **Dungeon** | Easy (+1 XP/min, −1 HP/min), Medium (+2/−2), Hard (+4/−4) |
-| **Tavern** | +2 HP/min, capped at max HP |
-| **Level-up** | XP threshold: `10 × 1.5^(level−1)` — full HP restore |
-| **Tick** | Client polls `/api/game/:id/tick` every 5 seconds |
-| **Inventory** | 10 slots per character |
-
-## API Overview
+Everything is saved to `public/data/avatar-fit.json`; the game computes positions from it with
+`public/js/avatar-fit.js` (the same code the studio uses, covered by `tests/avatar-fit.test.js`).
 
 ```
-POST /api/auth/register      — create account
-POST /api/auth/login         — authenticate
-POST /api/auth/refresh       — refresh access token (uses httpOnly cookie)
-POST /api/auth/logout        — clear cookie
-
-GET  /api/characters         — list your characters
-POST /api/characters         — create character
-DELETE /api/characters/:id   — delete character
-POST /api/characters/:id/avatar  — upload JPEG avatar (max 1 MB)
-PUT  /api/characters/:id/equip   — equip weapon or armor
-
-POST /api/game/:id/start     — start dungeon or tavern activity
-POST /api/game/:id/stop      — stop current activity
-GET  /api/game/:id/tick      — apply elapsed time, return state
+npm run canvas        # http://localhost:3001
 ```
+
+The studio has an interactive tutorial (opens on first visit; reopen with the **?** button) and a
+**Check all** view that tests every item on every avatar and flags bad fits. Workflow:
+**Landmarks → Fit → Check all → Save**, then commit the JSON. Adding a new item usually needs no manual positioning.
+
+This tool and its data are not part of any deployment except `avatar-fit.json`, which the game reads at runtime.

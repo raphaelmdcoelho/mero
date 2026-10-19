@@ -8,7 +8,7 @@ const path = require('path');
 
 const PORT     = 3001;
 const REPO     = path.join(__dirname, '..', '..');
-const CSS_FILE = path.join(REPO, 'public', 'css', 'style.css');
+const FIT_FILE  = path.join(REPO, 'public', 'data', 'avatar-fit.json');
 const HTML_FILE = path.join(__dirname, 'index.html');
 
 // ── MIME types ────────────────────────────────────────────────────────────────
@@ -21,64 +21,41 @@ const MIME = {
   '.jpg':  'image/jpeg',
   '.jpeg': 'image/jpeg',
   '.svg':  'image/svg+xml',
+  '.json': 'application/json',
   '.ico':  'image/x-icon',
 };
 
-// ── CSS patcher ───────────────────────────────────────────────────────────────
+// ── Fit data validation ───────────────────────────────────────────────────────
 
-// Replaces top/left/width/height values inside a specific CSS rule block.
-// Handles both pre-existing properties (replaces value) and absent ones (inserts).
-function patchRule(css, selector, values) {
-  const escaped = selector.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-  // Match the exact selector block (not a prefix of a longer selector)
-  const re = new RegExp(`(${escaped}\\s*\\{)([^}]*)(\\})`, '');
-  if (!re.test(css)) return { css, patched: false };
+const REGIONS = ['head', 'torso', 'hands', 'feet', 'shield'];
+const FIT_MODES = ['width', 'height', 'contain', 'cover'];
+const num = v => typeof v === 'number' && Number.isFinite(v);
 
-  const patched = css.replace(re, (_m, open, body, close) => {
-    let b = body;
-    for (const [prop, val] of Object.entries(values)) {
-      const propRe = new RegExp(`(${prop}\\s*:\\s*)([^;]+)(;)`, '');
-      if (propRe.test(b)) {
-        b = b.replace(propRe, `$1${val}$3`);
-      } else {
-        b = b.replace(/(\s*)$/, `\n  ${prop}: ${val};$1`);
-      }
-    }
-    return open + b + close;
-  });
-  return { css: patched, patched: true };
-}
-
-// Map of overlay slot key → CSS selector
-const SLOT_SELECTORS = {
-  armor:          '.equip-overlay',
-  'armor-f':      '.equip-overlay-armor--female',
-  shield:         '.equip-overlay-shield',
-  'shield-f':     '.equip-overlay-shield--female',
-  boots:          '.equip-overlay-boots',
-  'boots-f':      '.equip-overlay-boots--female',
-  gauntlet:       '.equip-overlay-gauntlet',
-  'gauntlet-f':   '.equip-overlay-gauntlet--female',
-  helmet:         '.equip-overlay-helmet',
-  'helmet-f':     '.equip-overlay-helmet--female',
-};
-
-function applyOverlaysToCss(css, overlays) {
-  const results = [];
-  for (const [key, selector] of Object.entries(SLOT_SELECTORS)) {
-    const pos = overlays[key];
-    if (!pos) continue;
-    const values = {
-      top:    parseFloat(pos.top).toFixed(2)    + '%',
-      left:   parseFloat(pos.left).toFixed(2)   + '%',
-      width:  parseFloat(pos.width).toFixed(2)  + '%',
-      height: parseFloat(pos.height).toFixed(2) + '%',
-    };
-    const result = patchRule(css, selector, values);
-    css = result.css;
-    results.push({ key, selector, patched: result.patched });
+// Rejects a malformed payload before it can overwrite the file the game reads.
+function validateFit(d) {
+  const errs = [];
+  if (!d || typeof d !== 'object') return ['payload is not an object'];
+  if (!d.rules || typeof d.rules !== 'object') errs.push('missing rules');
+  else for (const [slot, r] of Object.entries(d.rules)) {
+    if (!REGIONS.includes(r.region)) errs.push(`rules.${slot}.region invalid`);
+    if (!FIT_MODES.includes(r.fit)) errs.push(`rules.${slot}.fit invalid`);
+    if (!r.anchor || !num(r.anchor.x) || !num(r.anchor.y)) errs.push(`rules.${slot}.anchor invalid`);
+    if (!num(r.scale) || r.scale <= 0) errs.push(`rules.${slot}.scale invalid`);
   }
-  return { css, results };
+  if (!d.avatars || typeof d.avatars !== 'object') errs.push('missing avatars');
+  else for (const [key, lm] of Object.entries(d.avatars)) {
+    for (const reg of REGIONS) {
+      const b = lm[reg];
+      if (!b || ![b.x, b.y, b.w, b.h].every(num) || b.w <= 0 || b.h <= 0) errs.push(`avatars.${key}.${reg} invalid`);
+    }
+  }
+  if (!Array.isArray(d.items)) errs.push('items must be an array');
+  if (!d.sprites || typeof d.sprites !== 'object') errs.push('missing sprites');
+  else for (const [src, sp] of Object.entries(d.sprites)) {
+    if (!num(sp.w) || !num(sp.h) || !Array.isArray(sp.box) || sp.box.length !== 4 || !sp.box.every(num)) errs.push(`sprites.${src} invalid`);
+  }
+  if (d.overrides && typeof d.overrides !== 'object') errs.push('overrides invalid');
+  return errs;
 }
 
 // ── Request handler ───────────────────────────────────────────────────────────
@@ -88,7 +65,7 @@ function serve(res, filePath, status = 200) {
   const mime = MIME[ext] || 'application/octet-stream';
   try {
     const data = fs.readFileSync(filePath);
-    res.writeHead(status, { 'Content-Type': mime, 'Access-Control-Allow-Origin': '*' });
+    res.writeHead(status, { 'Content-Type': mime, 'Access-Control-Allow-Origin': '*', 'Cache-Control': 'no-store' });
     res.end(data);
   } catch {
     res.writeHead(404, { 'Content-Type': 'text/plain' });
@@ -110,28 +87,21 @@ const server = http.createServer((req, res) => {
     return res.end();
   }
 
-  // ── POST /apply ─────────────────────────────────────────────────────────────
-  if (req.method === 'POST' && url === '/apply') {
+  // ── POST /save-fit ──────────────────────────────────────────────────────────
+  if (req.method === 'POST' && url === '/save-fit') {
     let body = '';
     req.on('data', chunk => body += chunk);
     req.on('end', () => {
       try {
-        const { overlays } = JSON.parse(body);
-        if (!overlays || typeof overlays !== 'object') {
-          return json(res, 400, { error: 'Missing overlays payload' });
-        }
-        const css = fs.readFileSync(CSS_FILE, 'utf8');
-        const { css: patched, results } = applyOverlaysToCss(css, overlays);
-        fs.writeFileSync(CSS_FILE, patched, 'utf8');
-        const missed = results.filter(r => !r.patched).map(r => r.selector);
-        json(res, 200, {
-          ok: true,
-          applied: results.filter(r => r.patched).length,
-          missed,
-          message: missed.length
-            ? `Applied ${results.filter(r=>r.patched).length} rules. Could not find selectors: ${missed.join(', ')}`
-            : `Applied ${results.filter(r=>r.patched).length} rules to style.css`,
-        });
+        const payload = JSON.parse(body);
+        const errors = validateFit(payload);
+        if (errors.length) return json(res, 400, { error: 'Invalid fit data', errors });
+        fs.mkdirSync(path.dirname(FIT_FILE), { recursive: true });
+        if (fs.existsSync(FIT_FILE)) fs.copyFileSync(FIT_FILE, FIT_FILE + '.bak');
+        const tmp = FIT_FILE + '.tmp';
+        fs.writeFileSync(tmp, JSON.stringify(payload, null, 2) + '\n', 'utf8');
+        fs.renameSync(tmp, FIT_FILE);
+        json(res, 200, { ok: true, message: 'Saved public/data/avatar-fit.json (backup: avatar-fit.json.bak)' });
       } catch (err) {
         json(res, 500, { error: err.message });
       }
