@@ -240,7 +240,7 @@ function renderAll(char) {
       actLabel.textContent = t('game.js.dungeon_badge', { n: lvl });
     } else if (char.activity === 'dungeon_solo') {
       const sb = char.soloBattle;
-      actLabel.textContent = sb ? `⚔️ Fighting ${sb.monster_name}` : '⚔️ Dungeon';
+      actLabel.textContent = sb ? `Fighting ${sb.monster_name}` : 'Dungeon';
     } else if (char.activity === 'farm') {
       actLabel.textContent = t('game.js.farming_badge');
     } else if (char.activity === 'reading') {
@@ -720,7 +720,7 @@ function renderBattlePanel(char) {
 
   const dungeonInfo = DUNGEONS.find(d => d.set === (Number(run.dungeon_set) || 1)) || DUNGEONS[0];
   const dName = tDungeonName(dungeonInfo);
-  document.getElementById('battle-title').textContent = `⚔️ ${dName} · Lv ${run.dungeon_level}`;
+  document.getElementById('battle-title').textContent = `${dName} · Lv ${run.dungeon_level}`;
   document.getElementById('dungeon-run-label').textContent = `${dName} · Lv ${run.dungeon_level}`;
 
   const diff = run.difficulty || 'easy';
@@ -1905,7 +1905,7 @@ async function pollFarmStatus() {
 }
 
 function showFarmHarvestModal(harvested) {
-  document.getElementById('loot-modal-title').textContent = '🌾 Harvest Complete!';
+  document.getElementById('loot-modal-title').textContent = 'Harvest Complete!';
   document.getElementById('loot-xp-row').textContent      = '';
   document.getElementById('loot-gold-row').textContent    = '';
   const buffRow = document.getElementById('loot-buff-row');
@@ -2381,7 +2381,7 @@ function openSoloBattlePanel(soloBattle, char) {
   soloBattleHeroMaxHp    = heroMax;
   soloBattleMonsterMaxHp = monMax;
 
-  document.getElementById('solo-battle-title').textContent = `⚔️ ${name}`;
+  document.getElementById('solo-battle-title').textContent = name;
   document.getElementById('solo-monster-name').textContent = name;
   document.getElementById('solo-monster-icon').textContent = icon;
   updateSoloBattleBars(heroHp, heroMax, monHp, monMax);
