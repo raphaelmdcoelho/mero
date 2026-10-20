@@ -93,7 +93,6 @@
   .zoom-btn { width: 24px; height: 24px; border: 1px solid var(--border); background: transparent; color: var(--text); border-radius: 4px; cursor: pointer; }
   .zoom-btn:hover { border-color: var(--accent); color: var(--accent); }
   #zoom-label { font-size: 0.72rem; color: var(--muted); min-width: 38px; text-align: center; }
-  #help-btn { width: 26px; height: 26px; border-radius: 50%; padding: 0; font-weight: 700; }
 
   /* ── Panels ── */
   .panel {
@@ -293,8 +292,8 @@
   #tour-skip { font-size: 0.66rem; color: var(--muted); margin-top: 0.5rem; display: flex; align-items: center; gap: 0.3rem; cursor: pointer; }
 
   /* ── Help modal ── */
-  #help { position: fixed; inset: 0; z-index: 8000; background: rgba(8,8,14,0.7); display: none; align-items: center; justify-content: center; padding: 1rem; }
-  #help.on { display: flex; }
+  #help, #tutorials { position: fixed; inset: 0; z-index: 8000; background: rgba(8,8,14,0.7); display: none; align-items: center; justify-content: center; padding: 1rem; }
+  #help.on, #tutorials.on { display: flex; }
   .help-card { width: min(760px, 100%); max-height: 88vh; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; display: flex; flex-direction: column; }
   .help-head { display: flex; align-items: center; gap: 0.6rem; padding: 0.8rem 1rem; border-bottom: 1px solid var(--border); }
   .help-head h2 { font-family: 'Cinzel', Georgia, serif; color: var(--accent); font-size: 1.05rem; flex: 1; }
@@ -303,6 +302,17 @@
   .help-body table { border-collapse: collapse; width: 100%; font-size: 0.74rem; }
   .help-body td, .help-body th { border: 1px solid var(--border); padding: 0.3rem 0.5rem; text-align: left; vertical-align: top; }
   .help-body th { background: var(--surface2); }
+
+  /* ── Tutorials menu ── */
+  .tut-list { display: flex; flex-direction: column; gap: 0.6rem; }
+  .tut-card { display: flex; align-items: center; gap: 0.9rem; padding: 0.8rem 0.9rem; background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; }
+  .tut-card:hover { border-color: var(--accent); }
+  .tut-icon { font-size: 1.6rem; width: 2.2rem; text-align: center; flex-shrink: 0; }
+  .tut-info { flex: 1; min-width: 0; }
+  .tut-info h3 { font-family: 'Cinzel', Georgia, serif; color: var(--accent); font-size: 0.92rem; margin-bottom: 0.15rem; }
+  .tut-info p { font-size: 0.76rem; line-height: 1.45; color: var(--text); }
+  .tut-meta { font-size: 0.66rem; color: var(--muted); margin-top: 0.25rem; }
+  .tut-done { color: var(--ok); }
   kbd { background: #111; border: 1px solid var(--border); border-radius: 3px; padding: 0 0.3rem; font-size: 0.7rem; }
 </style>
 </head>
@@ -328,7 +338,7 @@
   <span class="spacer"></span>
   <span id="dirty-badge">● alterações não salvas</span>
   <button type="button" class="btn primary" id="save-btn" title="Salva em public/data/avatar-fit.json (Ctrl+S)">Save</button>
-  <button type="button" class="btn" id="help-btn" title="Tutorial e receitas">?</button>
+  <button type="button" class="btn" id="tutorials-btn" title="Tutoriais passo a passo (F1)">📖 Tutoriais</button>
   <div class="zoom-controls">
     <button type="button" class="zoom-btn" id="zoom-out">−</button>
     <span id="zoom-label">100%</span>
@@ -457,12 +467,26 @@
   </div>
 </div>
 
+<!-- Tutorials menu -->
+<div id="tutorials">
+  <div class="help-card">
+    <div class="help-head">
+      <h2>Tutoriais</h2>
+      <button type="button" class="btn small" id="tutorials-close">Fechar</button>
+    </div>
+    <div class="help-body">
+      <p>Escolha um passo a passo. Eles são guiados: o studio destaca o que usar e troca de aba sozinho. Dá para abrir de novo quando precisar (<kbd>F1</kbd>).</p>
+      <div class="tut-list" id="tutorials-list"></div>
+    </div>
+  </div>
+</div>
+
 <!-- Help / recipes -->
 <div id="help">
   <div class="help-card">
     <div class="help-head">
       <h2>Ajuda & receitas</h2>
-      <button type="button" class="btn small" id="help-tour">▶ Refazer o tutorial</button>
+      <button type="button" class="btn small" id="help-tour">📖 Tutoriais</button>
       <button type="button" class="btn small" id="help-close">Fechar</button>
     </div>
     <div class="help-body" id="help-body"></div>
@@ -1081,7 +1105,12 @@ $('rescan-btn').addEventListener('click', async () => {
 // Keyboard: arrows nudge the selected overlay / landmark (Shift = ×10), Ctrl+S saves
 document.addEventListener('keydown', e => {
   if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') { e.preventDefault(); save(); return; }
-  if (e.key === 'Escape' && $('tour').classList.contains('on')) { closeTour(); return; }
+  if (e.key === 'Escape') {
+    if ($('tour').classList.contains('on')) { closeTour(); return; }
+    if ($('tutorials').classList.contains('on')) { closeTutorialsMenu(); return; }
+    if ($('help').classList.contains('on')) { $('help').classList.remove('on'); return; }
+  }
+  if (e.key === 'F1') { e.preventDefault(); $('tutorials').classList.contains('on') ? closeTutorialsMenu() : openTutorialsMenu(); return; }
   if (/INPUT|SELECT|TEXTAREA/.test(document.activeElement.tagName) && document.activeElement.type !== 'range') return;
   const d = { ArrowLeft: [-1, 0], ArrowRight: [1, 0], ArrowUp: [0, -1], ArrowDown: [0, 1] }[e.key];
   if (!d) return;
@@ -1270,7 +1299,7 @@ function prefillAddForm({ name, slot, base, prealigned }) {
 // ════════════════════════════════════════════════════════════════════════════
 
 const TOUR_KEY = 'avatar-studio-tour-v2';
-const TOUR = [
+const POSITIONING_STEPS = [
   {
     title: 'Como o studio funciona',
     center: true,
@@ -1386,6 +1415,21 @@ const TOUR = [
       <p class="tip">Os avisos são calculados pelo mesmo código do jogo, então <b>o que você vê aqui é exatamente o que o jogador vê</b>.</p>`,
   },
   {
+    title: 'Pronto: quando usar o quê?',
+    center: true,
+    body: `<p>Três perguntas resolvem quase tudo:</p>
+      <ul>
+        <li>Um item errado em <b>todos</b> os avatares → <b>regra do slot</b> (ou o PNG tem margem estranha: <b>Rescan sprites</b>).</li>
+        <li>Todos os itens de um slot errados em <b>um</b> avatar → <b>landmark</b> daquele avatar.</li>
+        <li>Um item errado em <b>um</b> avatar → <b>exceção</b> (arraste o sprite).</li>
+      </ul>
+      <p>Sempre feche com <b>Check all</b> e <b>Save</b> (<kbd>Ctrl</kbd>+<kbd>S</kbd>).</p>
+      <p class="tip">Para refazer este passo a passo: botão <b>📖 Tutoriais</b> (ou <kbd>F1</kbd>). Lá também tem o tutorial de <b>equipamento novo</b>, da geração da arte até o encaixe.</p>`,
+  },
+];
+
+const NEWITEM_STEPS = [
+  {
     title: 'Prompts: gerar a arte do item',
     mode: 'prompts',
     target: '#view-prompts',
@@ -1414,17 +1458,46 @@ const TOUR = [
   },
 ];
 
+// Registry: add a tutorial here and it shows up in the 📖 Tutoriais menu.
+// `steps` use the same shape as above ({title, body, target?, place?, mode?, center?, onEnter?}).
+// `auto: true` = opens by itself on the first visit (and shows the "don't open again" checkbox).
+const TUTORIALS = [
+  {
+    id: 'positioning', icon: '🎯', auto: true, steps: POSITIONING_STEPS,
+    title: 'Posicionar sprites e equipamentos',
+    desc: 'Como o encaixe funciona: landmarks do corpo, regras de slot, exceções por item, Check all e Save.',
+  },
+  {
+    id: 'new-item', icon: '🛡️', steps: NEWITEM_STEPS,
+    title: 'Adicionar um equipamento novo',
+    desc: 'Gerar a arte com a aba Prompts, cadastrar o item e conferir o encaixe.',
+  },
+];
+const tutorialById = id => TUTORIALS.find(t => t.id === id) || TUTORIALS[0];
+const DONE_KEY = 'avatar-studio-tutorials-done';
+const doneSet = () => { try { return new Set(JSON.parse(localStorage.getItem(DONE_KEY) || '[]')); } catch (_) { return new Set(); } };
+function markDone(id) { try { const d = doneSet(); d.add(id); localStorage.setItem(DONE_KEY, JSON.stringify([...d])); } catch (_) {} }
+
+let TOUR = POSITIONING_STEPS;
+let tourDef = TUTORIALS[0];
 let tourIdx = 0;
-function openTour(i = 0) { tourIdx = i; $('tour').classList.add('on'); $('tour-never').checked = !!localStorage.getItem(TOUR_KEY); showTourStep(); }
+function openTour(id = 'positioning', i = 0) {
+  tourDef = tutorialById(id); TOUR = tourDef.steps; tourIdx = i;
+  $('tutorials').classList.remove('on');
+  $('tour-skip').style.display = tourDef.auto ? '' : 'none';
+  $('tour-never').checked = !!localStorage.getItem(TOUR_KEY);
+  $('tour').classList.add('on');
+  showTourStep();
+}
 function closeTour() {
   $('tour').classList.remove('on');
-  if ($('tour-never').checked) localStorage.setItem(TOUR_KEY, '1'); else localStorage.removeItem(TOUR_KEY);
+  if (tourDef.auto) { if ($('tour-never').checked) localStorage.setItem(TOUR_KEY, '1'); else localStorage.removeItem(TOUR_KEY); }
 }
 function showTourStep() {
   const s = TOUR[tourIdx];
   if (s.mode && ui.mode !== s.mode) setMode(s.mode);
   if (s.onEnter) s.onEnter();
-  $('tour-step-n').textContent = `Passo ${tourIdx + 1} de ${TOUR.length}`;
+  $('tour-step-n').textContent = `${tourDef.title} · passo ${tourIdx + 1} de ${TOUR.length}`;
   $('tour-title').textContent = s.title;
   $('tour-body').innerHTML = s.body;
   $('tour-dots').innerHTML = TOUR.map((_, i) => `<i class="${i === tourIdx ? 'on' : ''}"></i>`).join('');
@@ -1459,7 +1532,7 @@ function positionTour() {
   card.style.left = clamp(x, 12, vw - cw - 12) + 'px';
   card.style.top = clamp(y, 12, vh - ch - 12) + 'px';
 }
-$('tour-next').addEventListener('click', () => { if (tourIdx >= TOUR.length - 1) { closeTour(); return; } tourIdx++; showTourStep(); });
+$('tour-next').addEventListener('click', () => { if (tourIdx >= TOUR.length - 1) { markDone(tourDef.id); closeTour(); return; } tourIdx++; showTourStep(); });
 $('tour-prev').addEventListener('click', () => { if (tourIdx > 0) { tourIdx--; showTourStep(); } });
 $('tour-close').addEventListener('click', closeTour);
 window.addEventListener('resize', () => { if ($('tour').classList.contains('on')) positionTour(); });
@@ -1498,13 +1571,45 @@ $('help-body').innerHTML = `
     <li>Um item errado em <b>um</b> avatar → exceção.</li>
   </ul>
   <h4>Atalhos</h4>
-  <p><kbd>Ctrl</kbd>+<kbd>S</kbd> salvar · <kbd>←↑→↓</kbd> mover 0,1% (<kbd>Shift</kbd> = 1%) o item/landmark selecionado · <kbd>Esc</kbd> fecha o tutorial.</p>
+  <p><kbd>Ctrl</kbd>+<kbd>S</kbd> salvar · <kbd>←↑→↓</kbd> mover 0,1% (<kbd>Shift</kbd> = 1%) o item/landmark selecionado · <kbd>F1</kbd> abre os tutoriais · <kbd>Esc</kbd> fecha o tutorial.</p>
   <h4>Por que existe o JSON?</h4>
   <p>Antes, as posições eram escritas à mão no <code>style.css</code>, uma regra por slot e por gênero — o que servia para um item e quebrava os outros. Agora o jogo calcula a posição a partir de <code>public/data/avatar-fit.json</code> usando <code>public/js/avatar-fit.js</code>, o mesmo código usado aqui. Versione o JSON no git como qualquer outro arquivo.</p>`;
-$('help-btn').addEventListener('click', () => $('help').classList.add('on'));
 $('help-close').addEventListener('click', () => $('help').classList.remove('on'));
 $('help').addEventListener('mousedown', e => { if (e.target === $('help')) $('help').classList.remove('on'); });
-$('help-tour').addEventListener('click', () => { $('help').classList.remove('on'); setMode('fit'); openTour(0); });
+
+// Tutorials menu
+function openTutorialsMenu() {
+  const done = doneSet();
+  $('tutorials-list').innerHTML = TUTORIALS.map(t => `
+    <div class="tut-card">
+      <div class="tut-icon">${t.icon}</div>
+      <div class="tut-info">
+        <h3>${t.title}</h3>
+        <p>${t.desc}</p>
+        <div class="tut-meta">${t.steps.length} passos${done.has(t.id) ? ' · <span class="tut-done">✓ concluído</span>' : ''}</div>
+      </div>
+      <button type="button" class="btn primary" data-tut="${t.id}">▶ ${done.has(t.id) ? 'Refazer' : 'Iniciar'}</button>
+    </div>`).join('') + `
+    <div class="tut-card">
+      <div class="tut-icon">📚</div>
+      <div class="tut-info">
+        <h3>Referência rápida</h3>
+        <p>Glossário, modos de encaixe, receitas (novo avatar, trocar PNG) e atalhos.</p>
+      </div>
+      <button type="button" class="btn" id="tut-open-help">Abrir</button>
+    </div>`;
+  $('tutorials').classList.add('on');
+}
+function closeTutorialsMenu() { $('tutorials').classList.remove('on'); }
+$('tutorials-btn').addEventListener('click', openTutorialsMenu);
+$('tutorials-close').addEventListener('click', closeTutorialsMenu);
+$('tutorials').addEventListener('mousedown', e => { if (e.target === $('tutorials')) closeTutorialsMenu(); });
+$('tutorials-list').addEventListener('click', e => {
+  const start = e.target.closest('[data-tut]');
+  if (start) { const t = tutorialById(start.dataset.tut); setMode(t.steps[0].mode || 'fit'); openTour(t.id); return; }
+  if (e.target.closest('#tut-open-help')) { closeTutorialsMenu(); $('help').classList.add('on'); }
+});
+$('help-tour').addEventListener('click', () => { $('help').classList.remove('on'); openTutorialsMenu(); });
 
 // ── Boot ─────────────────────────────────────────────────────────────────────
 
@@ -1534,7 +1639,7 @@ $('splash-start').addEventListener('click', async () => {
   splash.classList.add('fade-out');
   splash.addEventListener('transitionend', () => splash.remove(), { once: true });
   await booted;
-  if (fit && !localStorage.getItem(TOUR_KEY)) setTimeout(() => openTour(0), 450);
+  if (fit && !localStorage.getItem(TOUR_KEY)) setTimeout(() => openTour('positioning'), 450);
 });
 </script>
 </body>
