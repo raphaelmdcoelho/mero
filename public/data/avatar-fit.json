@@ -1,0 +1,498 @@
+{
+  "version": 1,
+  "alphaThreshold": 40,
+  "rules": {
+    "armor": {
+      "region": "torso",
+      "fit": "width",
+      "anchor": {
+        "x": 0.5,
+        "y": 0
+      },
+      "scale": 1.04,
+      "dx": 0,
+      "dy": -1,
+      "check": {
+        "minCoverage": 0.7,
+        "minWidthRatio": 0.98,
+        "maxWidthRatio": 1.35
+      }
+    },
+    "helmet": {
+      "region": "head",
+      "fit": "width",
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "scale": 1.7,
+      "dx": 0,
+      "dy": 0,
+      "check": {
+        "minCoverage": 0.8,
+        "minWidthRatio": 1.2,
+        "maxWidthRatio": 2.4
+      }
+    },
+    "boots": {
+      "region": "feet",
+      "fit": "contain",
+      "anchor": {
+        "x": 0.5,
+        "y": 1
+      },
+      "scale": 1,
+      "dx": 0,
+      "dy": 0,
+      "check": {
+        "minCoverage": 0.75,
+        "minWidthRatio": 0.8,
+        "maxWidthRatio": 1.2
+      }
+    },
+    "gauntlet": {
+      "region": "hands",
+      "fit": "width",
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "scale": 1,
+      "dx": 0,
+      "dy": 0,
+      "check": {
+        "minCoverage": 0.8,
+        "minWidthRatio": 0.9,
+        "maxWidthRatio": 1.3
+      }
+    },
+    "shield": {
+      "region": "shield",
+      "fit": "contain",
+      "anchor": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "scale": 1,
+      "dx": 0,
+      "dy": 0,
+      "check": {
+        "minCoverage": 0.75,
+        "minWidthRatio": 0.7,
+        "maxWidthRatio": 1.3
+      }
+    }
+  },
+  "avatars": {
+    "male_A": {
+      "head": {
+        "x": 38,
+        "y": 4,
+        "w": 24,
+        "h": 21
+      },
+      "torso": {
+        "x": 27,
+        "y": 27,
+        "w": 46,
+        "h": 31
+      },
+      "hands": {
+        "x": 26,
+        "y": 40,
+        "w": 48,
+        "h": 17
+      },
+      "feet": {
+        "x": 30,
+        "y": 68,
+        "w": 40,
+        "h": 21
+      },
+      "shield": {
+        "x": 56,
+        "y": 38,
+        "w": 36,
+        "h": 24
+      }
+    },
+    "female_A": {
+      "head": {
+        "x": 40,
+        "y": 6,
+        "w": 20,
+        "h": 19
+      },
+      "torso": {
+        "x": 33,
+        "y": 27,
+        "w": 34,
+        "h": 31
+      },
+      "hands": {
+        "x": 29,
+        "y": 42,
+        "w": 42,
+        "h": 12
+      },
+      "feet": {
+        "x": 35,
+        "y": 70,
+        "w": 30,
+        "h": 19
+      },
+      "shield": {
+        "x": 55,
+        "y": 38,
+        "w": 34,
+        "h": 24
+      }
+    },
+    "male_B": {
+      "head": {
+        "x": 38,
+        "y": 6,
+        "w": 24,
+        "h": 19
+      },
+      "torso": {
+        "x": 27,
+        "y": 27,
+        "w": 46,
+        "h": 31
+      },
+      "hands": {
+        "x": 26,
+        "y": 40,
+        "w": 48,
+        "h": 17
+      },
+      "feet": {
+        "x": 30,
+        "y": 68,
+        "w": 40,
+        "h": 21
+      },
+      "shield": {
+        "x": 56,
+        "y": 38,
+        "w": 36,
+        "h": 24
+      }
+    },
+    "female_B": {
+      "head": {
+        "x": 39,
+        "y": 7,
+        "w": 22,
+        "h": 18
+      },
+      "torso": {
+        "x": 33,
+        "y": 27,
+        "w": 34,
+        "h": 31
+      },
+      "hands": {
+        "x": 29,
+        "y": 42,
+        "w": 42,
+        "h": 12
+      },
+      "feet": {
+        "x": 35,
+        "y": 70,
+        "w": 30,
+        "h": 19
+      },
+      "shield": {
+        "x": 55,
+        "y": 38,
+        "w": 34,
+        "h": 24
+      }
+    },
+    "male_C": {
+      "head": {
+        "x": 38,
+        "y": 4,
+        "w": 24,
+        "h": 21
+      },
+      "torso": {
+        "x": 27,
+        "y": 27,
+        "w": 46,
+        "h": 31
+      },
+      "hands": {
+        "x": 26,
+        "y": 40,
+        "w": 48,
+        "h": 17
+      },
+      "feet": {
+        "x": 30,
+        "y": 68,
+        "w": 40,
+        "h": 21
+      },
+      "shield": {
+        "x": 56,
+        "y": 38,
+        "w": 36,
+        "h": 24
+      }
+    },
+    "female_C": {
+      "head": {
+        "x": 40,
+        "y": 6,
+        "w": 20,
+        "h": 19
+      },
+      "torso": {
+        "x": 33,
+        "y": 27,
+        "w": 34,
+        "h": 31
+      },
+      "hands": {
+        "x": 29,
+        "y": 42,
+        "w": 42,
+        "h": 12
+      },
+      "feet": {
+        "x": 35,
+        "y": 70,
+        "w": 30,
+        "h": 19
+      },
+      "shield": {
+        "x": 55,
+        "y": 38,
+        "w": 34,
+        "h": 24
+      }
+    }
+  },
+  "items": [
+    {
+      "id": "leather_armor",
+      "name": "Leather Armor",
+      "slot": "armor",
+      "base": "leather_armor"
+    },
+    {
+      "id": "hunter_armor",
+      "name": "Hunter Armor",
+      "slot": "armor",
+      "base": "hunter_armor"
+    },
+    {
+      "id": "elven_leaves_armor",
+      "name": "Elven Leaves Armor",
+      "slot": "armor",
+      "base": "elven_leaves_armor"
+    },
+    {
+      "id": "iron_shield",
+      "name": "Iron Shield",
+      "slot": "shield",
+      "base": "iron_shield"
+    },
+    {
+      "id": "oak_shield",
+      "name": "Oak Shield",
+      "slot": "shield",
+      "base": "oak_shield"
+    },
+    {
+      "id": "iron_gauntlets",
+      "name": "Iron Gauntlets",
+      "slot": "gauntlet",
+      "base": "iron_gauntlets"
+    },
+    {
+      "id": "leather_boots",
+      "name": "Leather Boots",
+      "slot": "boots",
+      "base": "boot_leather"
+    },
+    {
+      "id": "leather_helmet",
+      "name": "Leather Helmet",
+      "slot": "helmet",
+      "src": "/img/leather_helmet.png"
+    }
+  ],
+  "sprites": {
+    "/items/leather_armor_male.png": {
+      "w": 1024,
+      "h": 1536,
+      "box": [
+        93,
+        315,
+        931,
+        1174
+      ],
+      "prealigned": false
+    },
+    "/items/leather_armor_female.png": {
+      "w": 1024,
+      "h": 1536,
+      "box": [
+        102,
+        315,
+        923,
+        1166
+      ],
+      "prealigned": false
+    },
+    "/items/hunter_armor_male.png": {
+      "w": 1024,
+      "h": 1536,
+      "box": [
+        94,
+        119,
+        955,
+        1258
+      ],
+      "prealigned": false
+    },
+    "/items/hunter_armor_female.png": {
+      "w": 1024,
+      "h": 1536,
+      "box": [
+        80,
+        86,
+        957,
+        1288
+      ],
+      "prealigned": false
+    },
+    "/items/elven_leaves_armor_male.png": {
+      "w": 1024,
+      "h": 1536,
+      "box": [
+        154,
+        149,
+        868,
+        1344
+      ],
+      "prealigned": false
+    },
+    "/items/elven_leaves_armor_female.png": {
+      "w": 1024,
+      "h": 1536,
+      "box": [
+        200,
+        149,
+        824,
+        1331
+      ],
+      "prealigned": false
+    },
+    "/items/iron_shield_male.png": {
+      "w": 1024,
+      "h": 1024,
+      "box": [
+        68,
+        62,
+        956,
+        948
+      ],
+      "prealigned": false
+    },
+    "/items/iron_shield_female.png": {
+      "w": 1024,
+      "h": 1024,
+      "box": [
+        68,
+        62,
+        956,
+        948
+      ],
+      "prealigned": false
+    },
+    "/items/oak_shield_male.png": {
+      "w": 1024,
+      "h": 1024,
+      "box": [
+        104,
+        106,
+        918,
+        902
+      ],
+      "prealigned": false
+    },
+    "/items/oak_shield_female.png": {
+      "w": 1024,
+      "h": 1024,
+      "box": [
+        104,
+        106,
+        918,
+        902
+      ],
+      "prealigned": false
+    },
+    "/items/iron_gauntlets_male.png": {
+      "w": 1536,
+      "h": 1024,
+      "box": [
+        191,
+        281,
+        1377,
+        816
+      ],
+      "prealigned": false
+    },
+    "/items/iron_gauntlets_female.png": {
+      "w": 1536,
+      "h": 1024,
+      "box": [
+        124,
+        286,
+        1429,
+        742
+      ],
+      "prealigned": false
+    },
+    "/items/boot_leather_male.png": {
+      "w": 1024,
+      "h": 1536,
+      "box": [
+        73,
+        466,
+        960,
+        1235
+      ],
+      "prealigned": false
+    },
+    "/items/boot_leather_female.png": {
+      "w": 1024,
+      "h": 1536,
+      "box": [
+        82,
+        334,
+        972,
+        1152
+      ],
+      "prealigned": false
+    },
+    "/img/leather_helmet.png": {
+      "w": 1024,
+      "h": 1536,
+      "box": [
+        94,
+        413,
+        959,
+        1011
+      ],
+      "prealigned": false
+    }
+  },
+  "overrides": {}
+}

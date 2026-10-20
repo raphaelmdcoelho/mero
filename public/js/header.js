@@ -5,16 +5,22 @@
 (function () {
   const path = window.location.pathname;
 
-  function navBtn(href, icon, label, pageMatch) {
-    const active = path.includes(pageMatch) ? ' active' : '';
-    return `<a href="${href}" class="header-nav-btn${active}">
-        <span class="header-nav-icon">${icon}</span>
-        <span class="header-nav-label">${label}</span>
-      </a>`;
+  // Pixel-art icons keep the nav in the same visual language as the Hero tiles.
+  const NAV = [
+    { href: '/game.html',   icon: '/equipment-icon.png',  label: 'Hero',    page: 'game.html' },
+    { href: '/social.html', icon: '/achivements_icon.png', label: 'Social',  page: 'social.html' },
+    { href: null,           icon: '/castle-icon.png',     label: 'Castle',  page: null },
+  ];
+
+  function navItem(n) {
+    const inner = `<span class="header-nav-icon"><img src="${n.icon}" alt="" /></span>
+        <span class="header-nav-label">${n.label}</span>`;
+    if (!n.href) return `<button type="button" class="header-nav-btn" disabled>${inner}</button>`;
+    const active = path.includes(n.page) ? ' active' : '';
+    return `<a href="${n.href}" class="header-nav-btn${active}">${inner}</a>`;
   }
 
-  const heroActive   = path.includes('game.html')   ? ' active' : '';
-  const socialActive = path.includes('social.html') ? ' active' : '';
+  const navHtml = NAV.map(navItem).join('\n    ');
 
   const html = `
 <header class="site-header">
@@ -26,12 +32,7 @@
     </div>
   </div>
   <nav class="header-nav">
-    ${navBtn('/game.html',   '⚔️', 'Hero',   'game.html')}
-    ${navBtn('/social.html', '👥', 'Social', 'social.html')}
-    <button type="button" class="header-nav-btn" disabled>
-      <span class="header-nav-icon">🏰</span>
-      <span class="header-nav-label">Castle</span>
-    </button>
+    ${navHtml}
   </nav>
   <div class="header-right">
     <div id="activity-badge" class="activity-badge">
@@ -46,18 +47,7 @@
     </button>
   </div>
   <div class="mobile-nav" id="mobile-nav">
-    <a href="/game.html" class="header-nav-btn${heroActive}">
-      <span class="header-nav-icon">⚔️</span>
-      <span class="header-nav-label">Hero</span>
-    </a>
-    <a href="/social.html" class="header-nav-btn${socialActive}">
-      <span class="header-nav-icon">👥</span>
-      <span class="header-nav-label">Social</span>
-    </a>
-    <button type="button" class="header-nav-btn" disabled>
-      <span class="header-nav-icon">🏰</span>
-      <span class="header-nav-label">Castle</span>
-    </button>
+    ${navHtml}
     <div class="mobile-nav-divider"></div>
     <a href="/characters.html" class="btn btn-outline btn-sm" data-i18n="game.heroes_link">← Heroes</a>
     <button type="button" class="btn btn-outline btn-sm" onclick="siteLogout()" data-i18n="game.logout">Logout</button>
@@ -66,6 +56,12 @@
 
   const placeholder = document.getElementById('app-header');
   placeholder.outerHTML = html;
+
+  // Torch embers over every in-game page except the leaderboard, whose art has its own fire
+  if (!path.includes('social.html')) {
+    document.body.insertAdjacentHTML('afterbegin',
+      '<div class="embers" aria-hidden="true">' + '<span class="ember"></span>'.repeat(10) + '</div>');
+  }
 })();
 
 function toggleMobileNav() {

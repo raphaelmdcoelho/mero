@@ -6,10 +6,6 @@
 (function () {
   const html = `
 <div class="status-bar">
-  <div class="status-workers-wrap">
-    <span class="status-section-title">Workers</span>
-    <span class="status-workers-count" id="workers-count">0</span>
-  </div>
   <div class="status-book-wrap">
     <span class="status-section-title">Busy</span>
     <div id="pickaxe-wrap" class="pickaxe-wrap">
@@ -56,7 +52,6 @@
     </div>
   </div>
   <div class="status-bars">
-    <span class="status-section-title">Character Status</span>
     <div class="stat-row">
       <span class="stat-label">HP</span>
       <div class="stat-track"><div class="stat-fill hp" id="hp-fill" style="width:100%"></div></div>
@@ -77,12 +72,12 @@
     <span id="unspent-header" class="status-unspent" style="display:none;" onclick="openPanel && openPanel('attributes')"></span>
   </div>
   <div class="status-money-wrap">
-    <span class="status-section-title">Money</span>
+    <span class="status-section-title">Gold</span>
     <span class="status-money-value" id="gold-display">🪙 —</span>
   </div>
 </div>
 <footer class="site-footer">
-  <span class="version-badge">Alpha v0.1</span>
+  <span class="version-badge">Mero · Alpha v0.1</span>
 </footer>`;
 
   document.getElementById('app-footer').outerHTML = html;

@@ -17,7 +17,17 @@ git worktree add ./trees/<feature_or_fix_name> -b <type>/<feature_or_fix_name> d
 2. **Immediately copy `.env`**: `cp .env ./trees/<name>/.env`
 3. Do all work inside the worktree directory
 4. Commit inside the worktree when done
-5. Tell the user to merge: `git merge feat/<name>` from `development`
+5. **Submit the work as a Pull Request** (see below) — do not just tell the user to merge locally
+
+### Pull requests (mandatory)
+Every change must reach `development` through a PR, never by a local merge or a direct push to `development`/`main`.
+- Push the branch: `git push -u origin <type>/<name>`
+- Open the PR with `gh pr create --base development --head <type>/<name>`
+- Title: conventional-commit style, same as the commit (e.g. `feat: ...`, `fix: ...`)
+- Body: what changed and why, how it was verified (tests run, screenshots/manual checks), and any known risks or follow-ups
+- If pushing or `gh` is unavailable (no remote access / not authenticated), commit as usual and tell the user exactly which commands to run
+- After opening the PR, give the user the PR link; do not merge it yourself
+- Keep one PR per feature/fix; if branches touch the same files, say which should merge first
 
 Do not ask the user whether to create a worktree — just do it automatically.
 The `.env` copy step is mandatory — the file is gitignored and won't exist in the worktree otherwise.

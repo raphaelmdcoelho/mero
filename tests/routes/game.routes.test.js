@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import express from 'express';
 import request from 'supertest';
 import { createRequire } from 'module';
+import { routeSql, sqlCalls } from '../db-mock.js';
 
 const require = createRequire(import.meta.url);
 
@@ -118,13 +119,29 @@ describe('POST /api/game/:characterId/start', () => {
     expect(res.body.error).toMatch(/Already/);
   });
 
-  it('starts tavern activity and returns fullChar', async () => {
-    executeSpy
-      .mockResolvedValueOnce({ rows: [baseChar] })
-      .mockResolvedValueOnce({});
+  it('requires a valid restType for tavern', async () => {
+    executeSpy.mockResolvedValueOnce({ rows: [{ ...baseChar, gold: 100 }] });
     const res = await request(app).post('/api/game/10/start').send({ action: 'tavern' });
+    expect(res.status).toBe(400);
+    expect(res.body.error).toMatch(/restType/);
+  });
+
+  it('returns 400 when the character cannot afford the rest', async () => {
+    executeSpy.mockResolvedValueOnce({ rows: [{ ...baseChar, gold: 5 }] });
+    const res = await request(app).post('/api/game/10/start').send({ action: 'tavern', restType: 'relax' });
+    expect(res.status).toBe(400);
+    expect(res.body.error).toMatch(/Not enough gold/);
+  });
+
+  it('starts tavern activity, charges the rest cost and returns fullChar', async () => {
+    routeSql(executeSpy, [[/FROM characters WHERE id = \? AND user_id/, { rows: [{ ...baseChar, gold: 100 }] }]]);
+    const res = await request(app).post('/api/game/10/start').send({ action: 'tavern', restType: 'break' });
     expect(res.status).toBe(200);
     expect(mockFullChar).toHaveBeenCalledWith(10);
+    const update = executeSpy.mock.calls.map(c => c[0]).find(q => q.sql?.includes('SET activity = ?'));
+    expect(update.args[0]).toBe('tavern');
+    expect(update.args[3]).toBe('break');
+    expect(update.args[4]).toBe(30); // break costs 30g
   });
 });
 
@@ -184,168 +201,161 @@ describe('GET /api/game/:characterId/tick', () => {
   });
 });
 
-// ── POST /api/game/:characterId/dungeon/enter ─────────────────────────────────
+// ── POST /api/game/:characterId/dungeon/enter ────────────────────────────────
 
 describe('POST /api/game/:characterId/dungeon/enter', () => {
+  const monster = { id: 1, dungeon_set: 1, dungeon_level: 1, name: 'Goblin', hp: 12, is_boss: 0 };
+  const enterRoutes = ({ char = baseChar, run = [], monsters = [monster], extra = [] } = {}) => [
+    [/FROM characters WHERE id = \? AND user_id/, { rows: [char] }],
+    [/SELECT id FROM dungeon_run/,                { rows: run }],
+    [/FROM monsters WHERE dungeon_set/,           { rows: monsters }],
+    ...extra,
+  ];
+  const enter = body => request(app).post('/api/game/10/dungeon/enter').send(body);
+
+  beforeEach(() => { batchSpy.mockResolvedValue({}); });
+
   it('returns 400 if character already has an active activity', async () => {
-    executeSpy.mockResolvedValueOnce({ rows: [{ ...baseChar, activity: 'tavern' }] });
-    const res = await request(app).post('/api/game/10/dungeon/enter').send({ level: 1, set: 1 });
+    routeSql(executeSpy, enterRoutes({ char: { ...baseChar, activity: 'tavern' } }));
+    const res = await enter({ level: 1, set: 1, difficulty: 'easy' });
     expect(res.status).toBe(400);
     expect(res.body.error).toMatch(/Stop your current activity/);
   });
 
   it('returns 400 if already in a dungeon run', async () => {
-    executeSpy
-      .mockResolvedValueOnce({ rows: [baseChar] })
-      .mockResolvedValueOnce({ rows: [{ id: 5 }] });
-    const res = await request(app).post('/api/game/10/dungeon/enter').send({ level: 1, set: 1 });
+    routeSql(executeSpy, enterRoutes({ run: [{ id: 5 }] }));
+    const res = await enter({ level: 1, set: 1, difficulty: 'easy' });
     expect(res.status).toBe(400);
-    expect(res.body.error).toMatch(/Flee first/);
+    expect(res.body.error).toMatch(/Already in a dungeon run/);
   });
 
   it('returns 400 for level out of range', async () => {
-    executeSpy
-      .mockResolvedValueOnce({ rows: [baseChar] })
-      .mockResolvedValueOnce({ rows: [] });
-    const res = await request(app).post('/api/game/10/dungeon/enter').send({ level: 11, set: 1 });
+    routeSql(executeSpy, enterRoutes());
+    const res = await enter({ level: 11, set: 1, difficulty: 'easy' });
     expect(res.status).toBe(400);
     expect(res.body.error).toMatch(/level must be 1-10/);
   });
 
   it('returns 403 if character level too low for the requested set', async () => {
-    executeSpy
-      .mockResolvedValueOnce({ rows: [{ ...baseChar, level: 5 }] })
-      .mockResolvedValueOnce({ rows: [] });
-    const res = await request(app).post('/api/game/10/dungeon/enter').send({ level: 1, set: 2 });
+    routeSql(executeSpy, enterRoutes());
+    const res = await enter({ level: 1, set: 2, difficulty: 'easy' });
     expect(res.status).toBe(403);
     expect(res.body.error).toMatch(/unlocks at level 20/);
   });
 
   it('returns 400 if trying to skip dungeon level (mastery gate)', async () => {
-    executeSpy
-      .mockResolvedValueOnce({ rows: [{ ...baseChar, dungeon_mastery: 1 }] })
-      .mockResolvedValueOnce({ rows: [] });
-    const res = await request(app).post('/api/game/10/dungeon/enter').send({ level: 3, set: 1 });
+    routeSql(executeSpy, enterRoutes({ char: { ...baseChar, dungeon_mastery: 1 } }));
+    const res = await enter({ level: 3, set: 1, difficulty: 'easy' });
     expect(res.status).toBe(400);
     expect(res.body.error).toMatch(/Complete dungeon level 2 first/);
   });
 
-  it('enters dungeon successfully', async () => {
-    const monster = { id: 1, dungeon_set: 1, dungeon_level: 1, name: 'Goblin', hp: 12, is_boss: 0 };
-    executeSpy
-      .mockResolvedValueOnce({ rows: [baseChar] })
-      .mockResolvedValueOnce({ rows: [] })
-      .mockResolvedValueOnce({ rows: [monster] });
-    batchSpy.mockResolvedValueOnce({});
-    const res = await request(app).post('/api/game/10/dungeon/enter').send({ level: 1, set: 1 });
+  it('returns 400 for a missing or unknown difficulty', async () => {
+    routeSql(executeSpy, enterRoutes());
+    const res = await enter({ level: 1, set: 1 });
+    expect(res.status).toBe(400);
+    expect(res.body.error).toMatch(/difficulty/);
+  });
+
+  it('returns 400 when stamina is below the difficulty cost', async () => {
+    routeSql(executeSpy, enterRoutes({ char: { ...baseChar, stamina: 1 } }));
+    const res = await enter({ level: 1, set: 1, difficulty: 'easy' });
+    expect(res.status).toBe(400);
+    expect(res.body.error).toMatch(/Not enough stamina/);
+  });
+
+  it('returns 500 when the level has no monster data', async () => {
+    routeSql(executeSpy, enterRoutes({ char: { ...baseChar, stamina: 10 }, monsters: [] }));
+    const res = await enter({ level: 1, set: 1, difficulty: 'easy' });
+    expect(res.status).toBe(500);
+  });
+
+  it('enters dungeon: creates the run, sets activity and spends stamina', async () => {
+    routeSql(executeSpy, enterRoutes({ char: { ...baseChar, stamina: 10 } }));
+    const res = await enter({ level: 1, set: 1, difficulty: 'medium' });
     expect(res.status).toBe(200);
-    expect(batchSpy).toHaveBeenCalled();
+    expect(batchSpy).toHaveBeenCalledTimes(1);
+    const [insertRun, updateChar] = batchSpy.mock.calls[0][0];
+    expect(insertRun.sql).toContain('INSERT INTO dungeon_run');
+    expect(insertRun.args[6]).toBe('medium');
+    expect(updateChar.args[2]).toBe(6); // 10 stamina - 4 (medium)
+    // ends_at = started_at + 180 s
+    expect(insertRun.args[7] - insertRun.args[5]).toBe(180);
+  });
+
+  it('rejects a potion that is not in the inventory', async () => {
+    routeSql(executeSpy, enterRoutes({ char: { ...baseChar, stamina: 10 } }));
+    const res = await enter({ level: 1, set: 1, difficulty: 'easy', potion_item_id: 40 });
+    expect(res.status).toBe(400);
+    expect(res.body.error).toMatch(/Potion not in inventory/);
+  });
+
+  it('shortens the run when a speed potion is used', async () => {
+    routeSql(executeSpy, enterRoutes({
+      char: { ...baseChar, stamina: 10 },
+      extra: [
+        [/FROM inventory inv/,                 { rows: [{ id: 40, item_subtype: 'adventure_potion', buff_effect: '{"type":"speed","value":0.5}' }] }],
+        [/SELECT buff_effect FROM items/,      { rows: [{ buff_effect: '{"type":"speed","value":0.5}' }] }],
+      ],
+    }));
+    const res = await enter({ level: 1, set: 1, difficulty: 'hard', potion_item_id: 40 });
+    expect(res.status).toBe(200);
+    const insertRun = batchSpy.mock.calls[0][0][0];
+    expect(insertRun.args[7] - insertRun.args[5]).toBe(150); // hard 300 s * 0.5
+    expect(insertRun.args[8]).toBe(40);
   });
 });
 
-// ── POST /api/game/:characterId/dungeon/flee ──────────────────────────────────
+// ── GET /api/game/:characterId/dungeon/status ─────────────────────────────────
 
-describe('POST /api/game/:characterId/dungeon/flee', () => {
-  it('clears dungeon run and activity without penalty', async () => {
-    executeSpy.mockResolvedValueOnce({ rows: [{ ...baseChar, activity: 'dungeon' }] });
-    batchSpy.mockResolvedValueOnce({});
-    const res = await request(app).post('/api/game/10/dungeon/flee');
+describe('GET /api/game/:characterId/dungeon/status', () => {
+  const statusRoutes = run => [
+    [/FROM characters WHERE id = \? AND user_id/, { rows: [baseChar] }],
+    [/FROM dungeon_run WHERE character_id/,       { rows: run ? [run] : [] }],
+  ];
+
+  it('reports inactive when there is no run', async () => {
+    routeSql(executeSpy, statusRoutes(null));
+    const res = await request(app).get('/api/game/10/dungeon/status');
     expect(res.status).toBe(200);
-    expect(batchSpy.mock.calls[0][0]).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({ sql: expect.stringContaining('DELETE FROM dungeon_run') }),
-      ])
-    );
+    expect(res.body).toEqual({ active: false });
+  });
+
+  it('reports remaining time while the timer is running', async () => {
+    const endsAt = Math.floor(Date.now() / 1000) + 120;
+    routeSql(executeSpy, statusRoutes({ id: 1, character_id: 10, dungeon_level: 2, dungeon_set: 1, difficulty: 'easy', ends_at: endsAt, potion_item_id: null }));
+    const res = await request(app).get('/api/game/10/dungeon/status');
+    expect(res.status).toBe(200);
+    expect(res.body.active).toBe(true);
+    expect(res.body.remainingMs).toBeGreaterThan(100000);
+    expect(res.body.difficulty).toBe('easy');
+    expect(res.body.dungeon_level).toBe(2);
   });
 });
 
-// ── POST /api/game/:characterId/dungeon/attack ────────────────────────────────
+// ── POST /api/game/:characterId/dungeon/stop ──────────────────────────────────
 
-describe('POST /api/game/:characterId/dungeon/attack', () => {
-  const monster = {
-    id: 1, name: 'Goblin', hp: 12, damage: 3, hit_chance: 55,
-    dodge_chance: 8, defense: 0, xp_reward: 5, is_boss: 0,
-    drop_chance: 8, dungeon_level: 1, dungeon_set: 1,
-  };
-  const run = { id: 1, character_id: 10, dungeon_level: 1, dungeon_set: 1, kills: 0, monster_id: 1, monster_hp: 12, started_at: 1000 };
-  const weapon = { id: 1, damage: 2, weapon_type: 'melee', defense: 0 };
-  const armor  = { id: 3, damage: 0, weapon_type: null, defense: 2, armor_slot: 'body' };
-  const shield = { id: 12, damage: 0, weapon_type: null, defense: 2, armor_slot: 'shield' };
-
-  it('returns 400 if no active dungeon run', async () => {
-    executeSpy
-      .mockResolvedValueOnce({ rows: [baseChar] })
-      .mockResolvedValueOnce({ rows: [] });
-    const res = await request(app).post('/api/game/10/dungeon/attack');
+describe('POST /api/game/:characterId/dungeon/stop', () => {
+  it('returns 400 if there is no active dungeon run', async () => {
+    routeSql(executeSpy, [[/FROM characters WHERE id = \? AND user_id/, { rows: [baseChar] }]]);
+    const res = await request(app).post('/api/game/10/dungeon/stop');
     expect(res.status).toBe(400);
     expect(res.body.error).toMatch(/No active dungeon run/);
   });
 
-  it('returns defeat with hp=1 when player dies', async () => {
-    const dyingChar = { ...baseChar, hp: 1, weapon_id: null, armor_id: null, shield_id: null };
-    const strongMonster = { ...monster, damage: 999, hit_chance: 100, dodge_chance: 0 };
-    executeSpy
-      .mockResolvedValueOnce({ rows: [dyingChar] })
-      .mockResolvedValueOnce({ rows: [run] })
-      .mockResolvedValueOnce({ rows: [strongMonster] })
-      .mockResolvedValueOnce({ rows: [null] })
-      .mockResolvedValueOnce({ rows: [null] })
-      .mockResolvedValueOnce({ rows: [null] });
+  it('cancels the run without xp, gold or loot', async () => {
+    routeSql(executeSpy, [
+      [/FROM characters WHERE id = \? AND user_id/, { rows: [{ ...baseChar, activity: 'dungeon' }] }],
+      [/FROM dungeon_run WHERE character_id/,       { rows: [{ id: 1, character_id: 10 }] }],
+    ]);
     batchSpy.mockResolvedValueOnce({});
-    const res = await request(app).post('/api/game/10/dungeon/attack');
+    const res = await request(app).post('/api/game/10/dungeon/stop');
     expect(res.status).toBe(200);
-    expect(res.body.result).toBe('defeat');
-    const batchCalls = batchSpy.mock.calls[0][0];
-    expect(batchCalls.find(c => c.sql.includes('SET hp = 1'))).toBeDefined();
-  });
-
-  it('returns monster_killed with XP awarded when monster dies', async () => {
-    const strongChar = { ...baseChar, hp: 100, attr_strength: 20, attr_dexterity: 20 };
-    const weakMonster = { ...monster, hp: 1, damage: 0 };
-    const weakRun = { ...run, monster_hp: 1 };
-    const nextMonster = { ...monster, id: 2 };
-    executeSpy
-      .mockResolvedValueOnce({ rows: [strongChar] })
-      .mockResolvedValueOnce({ rows: [weakRun] })
-      .mockResolvedValueOnce({ rows: [weakMonster] })
-      .mockResolvedValueOnce({ rows: [weapon] })
-      .mockResolvedValueOnce({ rows: [armor] })
-      .mockResolvedValueOnce({ rows: [shield] })
-      .mockResolvedValueOnce({ rows: [] })         // no gear drop
-      .mockResolvedValueOnce({ rows: [nextMonster] });
-    batchSpy.mockResolvedValueOnce({});
-    // 0.5 * 100 = 50 < hitChance(70) so player hits; 50 >= drop_chance so no gear drop
-    vi.spyOn(Math, 'random').mockReturnValue(0.5);
-    const res = await request(app).post('/api/game/10/dungeon/attack');
-    vi.restoreAllMocks();
-    expect(res.status).toBe(200);
-    expect(res.body.result).toBe('monster_killed');
-    expect(res.body.gainedXp).toBe(5);
-  });
-
-  it('returns run_complete and updates mastery when boss is killed', async () => {
-    const bossMonster = { ...monster, is_boss: 1, hp: 1, damage: 0, xp_reward: 55 };
-    const bossRun = { ...run, monster_hp: 1 };
-    const strongChar = { ...baseChar, hp: 100, dungeon_mastery: 0 };
-    executeSpy
-      .mockResolvedValueOnce({ rows: [strongChar] })
-      .mockResolvedValueOnce({ rows: [bossRun] })
-      .mockResolvedValueOnce({ rows: [bossMonster] })
-      .mockResolvedValueOnce({ rows: [weapon] })
-      .mockResolvedValueOnce({ rows: [armor] })
-      .mockResolvedValueOnce({ rows: [shield] })
-      .mockResolvedValueOnce({ rows: [] });         // no gear drop
-    batchSpy.mockResolvedValueOnce({});
-    // 0.5 * 100 = 50 < hitChance(70) so player hits; 50 >= drop_chance so no gear drop
-    vi.spyOn(Math, 'random').mockReturnValue(0.5);
-    const res = await request(app).post('/api/game/10/dungeon/attack');
-    vi.restoreAllMocks();
-    expect(res.status).toBe(200);
-    expect(res.body.result).toBe('run_complete');
-    expect(res.body.newMastery).toBe(1);
+    expect(res.body).toMatchObject({ done: true, forced: true, gainedXp: 0, gainedGold: 0, loot: [] });
     expect(batchSpy.mock.calls[0][0]).toEqual(
       expect.arrayContaining([
         expect.objectContaining({ sql: expect.stringContaining('DELETE FROM dungeon_run') }),
+        expect.objectContaining({ sql: expect.stringContaining('SET activity = NULL') }),
       ])
     );
   });

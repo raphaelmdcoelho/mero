@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import express from 'express';
 import request from 'supertest';
 import { createRequire } from 'module';
+import { routeSql, sqlCalls } from '../db-mock.js';
 
 const require = createRequire(import.meta.url);
 
@@ -207,39 +208,79 @@ describe('POST /api/characters/:id/avatar/preset', () => {
 // ── PUT /api/characters/:id/equip ─────────────────────────────────────────────
 
 describe('PUT /api/characters/:id/equip', () => {
+  // item rows as the equip validation query returns them: SELECT type, armor_slot FROM items
+  const helmetItem = { id: 22, type: 'armor', armor_slot: 'helmet' };
+  const routes = ({ char = baseChar, validation = null, inInventory = true, updated = char } = {}) => [
+    [/FROM characters WHERE id = \? AND user_id/, { rows: [char] }],
+    [/SELECT type, armor_slot FROM items/,        { rows: validation ? [validation] : [] }],
+    [/SELECT id FROM inventory/,                  { rows: inInventory ? [{ id: 1 }] : [] }],
+    [/SELECT \* FROM characters WHERE id = \?$/,   { rows: [updated] }],
+    [/FROM items WHERE id/,                       args => ({ rows: [[weapon, armor, shield].find(i => i.id === args[0]) ?? null] }),],
+  ];
+
   it('returns 400 for an invalid slot', async () => {
-    executeSpy.mockResolvedValueOnce({ rows: [baseChar] });
+    routeSql(executeSpy, routes());
     const res = await request(app)
       .put('/api/characters/10/equip')
-      .send({ slot: 'helmet', item_id: 2 });
+      .send({ slot: 'cape', item_id: 2 });
     expect(res.status).toBe(400);
     expect(res.body.error).toMatch(/slot/);
   });
 
   it('unequips weapon when item_id is null', async () => {
-    executeSpy
-      .mockResolvedValueOnce({ rows: [baseChar] })
-      .mockResolvedValueOnce({})
-      .mockResolvedValueOnce({ rows: [{ ...baseChar, weapon_id: null }] })
-      .mockResolvedValueOnce({ rows: [] })
-      .mockResolvedValueOnce({ rows: [null] })
-      .mockResolvedValueOnce({ rows: [armor] })
-      .mockResolvedValueOnce({ rows: [shield] });
+    routeSql(executeSpy, routes({ updated: { ...baseChar, weapon_id: null } }));
     const res = await request(app)
       .put('/api/characters/10/equip')
       .send({ slot: 'weapon', item_id: null });
     expect(res.status).toBe(200);
+    expect(sqlCalls(executeSpy).some(q => q.includes('SET weapon_id = NULL'))).toBe(true);
+    expect(res.body.equippedWeapon).toBeNull();
   });
 
-  it('returns 400 if item is not in inventory or wrong type', async () => {
-    executeSpy
-      .mockResolvedValueOnce({ rows: [baseChar] })
-      .mockResolvedValueOnce({ rows: [] });
+  it('returns 400 if the item does not exist', async () => {
+    routeSql(executeSpy, routes());
     const res = await request(app)
       .put('/api/characters/10/equip')
       .send({ slot: 'weapon', item_id: 99 });
     expect(res.status).toBe(400);
+    expect(res.body.error).toMatch(/not found/i);
+  });
+
+  it('returns 400 if the item type does not fit the slot', async () => {
+    routeSql(executeSpy, routes({ validation: { type: 'armor', armor_slot: 'body' } }));
+    const res = await request(app)
+      .put('/api/characters/10/equip')
+      .send({ slot: 'weapon', item_id: 3 });
+    expect(res.status).toBe(400);
+    expect(res.body.error).toMatch(/wrong item type/i);
+  });
+
+  it('returns 400 if the armor belongs in another slot', async () => {
+    routeSql(executeSpy, routes({ validation: helmetItem }));
+    const res = await request(app)
+      .put('/api/characters/10/equip')
+      .send({ slot: 'boots', item_id: 22 });
+    expect(res.status).toBe(400);
+    expect(res.body.error).toMatch(/helmet slot/);
+  });
+
+  it('returns 400 if item is not in inventory', async () => {
+    routeSql(executeSpy, routes({ validation: { type: 'weapon', armor_slot: null }, inInventory: false }));
+    const res = await request(app)
+      .put('/api/characters/10/equip')
+      .send({ slot: 'weapon', item_id: 1 });
+    expect(res.status).toBe(400);
     expect(res.body.error).toMatch(/inventory/i);
+  });
+
+  it('equips an owned helmet', async () => {
+    routeSql(executeSpy, routes({ validation: helmetItem }));
+    const res = await request(app)
+      .put('/api/characters/10/equip')
+      .send({ slot: 'helmet', item_id: 22 });
+    expect(res.status).toBe(200);
+    const update = executeSpy.mock.calls.map(c => c[0]).find(q => q.sql?.includes('SET helmet_id = ?'));
+    expect(update.args).toEqual([22, 10]);
   });
 });
 

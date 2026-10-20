@@ -1,23 +1,29 @@
 <!-- DEV TOOL — not included in game build -->
 <!DOCTYPE html>
-<html lang="en">
+<html lang="pt-BR">
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>ShedR — Dev Tool</title>
+<title>ShedR — Avatar Studio</title>
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
   :root {
     --bg: #1a1a22;
     --surface: #23232e;
+    --surface2: #2b2b38;
     --border: #3a3a4a;
     --accent: #c9a84c;
     --text: #e8e0d0;
-    --muted: #888;
-    --gold: #c9a84c;
-    --panel-w: 200px;
-    --output-h: 180px;
+    --muted: #8a8a98;
+    --ok: #4caf7d;
+    --warn: #e0a030;
+    --bad: #d9534f;
+    --c-head: #f4a261;
+    --c-torso: #4cc9f0;
+    --c-hands: #d06bd6;
+    --c-feet: #80ed99;
+    --c-shield: #ffd166;
   }
 
   body {
@@ -26,8 +32,8 @@
     font-family: 'Segoe UI', system-ui, sans-serif;
     font-size: 13px;
     display: grid;
-    grid-template-columns: var(--panel-w) 1fr var(--panel-w);
-    grid-template-rows: 40px 1fr var(--output-h);
+    grid-template-columns: 210px 1fr 290px;
+    grid-template-rows: 44px 1fr 150px;
     grid-template-areas:
       "header header header"
       "left   canvas right"
@@ -35,6 +41,8 @@
     height: 100vh;
     overflow: hidden;
   }
+  button { font-family: inherit; }
+  .hidden { display: none !important; }
 
   /* ── Header ── */
   header {
@@ -44,45 +52,48 @@
     display: flex;
     align-items: center;
     padding: 0 1rem;
-    gap: 1rem;
-    font-family: 'Cinzel', Georgia, serif;
-    font-size: 0.85rem;
-    color: var(--gold);
-    letter-spacing: 0.08em;
+    gap: 0.75rem;
   }
-  header span { color: var(--muted); font-family: system-ui; font-size: 0.7rem; letter-spacing: 0; margin-right: auto; }
-
-  /* ── Zoom controls ── */
-  .zoom-controls {
-    margin-left: auto;
-    display: flex;
-    align-items: center;
-    gap: 0.4rem;
+  .brand { font-family: 'Cinzel', Georgia, serif; font-size: 0.9rem; color: var(--accent); letter-spacing: 0.08em; margin-right: 0.5rem; }
+  .tabs { display: flex; gap: 2px; background: var(--bg); padding: 3px; border-radius: 8px; border: 1px solid var(--border); }
+  .tab {
+    padding: 0.28rem 0.9rem;
+    border: none;
+    background: transparent;
+    color: var(--muted);
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.78rem;
+    font-weight: 600;
   }
-  .zoom-btn {
-    width: 24px;
-    height: 24px;
-    border: 1px solid var(--border);
+  .tab:hover { color: var(--text); }
+  .tab.active { background: var(--accent); color: #1a1a22; }
+  .tab .count { margin-left: 0.35rem; font-size: 0.65rem; padding: 0 0.35rem; border-radius: 99px; background: var(--bad); color: #fff; }
+  .spacer { margin-left: auto; }
+  #dirty-badge { font-size: 0.7rem; color: var(--warn); display: none; }
+  #dirty-badge.on { display: inline; }
+  .btn {
+    padding: 0.28rem 0.8rem;
     background: transparent;
     color: var(--text);
-    border-radius: 4px;
-    font-size: 1rem;
-    line-height: 1;
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    font-size: 0.75rem;
     cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: border-color 0.15s, color 0.15s;
+    transition: border-color 0.15s, color 0.15s, opacity 0.15s;
   }
+  .btn:hover { border-color: var(--accent); color: var(--accent); }
+  .btn.primary { background: var(--accent); color: #1a1a22; border-color: var(--accent); font-weight: 700; }
+  .btn.primary:hover { opacity: 0.85; color: #1a1a22; }
+  .btn.primary.success { background: var(--ok); border-color: var(--ok); color: #fff; }
+  .btn.primary.error { background: var(--bad); border-color: var(--bad); color: #fff; }
+  .btn.small { padding: 0.15rem 0.5rem; font-size: 0.68rem; }
+  .btn:disabled { opacity: 0.45; cursor: not-allowed; }
+  .zoom-controls { display: flex; align-items: center; gap: 0.3rem; }
+  .zoom-btn { width: 24px; height: 24px; border: 1px solid var(--border); background: transparent; color: var(--text); border-radius: 4px; cursor: pointer; }
   .zoom-btn:hover { border-color: var(--accent); color: var(--accent); }
-  #zoom-label {
-    font-family: system-ui;
-    font-size: 0.72rem;
-    color: var(--muted);
-    min-width: 38px;
-    text-align: center;
-    letter-spacing: 0;
-  }
+  #zoom-label { font-size: 0.72rem; color: var(--muted); min-width: 38px; text-align: center; }
+  #help-btn { width: 26px; height: 26px; border-radius: 50%; padding: 0; font-weight: 700; }
 
   /* ── Panels ── */
   .panel {
@@ -100,61 +111,69 @@
     text-transform: uppercase;
     letter-spacing: 0.1em;
     color: var(--muted);
-    padding-bottom: 0.4rem;
+    padding-bottom: 0.35rem;
     border-bottom: 1px solid var(--border);
-    margin-bottom: 0.25rem;
+    margin-top: 0.4rem;
   }
+  .panel-title:first-child { margin-top: 0; }
+  .panel-title-row { display: flex; align-items: center; justify-content: space-between; padding-bottom: 0.35rem; border-bottom: 1px solid var(--border); }
+  .panel-title-row .panel-title { border: none; padding: 0; margin: 0; }
+  .hint { font-size: 0.68rem; color: var(--muted); line-height: 1.4; }
+  .section { display: flex; flex-direction: column; gap: 0.4rem; }
 
-  /* ── Gender toggle ── */
   .gender-btns { display: flex; gap: 0.4rem; }
-  .gender-btn {
-    flex: 1;
-    padding: 0.3rem;
-    border: 1px solid var(--border);
-    background: transparent;
-    color: var(--muted);
-    border-radius: 4px;
-    cursor: pointer;
-    font-size: 0.75rem;
-    transition: border-color 0.15s, color 0.15s;
-  }
-  .gender-btn.active {
-    border-color: var(--accent);
-    color: var(--accent);
-    font-weight: 600;
-  }
+  .gender-btn { flex: 1; padding: 0.3rem; border: 1px solid var(--border); background: transparent; color: var(--muted); border-radius: 4px; cursor: pointer; font-size: 0.75rem; }
+  .gender-btn.active { border-color: var(--accent); color: var(--accent); font-weight: 600; }
 
-  /* ── Avatar thumbnails ── */
   .avatar-thumb-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.4rem; }
-  .avatar-thumb {
-    border: 2px solid var(--border);
-    border-radius: 6px;
-    overflow: hidden;
-    cursor: pointer;
-    aspect-ratio: 1;
-    background: #111;
-    transition: border-color 0.15s;
-  }
-  .avatar-thumb img { width: 100%; height: 100%; object-fit: cover; }
+  .avatar-thumb { border: 2px solid var(--border); border-radius: 6px; overflow: hidden; cursor: pointer; aspect-ratio: 1; background: #111; position: relative; }
+  .avatar-thumb img { width: 100%; height: 100%; object-fit: cover; object-position: top; }
   .avatar-thumb.active { border-color: var(--accent); }
+  .avatar-thumb .dot { position: absolute; right: 3px; bottom: 3px; width: 8px; height: 8px; border-radius: 50%; background: var(--bad); display: none; }
+  .avatar-thumb.has-problem .dot { display: block; }
 
-  /* ── Equipment items ── */
-  .equip-item {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    padding: 0.35rem 0.5rem;
-    border: 1px solid var(--border);
-    border-radius: 6px;
-    cursor: pointer;
-    transition: border-color 0.15s, background 0.15s;
-    user-select: none;
-  }
+  .check-row { display: flex; align-items: center; gap: 0.4rem; font-size: 0.72rem; color: var(--text); cursor: pointer; }
+  .check-row input { accent-color: var(--accent); }
+
+  /* landmark legend */
+  .lm-legend { display: flex; flex-direction: column; gap: 0.3rem; }
+  .lm-chip { display: flex; align-items: center; gap: 0.45rem; padding: 0.3rem 0.45rem; border: 1px solid var(--border); border-radius: 5px; cursor: pointer; font-size: 0.72rem; }
+  .lm-chip:hover { border-color: var(--muted); }
+  .lm-chip.active { border-color: var(--accent); background: rgba(201,168,76,0.08); }
+  .lm-swatch { width: 10px; height: 10px; border-radius: 2px; flex-shrink: 0; }
+
+  /* ── Equipment list ── */
+  .equip-item { display: flex; align-items: center; gap: 0.5rem; padding: 0.3rem 0.5rem; border: 1px solid var(--border); border-radius: 6px; cursor: pointer; user-select: none; }
   .equip-item:hover { border-color: var(--muted); }
   .equip-item.active { border-color: var(--accent); background: rgba(201,168,76,0.08); }
-  .equip-item img { width: 32px; height: 32px; object-fit: contain; }
-  .equip-item-label { font-size: 0.7rem; color: var(--muted); line-height: 1.2; }
+  .equip-item.selected { box-shadow: 0 0 0 1px var(--accent); }
+  .equip-item img { width: 30px; height: 30px; object-fit: contain; }
+  .equip-item-label { font-size: 0.72rem; color: var(--muted); line-height: 1.2; flex: 1; }
   .equip-item.active .equip-item-label { color: var(--text); }
+  .equip-item-slot { font-size: 0.58rem; text-transform: uppercase; color: var(--muted); letter-spacing: 0.06em; display: block; }
+  .equip-item-del { width: 16px; height: 16px; border: 1px solid #555; background: transparent; color: #888; border-radius: 3px; font-size: 0.65rem; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+  .equip-item-del:hover { border-color: var(--bad); color: var(--bad); }
+  .badge { font-size: 0.6rem; padding: 0 0.3rem; border-radius: 3px; }
+  .badge.bad { background: var(--bad); color: #fff; }
+
+  .add-equip-toggle { width: 20px; height: 20px; border: 1px solid var(--border); background: transparent; color: var(--muted); border-radius: 4px; font-size: 1rem; line-height: 1; cursor: pointer; }
+  .add-equip-toggle:hover, .add-equip-toggle.open { border-color: var(--accent); color: var(--accent); }
+  #add-equip-form { display: none; flex-direction: column; gap: 0.4rem; padding: 0.6rem; background: rgba(0,0,0,0.25); border: 1px solid var(--border); border-radius: 6px; }
+  #add-equip-form.open { display: flex; }
+  .field { display: flex; flex-direction: column; gap: 0.15rem; }
+  .field > label { font-size: 0.62rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); }
+  input[type=text], select, input[type=number] { width: 100%; padding: 0.25rem 0.4rem; background: var(--bg); border: 1px solid var(--border); border-radius: 4px; color: var(--text); font-size: 0.72rem; outline: none; }
+  input[type=text]:focus, select:focus, input[type=number]:focus { border-color: var(--accent); }
+  .radio-row { display: flex; gap: 0.6rem; font-size: 0.68rem; }
+  .radio-row label { display: flex; align-items: center; gap: 0.25rem; cursor: pointer; }
+  #add-error { color: var(--bad); font-size: 0.68rem; }
+
+  /* ── Sliders ── */
+  .slider-row { display: grid; grid-template-columns: 52px 1fr 46px; align-items: center; gap: 0.4rem; }
+  .slider-row label { font-size: 0.68rem; color: var(--muted); }
+  .slider-row input[type=range] { accent-color: var(--accent); height: 4px; cursor: pointer; width: 100%; }
+  .slider-row input[type=number] { padding: 0.1rem 0.2rem; font-size: 0.68rem; text-align: right; }
+  .btn-row { display: flex; gap: 0.3rem; flex-wrap: wrap; }
 
   /* ── Canvas area ── */
   #canvas-area {
@@ -163,391 +182,153 @@
     align-items: center;
     justify-content: center;
     background: repeating-conic-gradient(#1f1f28 0% 25%, #222230 0% 50%) 0 0 / 20px 20px;
-    overflow: hidden;
+    overflow: auto;
     position: relative;
   }
+  #stage-wrap { padding: 1.5rem; display: flex; align-items: center; justify-content: center; min-width: 100%; min-height: 100%; }
 
-  /* Avatar container — larger for the dev tool so the full character is visible */
-  #avatar-container {
-    position: relative;
-    width: 320px;
-    height: 420px;
-    border-radius: 12px;
-    border: 2px solid var(--border);
-    overflow: visible;
-    background: rgba(0,0,0,0.35);
-    flex-shrink: 0;
-  }
-  #avatar-container img.base-avatar {
-    width: 100%;
-    height: 100%;
-    object-fit: contain;
-    border-radius: 10px;
-    display: block;
-  }
+  /* The stage has the exact 2:3 shape of the avatar PNG — same as the game's .avatar-stage */
+  .stage { position: relative; aspect-ratio: 1024 / 1536; height: var(--stage-h, 560px); background: #12121a; border: 1px solid var(--border); flex-shrink: 0; }
+  .stage .base { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+  .stage .equip { position: absolute; pointer-events: none; }
+  .stage .grid-line { position: absolute; left: 0; right: 0; height: 0; border-top: 1px dashed rgba(255,255,255,0.15); pointer-events: none; z-index: 50; }
+  .stage .grid-line span { position: absolute; left: 3px; top: -12px; font-size: 9px; color: rgba(255,255,255,0.45); }
+  .stage .grid-vline { position: absolute; top: 0; bottom: 0; width: 0; border-left: 1px dashed rgba(255,255,255,0.1); pointer-events: none; z-index: 50; }
 
-  /* Overlay images — mirrors .equip-overlay in style.css */
-  .equip-overlay {
-    position: absolute;
-    width: 65%;
-    height: 65%;
-    top: 40%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    object-fit: contain;
-    cursor: grab;
-    box-sizing: border-box;
-  }
-  .equip-overlay.dragging { cursor: grabbing; opacity: 0.85; }
-  .equip-overlay.selected {
-    outline: 2px dashed var(--accent);
-    outline-offset: 2px;
-  }
+  .hit { position: absolute; cursor: grab; z-index: 20; outline: 1px dashed rgba(201,168,76,0.0); }
+  .hit:hover { outline-color: rgba(201,168,76,0.6); }
+  .hit.selected { outline: 2px dashed var(--accent); z-index: 21; }
+  .hit.dragging { cursor: grabbing; }
+  .handle { position: absolute; width: 11px; height: 11px; right: -6px; bottom: -6px; background: var(--accent); border: 1px solid #000; border-radius: 2px; cursor: se-resize; display: none; }
+  .hit.selected .handle, .lm-box.selected .handle { display: block; }
+  .hit .tag, .lm-box .tag { position: absolute; left: 0; top: -15px; font-size: 9px; background: var(--accent); color: #111; padding: 0 4px; border-radius: 2px; white-space: nowrap; display: none; }
+  .hit.selected .tag { display: block; }
+  .hit.warn { outline-color: var(--bad); }
 
-  /* Resize handle */
-  .resize-handle {
-    position: absolute;
-    width: 10px;
-    height: 10px;
-    background: var(--accent);
-    border: 1px solid #000;
-    border-radius: 2px;
-    bottom: -5px;
-    right: -5px;
-    cursor: se-resize;
-    z-index: 100;
-  }
+  .lm-box { position: absolute; z-index: 30; cursor: grab; border: 2px solid var(--c); background: color-mix(in srgb, var(--c) 14%, transparent); }
+  .lm-box .tag { display: block; background: var(--c); }
+  .lm-box.selected { background: color-mix(in srgb, var(--c) 26%, transparent); box-shadow: 0 0 0 1px #000, 0 0 12px var(--c); z-index: 31; }
+  .lm-box.dim { opacity: 0.45; }
 
-  /* ── Output panel ── */
-  #output-panel {
-    grid-area: output;
-    background: #111;
-    border-top: 1px solid var(--border);
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-  }
-  #output-toolbar {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    padding: 0.4rem 0.75rem;
-    border-bottom: 1px solid var(--border);
-    flex-shrink: 0;
-  }
+  /* ── Check view ── */
+  #view-check { padding: 1rem; width: 100%; height: 100%; overflow: auto; align-self: flex-start; }
+  .check-head { display: flex; align-items: center; gap: 1rem; margin-bottom: 0.75rem; font-size: 0.8rem; flex-wrap: wrap; }
+  .check-head b.ok { color: var(--ok); } .check-head b.bad { color: var(--bad); }
+  .check-grid { display: grid; gap: 0.5rem; }
+  .check-colhead { font-size: 0.68rem; color: var(--muted); text-align: center; padding-bottom: 0.2rem; }
+  .check-rowhead { font-size: 0.7rem; color: var(--muted); display: flex; align-items: center; }
+  .cell { border: 2px solid var(--border); border-radius: 6px; padding: 0.3rem; background: var(--surface); cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 0.25rem; min-width: 0; }
+  .cell:hover { border-color: var(--accent); }
+  .cell.ok { border-color: #2f5f46; }
+  .cell.bad { border-color: var(--bad); }
+  .cell .stage { --stage-h: 170px; }
+  .cell .msg { font-size: 0.62rem; line-height: 1.3; text-align: center; width: 100%; }
+  .cell.ok .msg { color: var(--ok); } .cell.bad .msg { color: #f08a86; }
+
+  /* ── Prompts view ── */
+  #view-prompts { padding: 1rem 1.2rem; width: 100%; height: 100%; overflow: auto; align-self: flex-start; }
+  .pr-layout { display: grid; grid-template-columns: 330px 1fr; gap: 1.2rem; align-items: start; max-width: 1200px; margin: 0 auto; }
+  .pr-card { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 0.9rem; display: flex; flex-direction: column; gap: 0.7rem; }
+  .pr-card h3 { font-family: 'Cinzel', Georgia, serif; font-size: 0.9rem; color: var(--accent); }
+  .slot-btns { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.35rem; }
+  .slot-btn { padding: 0.4rem 0.2rem; border: 1px solid var(--border); background: transparent; color: var(--muted); border-radius: 5px; cursor: pointer; font-size: 0.72rem; display: flex; flex-direction: column; align-items: center; gap: 0.1rem; }
+  .slot-btn small { font-size: 0.58rem; opacity: 0.8; }
+  .slot-btn:hover { border-color: var(--muted); color: var(--text); }
+  .slot-btn.active { border-color: var(--accent); color: var(--accent); background: rgba(201,168,76,0.08); }
+  .chips { display: flex; flex-wrap: wrap; gap: 0.25rem; }
+  .chip { padding: 0.1rem 0.5rem; border: 1px solid var(--border); border-radius: 99px; font-size: 0.66rem; color: var(--muted); cursor: pointer; background: transparent; }
+  .chip:hover { border-color: var(--accent); color: var(--accent); }
+  textarea { width: 100%; padding: 0.35rem 0.45rem; background: var(--bg); border: 1px solid var(--border); border-radius: 4px; color: var(--text); font-size: 0.72rem; outline: none; resize: vertical; font-family: inherit; }
+  textarea:focus { border-color: var(--accent); }
+  .pr-out { display: flex; flex-direction: column; gap: 0.9rem; min-width: 0; }
+  .pr-prompt-head { display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; }
+  .pr-prompt-head h3 { flex: 1; }
+  .meta { display: flex; gap: 0.35rem; flex-wrap: wrap; }
+  .meta span { font-size: 0.64rem; padding: 0.05rem 0.45rem; border-radius: 4px; background: var(--bg); border: 1px solid var(--border); color: var(--muted); }
+  .meta span b { color: var(--text); font-weight: 600; }
+  .pr-text { font-family: Consolas, 'Courier New', monospace; font-size: 0.7rem; line-height: 1.5; min-height: 240px; white-space: pre-wrap; color: #cfe8cf; }
+  .pr-errors { color: #f08a86; font-size: 0.76rem; }
+  .pr-notes { font-size: 0.74rem; line-height: 1.55; padding-left: 1.1rem; display: flex; flex-direction: column; gap: 0.2rem; }
+  .pr-vars { font-size: 0.7rem; color: var(--muted); }
+  .pr-vars code { background: #111; padding: 0 0.25rem; border-radius: 3px; color: #a8d8a8; }
+  details.raw summary { cursor: pointer; font-size: 0.74rem; color: var(--muted); }
+  details.raw[open] summary { margin-bottom: 0.5rem; }
+
+  /* ── Output / checks ── */
+  #output-panel { grid-area: output; background: #111; border-top: 1px solid var(--border); display: flex; flex-direction: column; overflow: hidden; }
+  #output-toolbar { display: flex; align-items: center; gap: 0.5rem; padding: 0.35rem 0.75rem; border-bottom: 1px solid var(--border); flex-shrink: 0; }
   #output-toolbar label { font-size: 0.7rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.1em; }
-  #apply-btn {
-    margin-left: auto;
-    padding: 0.25rem 0.9rem;
-    background: var(--accent);
-    color: #1a1a22;
-    border: none;
-    border-radius: 4px;
-    font-size: 0.75rem;
-    font-weight: 700;
-    cursor: pointer;
-    letter-spacing: 0.05em;
-    transition: opacity 0.15s, background 0.2s;
-  }
-  #apply-btn:hover { opacity: 0.85; }
-  #apply-btn:disabled { opacity: 0.5; cursor: not-allowed; }
-  #apply-btn.success { background: #4caf7d; color: #fff; }
-  #apply-btn.error   { background: #c0392b; color: #fff; }
-  #apply-status {
-    font-size: 0.68rem;
-    color: var(--muted);
-    flex: 1;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-  #copy-btn {
-    padding: 0.25rem 0.75rem;
-    background: transparent;
-    color: var(--muted);
-    border: 1px solid var(--border);
-    border-radius: 4px;
-    font-size: 0.75rem;
-    cursor: pointer;
-    transition: border-color 0.15s, color 0.15s;
-  }
-  #copy-btn:hover { border-color: var(--accent); color: var(--accent); }
-  #css-output {
-    flex: 1;
-    overflow-y: auto;
-    padding: 0.5rem 0.75rem;
-    font-family: 'Consolas', 'Courier New', monospace;
-    font-size: 0.72rem;
-    color: #a8d8a8;
-    white-space: pre;
-    line-height: 1.6;
-  }
+  #output-body { flex: 1; overflow-y: auto; padding: 0.5rem 0.75rem; font-size: 0.74rem; line-height: 1.6; }
+  #output-body .ok { color: var(--ok); } #output-body .bad { color: #f08a86; }
+  #json-out { white-space: pre; font-family: Consolas, 'Courier New', monospace; font-size: 0.68rem; color: #a8d8a8; }
+  #status { font-size: 0.7rem; color: var(--muted); flex: 1; }
 
-  /* ── Size controls (shown when an overlay is selected) ── */
-  #size-controls {
-    display: none;
-    flex-direction: column;
-    gap: 0.5rem;
-    padding: 0.6rem 0.5rem;
-    border-top: 1px solid var(--border);
-    margin-top: auto;
-  }
-  #size-controls.visible { display: flex; }
-  .size-controls-title {
-    font-size: 0.65rem;
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
-    color: var(--muted);
-  }
-  .size-row {
-    display: flex;
-    align-items: center;
-    gap: 0.4rem;
-  }
-  .size-row label {
-    font-size: 0.68rem;
-    color: var(--muted);
-    width: 14px;
-    flex-shrink: 0;
-  }
-  .size-row input[type=range] {
-    flex: 1;
-    accent-color: var(--accent);
-    height: 4px;
-    cursor: pointer;
-  }
-  .size-val {
-    font-size: 0.68rem;
-    color: var(--text);
-    width: 36px;
-    text-align: right;
-    flex-shrink: 0;
-  }
-  .size-step-btns {
-    display: flex;
-    gap: 0.3rem;
-  }
-  .size-step-btn {
-    flex: 1;
-    padding: 0.2rem 0;
-    border: 1px solid var(--border);
-    background: transparent;
-    color: var(--muted);
-    border-radius: 4px;
-    font-size: 0.8rem;
-    cursor: pointer;
-    transition: border-color 0.15s, color 0.15s;
-  }
-  .size-step-btn:hover { border-color: var(--accent); color: var(--accent); }
-  .style-title { margin-top: 0.5rem; }
-  .reset-btn {
-    margin-left: 0.5rem;
-    padding: 0.25rem 0.6rem;
-    background: transparent;
-    border: 1px solid #555;
-    color: #888;
-    border-radius: 4px;
-    font-size: 0.7rem;
-    cursor: pointer;
-  }
-  .reset-btn:hover { border-color: var(--accent); color: var(--accent); }
+  /* ── Splash ── */
+  #splash { position: fixed; inset: 0; z-index: 9999; background: var(--bg); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2.5rem; transition: opacity 0.5s ease, transform 0.5s ease; }
+  #splash.fade-out { opacity: 0; transform: scale(1.04); pointer-events: none; }
+  .splash-logo-wrap { position: relative; display: inline-flex; align-items: center; justify-content: center; padding: 64px; }
+  #splash-logo { max-width: min(480px, 80vw); width: 100%; object-fit: contain; filter: drop-shadow(0 0 32px rgba(201,168,76,0.25)); }
+  .moon-orbit { position: absolute; inset: 0; animation: orbit 20s linear infinite; pointer-events: none; }
+  .gamepad-spin { position: absolute; top: 0; left: 50%; transform: translateX(-50%); font-size: 48px; line-height: 1; filter: drop-shadow(0 0 8px rgba(201,168,76,0.65)); }
+  @keyframes orbit { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+  #splash-start { padding: 0.75rem 3rem; background: transparent; border: 2px solid var(--accent); color: var(--accent); font-family: 'Cinzel', Georgia, serif; font-size: 1rem; font-weight: 700; letter-spacing: 0.2em; text-transform: uppercase; border-radius: 6px; cursor: pointer; transition: background 0.2s, color 0.2s, box-shadow 0.2s; }
+  #splash-start:hover { background: var(--accent); color: #1a1a22; box-shadow: 0 0 24px rgba(201,168,76,0.4); }
 
-  /* ── Splash screen ── */
-  #splash {
-    position: fixed;
-    inset: 0;
-    z-index: 9999;
-    background: var(--bg);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 2.5rem;
-    transition: opacity 0.5s ease, transform 0.5s ease;
-  }
-  #splash.fade-out {
-    opacity: 0;
-    transform: scale(1.04);
-    pointer-events: none;
-  }
-  .splash-logo-wrap {
-    position: relative;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    padding: 64px;
-  }
-  #splash-logo {
-    max-width: min(480px, 80vw);
-    width: 100%;
-    object-fit: contain;
-    filter: drop-shadow(0 0 32px rgba(201,168,76,0.25));
-  }
-  .moon-orbit {
-    position: absolute;
-    inset: 0;
-    animation: orbit 20s linear infinite;
-    pointer-events: none;
-  }
-  .gamepad-spin {
-    position: absolute;
-    top: 0;
-    left: 50%;
-    transform: translateX(-50%);
-    font-size: 48px;
-    line-height: 1;
-    filter: drop-shadow(0 0 8px rgba(201,168,76,0.65));
-  }
-  @keyframes orbit {
-    from { transform: rotate(0deg); }
-    to   { transform: rotate(360deg); }
-  }
-  #splash-start {
-    padding: 0.75rem 3rem;
-    background: transparent;
-    border: 2px solid var(--accent);
-    color: var(--accent);
-    font-family: 'Cinzel', Georgia, serif;
-    font-size: 1rem;
-    font-weight: 700;
-    letter-spacing: 0.2em;
-    text-transform: uppercase;
-    border-radius: 6px;
-    cursor: pointer;
-    transition: background 0.2s, color 0.2s, box-shadow 0.2s;
-  }
-  #splash-start:hover {
-    background: var(--accent);
-    color: #1a1a22;
-    box-shadow: 0 0 24px rgba(201,168,76,0.4);
-  }
+  /* ── Tutorial (spotlight tour) ── */
+  #tour { position: fixed; inset: 0; z-index: 9000; display: none; }
+  #tour.on { display: block; }
+  #tour-hole { position: absolute; border-radius: 8px; box-shadow: 0 0 0 9999px rgba(8,8,14,0.78); border: 2px solid var(--accent); transition: all 0.25s ease; pointer-events: none; }
+  #tour-card { position: absolute; width: 380px; max-width: calc(100vw - 24px); background: var(--surface); border: 1px solid var(--accent); border-radius: 10px; padding: 1rem 1.1rem; box-shadow: 0 16px 50px rgba(0,0,0,0.6); transition: all 0.25s ease; max-height: calc(100vh - 24px); overflow-y: auto; }
+  #tour-card h3 { font-family: 'Cinzel', Georgia, serif; color: var(--accent); font-size: 1rem; margin-bottom: 0.5rem; }
+  #tour-card .step-n { font-size: 0.65rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 0.2rem; }
+  #tour-body { font-size: 0.8rem; line-height: 1.55; display: flex; flex-direction: column; gap: 0.5rem; }
+  #tour-body code, .help-body code { background: #111; padding: 0 0.3rem; border-radius: 3px; font-size: 0.74rem; color: #a8d8a8; }
+  #tour-body ul, .help-body ul { padding-left: 1.1rem; display: flex; flex-direction: column; gap: 0.2rem; }
+  #tour-body .tip, .help-body .tip { background: rgba(201,168,76,0.1); border-left: 3px solid var(--accent); padding: 0.4rem 0.6rem; border-radius: 0 4px 4px 0; font-size: 0.74rem; }
+  #tour-body .try { background: rgba(76,175,125,0.12); border-left: 3px solid var(--ok); padding: 0.4rem 0.6rem; border-radius: 0 4px 4px 0; font-size: 0.74rem; }
+  #tour-foot { display: flex; align-items: center; gap: 0.4rem; margin-top: 0.8rem; }
+  #tour-dots { display: flex; gap: 4px; flex: 1; flex-wrap: wrap; }
+  #tour-dots i { width: 6px; height: 6px; border-radius: 50%; background: var(--border); }
+  #tour-dots i.on { background: var(--accent); }
+  #tour-skip { font-size: 0.66rem; color: var(--muted); margin-top: 0.5rem; display: flex; align-items: center; gap: 0.3rem; cursor: pointer; }
 
-  /* ── Add-equipment form ── */
-  .panel-title-row {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding-bottom: 0.4rem;
-    border-bottom: 1px solid var(--border);
-    margin-bottom: 0.25rem;
-  }
-  .panel-title-row .panel-title { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
-  .add-equip-toggle {
-    width: 20px;
-    height: 20px;
-    border: 1px solid var(--border);
-    background: transparent;
-    color: var(--muted);
-    border-radius: 4px;
-    font-size: 1rem;
-    line-height: 1;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-    transition: border-color 0.15s, color 0.15s;
-  }
-  .add-equip-toggle:hover, .add-equip-toggle.open { border-color: var(--accent); color: var(--accent); }
-
-  #add-equip-form {
-    display: none;
-    flex-direction: column;
-    gap: 0.4rem;
-    padding: 0.6rem;
-    background: rgba(0,0,0,0.25);
-    border: 1px solid var(--border);
-    border-radius: 6px;
-    margin-bottom: 0.4rem;
-  }
-  #add-equip-form.open { display: flex; }
-  #add-equip-form label {
-    font-size: 0.62rem;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-    color: var(--muted);
-    margin-bottom: 0.1rem;
-  }
-  #add-equip-form input[type=text],
-  #add-equip-form select {
-    width: 100%;
-    padding: 0.25rem 0.4rem;
-    background: var(--bg);
-    border: 1px solid var(--border);
-    border-radius: 4px;
-    color: var(--text);
-    font-size: 0.72rem;
-    outline: none;
-  }
-  #add-equip-form input[type=text]:focus,
-  #add-equip-form select:focus { border-color: var(--accent); }
-  .form-field { display: flex; flex-direction: column; gap: 0.15rem; }
-  .form-gender-type { display: flex; gap: 0.3rem; }
-  .form-gender-type label {
-    display: flex;
-    align-items: center;
-    gap: 0.25rem;
-    font-size: 0.68rem;
-    text-transform: none;
-    letter-spacing: 0;
-    color: var(--text);
-    cursor: pointer;
-  }
-  .form-hint {
-    font-size: 0.6rem;
-    color: var(--muted);
-    line-height: 1.3;
-  }
-  .add-equip-submit {
-    padding: 0.3rem;
-    background: var(--accent);
-    color: #1a1a22;
-    border: none;
-    border-radius: 4px;
-    font-size: 0.72rem;
-    font-weight: 700;
-    cursor: pointer;
-    margin-top: 0.2rem;
-  }
-  .add-equip-submit:hover { opacity: 0.85; }
-  .hidden { display: none !important; }
-
-  /* custom item delete button */
-  .equip-item-del {
-    margin-left: auto;
-    flex-shrink: 0;
-    width: 16px;
-    height: 16px;
-    border: 1px solid #555;
-    background: transparent;
-    color: #888;
-    border-radius: 3px;
-    font-size: 0.65rem;
-    line-height: 1;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-  .equip-item-del:hover { border-color: #c0392b; color: #c0392b; }
+  /* ── Help modal ── */
+  #help { position: fixed; inset: 0; z-index: 8000; background: rgba(8,8,14,0.7); display: none; align-items: center; justify-content: center; padding: 1rem; }
+  #help.on { display: flex; }
+  .help-card { width: min(760px, 100%); max-height: 88vh; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; display: flex; flex-direction: column; }
+  .help-head { display: flex; align-items: center; gap: 0.6rem; padding: 0.8rem 1rem; border-bottom: 1px solid var(--border); }
+  .help-head h2 { font-family: 'Cinzel', Georgia, serif; color: var(--accent); font-size: 1.05rem; flex: 1; }
+  .help-body { padding: 1rem 1.2rem; overflow-y: auto; font-size: 0.8rem; line-height: 1.6; display: flex; flex-direction: column; gap: 0.6rem; }
+  .help-body h4 { color: var(--accent); margin-top: 0.6rem; font-size: 0.85rem; }
+  .help-body table { border-collapse: collapse; width: 100%; font-size: 0.74rem; }
+  .help-body td, .help-body th { border: 1px solid var(--border); padding: 0.3rem 0.5rem; text-align: left; vertical-align: top; }
+  .help-body th { background: var(--surface2); }
+  kbd { background: #111; border: 1px solid var(--border); border-radius: 3px; padding: 0 0.3rem; font-size: 0.7rem; }
 </style>
 </head>
 <body>
 
-<!-- Splash / home screen -->
+<!-- Splash -->
 <div id="splash">
   <div class="splash-logo-wrap">
-    <img id="splash-logo" src="" alt="ShedR" />
-    <div class="moon-orbit">
-      <div class="gamepad-spin">🎮</div>
-    </div>
+    <img id="splash-logo" src="/shedr.png" alt="ShedR" />
+    <div class="moon-orbit"><div class="gamepad-spin">🎮</div></div>
   </div>
   <button type="button" id="splash-start">Enter Studio</button>
 </div>
 
 <header>
-  ShedR
-  <span>DEV TOOL — click overlay to select · drag to move · use size controls or corner handle to resize</span>
+  <span class="brand">ShedR · Avatar Studio</span>
+  <div class="tabs" id="tabs">
+    <button type="button" class="tab active" data-mode="fit" title="Ver e ajustar os equipamentos no personagem">Fit</button>
+    <button type="button" class="tab" data-mode="landmarks" title="Marcar head / torso / hands / feet / shield de cada avatar">Landmarks</button>
+ <button type="button" class="tab" data-mode="prompts" title="Gerar prompts de imagem para novos itens">Prompts</button>
+    <button type="button" class="tab" data-mode="check" title="Testar todos os itens em todos os avatares">Check all<span class="count hidden" id="check-count"></span></button>
+  </div>
+  <span class="spacer"></span>
+  <span id="dirty-badge">● alterações não salvas</span>
+  <button type="button" class="btn primary" id="save-btn" title="Salva em public/data/avatar-fit.json (Ctrl+S)">Save</button>
+  <button type="button" class="btn" id="help-btn" title="Tutorial e receitas">?</button>
   <div class="zoom-controls">
     <button type="button" class="zoom-btn" id="zoom-out">−</button>
     <span id="zoom-label">100%</span>
@@ -555,741 +336,1206 @@
   </div>
 </header>
 
-<!-- Left: Avatar selector -->
+<!-- Left -->
 <aside class="panel" id="left-panel">
   <div class="panel-title">Character</div>
-
   <div class="gender-btns">
     <button type="button" class="gender-btn active" data-gender="male">Male</button>
     <button type="button" class="gender-btn" data-gender="female">Female</button>
   </div>
-
-  <div class="panel-title style-title">Style</div>
+  <div class="panel-title">Style</div>
   <div class="avatar-thumb-grid" id="avatar-thumbs"></div>
+
+  <div class="panel-title">View</div>
+  <label class="check-row"><input type="checkbox" id="opt-grid" /> Grade de % (régua)</label>
+  <label class="check-row hidden" id="opt-preview-row"><input type="checkbox" id="opt-preview" checked /> Mostrar equipamentos</label>
+
+  <div id="lm-panel" class="section hidden">
+    <div class="panel-title">Landmarks</div>
+    <div class="lm-legend" id="lm-legend"></div>
+    <p class="hint" id="lm-hint"></p>
+  </div>
 </aside>
 
-<!-- Center: Canvas -->
+<!-- Center -->
 <main id="canvas-area">
-  <div id="avatar-container">
-    <img class="base-avatar" id="base-img" src="" alt="Avatar" />
-  </div>
+  <div id="stage-wrap"></div>
+  <div id="view-check" class="hidden"></div>
+  <div id="view-prompts" class="hidden"></div>
 </main>
 
-<!-- Right: Equipment -->
+<!-- Right -->
 <aside class="panel right" id="right-panel">
   <div class="panel-title-row">
     <div class="panel-title">Equipment</div>
-    <button type="button" class="add-equip-toggle" id="add-equip-toggle" title="Add equipment">+</button>
+    <button type="button" class="add-equip-toggle" id="add-equip-toggle" title="Adicionar equipamento">+</button>
   </div>
 
-  <!-- Add equipment form -->
   <div id="add-equip-form">
-    <div class="form-field">
-      <label>Name</label>
-      <input type="text" id="eq-name" placeholder="e.g. Iron Helmet" />
-    </div>
-    <div class="form-field">
-      <label>Slot</label>
+    <div class="field"><label>Name</label><input type="text" id="eq-name" placeholder="e.g. Iron Helmet" /></div>
+    <div class="field"><label>Slot</label>
       <select id="eq-slot">
         <option value="armor">Armor</option>
         <option value="shield">Shield</option>
         <option value="helmet">Helmet</option>
-        <option value="gauntlet">Arm / Gauntlet</option>
+        <option value="gauntlet">Gauntlet</option>
         <option value="boots">Boots</option>
       </select>
     </div>
-    <div class="form-field">
-      <label>Image type</label>
-      <div class="form-gender-type">
-        <label><input type="radio" name="eq-imgtype" value="gendered" checked /> Gender-specific</label>
-        <label><input type="radio" name="eq-imgtype" value="static" /> Single image</label>
+    <div class="field"><label>Image type</label>
+      <div class="radio-row">
+        <label><input type="radio" name="eq-imgtype" value="gendered" checked /> Por gênero</label>
+        <label><input type="radio" name="eq-imgtype" value="static" /> Imagem única</label>
       </div>
     </div>
-    <div class="form-field" id="eq-base-field">
-      <label>Base filename (no suffix)</label>
+    <div class="field" id="eq-base-field"><label>Base filename</label>
       <input type="text" id="eq-base" placeholder="e.g. iron_helmet" />
-      <span class="form-hint">File must exist as items/iron_helmet_male.png and items/iron_helmet_female.png</span>
+      <span class="hint">Precisa existir: public/items/iron_helmet_male.png e _female.png</span>
     </div>
-    <div class="form-field hidden" id="eq-static-field">
-      <label>Image path (from public/)</label>
+    <div class="field hidden" id="eq-static-field"><label>Image path (dentro de public/)</label>
       <input type="text" id="eq-static" placeholder="e.g. img/iron_helmet.png" />
-      <span class="form-hint">File must exist inside public/</span>
     </div>
-    <button type="button" class="add-equip-submit" id="add-equip-submit">Add Equipment</button>
+    <label class="check-row"><input type="checkbox" id="eq-prealigned" /> Já desenhado no canvas do avatar</label>
+    <div id="add-error"></div>
+    <button type="button" class="btn primary" id="add-equip-submit">Add Equipment</button>
   </div>
 
-  <div id="equip-list"></div>
+  <div id="equip-list" class="section"></div>
 
-  <div id="size-controls">
-    <div class="size-controls-title">Size — <span id="size-slot-name">—</span></div>
-    <div class="size-row">
-      <label>W</label>
-      <input type="range" id="size-w" min="5" max="150" step="1" />
-      <span class="size-val" id="size-w-val">—</span>
-    </div>
-    <div class="size-row">
-      <label>H</label>
-      <input type="range" id="size-h" min="5" max="150" step="1" />
-      <span class="size-val" id="size-h-val">—</span>
-    </div>
-    <div class="size-step-btns">
-      <button type="button" class="size-step-btn" id="size-smaller">− Smaller</button>
-      <button type="button" class="size-step-btn" id="size-bigger">+ Bigger</button>
+  <div id="rule-panel" class="section">
+    <div class="panel-title">Slot rule — <span id="rule-slot-name"></span></div>
+    <p class="hint">Vale para <b>todos</b> os itens deste slot, em todos os avatares.</p>
+    <div class="field"><label>Slot</label><select id="rule-slot"></select></div>
+    <div class="field"><label>Landmark alvo</label><select id="rule-region"></select></div>
+    <div class="field"><label>Modo de encaixe</label><select id="rule-fit"></select></div>
+    <div id="rule-sliders" class="section"></div>
+  </div>
+
+  <div id="override-panel" class="section">
+    <div class="panel-title">This sprite — <span id="ov-name">—</span></div>
+    <p class="hint" id="ov-hint">Selecione um item ativo para ajustá-lo <b>só neste avatar</b>. Arraste no canvas ou use os controles.</p>
+    <div id="ov-sliders" class="section"></div>
+    <div class="btn-row" id="ov-buttons"></div>
+    <label class="check-row hidden" id="ov-prealigned-row"><input type="checkbox" id="ov-prealigned" /> Sprite já alinhado ao canvas (sem encaixe)</label>
+  </div>
+
+  <div id="lm-edit-panel" class="section hidden">
+    <div class="panel-title">Landmark — <span id="lm-name">—</span></div>
+    <div id="lm-sliders" class="section"></div>
+    <div class="btn-row">
+      <button type="button" class="btn small" id="lm-copy">Copiar de outro estilo…</button>
+      <button type="button" class="btn small" id="lm-revert">Desfazer avatar</button>
     </div>
   </div>
 </aside>
 
-<!-- Bottom: CSS output -->
+<!-- Bottom -->
 <div id="output-panel">
   <div id="output-toolbar">
-    <label>Generated CSS</label>
-    <span id="apply-status"></span>
-    <button type="button" id="apply-btn">Apply to Game</button>
-    <button type="button" id="copy-btn">Copy CSS</button>
-    <button type="button" class="reset-btn" id="reset-btn">Reset</button>
+    <label id="output-label">Checks — avatar atual</label>
+    <span id="status"></span>
+    <button type="button" class="btn small" id="rescan-btn" title="Remede a caixa visível de todos os PNGs (use depois de trocar uma imagem)">Rescan sprites</button>
+    <button type="button" class="btn small" id="json-toggle">Mostrar JSON</button>
   </div>
-  <div id="css-output"></div>
+  <div id="output-body"></div>
 </div>
 
+<!-- Tutorial overlay -->
+<div id="tour">
+  <div id="tour-hole"></div>
+  <div id="tour-card">
+    <div class="step-n" id="tour-step-n"></div>
+    <h3 id="tour-title"></h3>
+    <div id="tour-body"></div>
+    <label id="tour-skip"><input type="checkbox" id="tour-never" /> Não abrir automaticamente de novo</label>
+    <div id="tour-foot">
+      <div id="tour-dots"></div>
+      <button type="button" class="btn small" id="tour-close">Fechar</button>
+      <button type="button" class="btn small" id="tour-prev">← Voltar</button>
+      <button type="button" class="btn small primary" id="tour-next">Próximo →</button>
+    </div>
+  </div>
+</div>
+
+<!-- Help / recipes -->
+<div id="help">
+  <div class="help-card">
+    <div class="help-head">
+      <h2>Ajuda & receitas</h2>
+      <button type="button" class="btn small" id="help-tour">▶ Refazer o tutorial</button>
+      <button type="button" class="btn small" id="help-close">Fechar</button>
+    </div>
+    <div class="help-body" id="help-body"></div>
+  </div>
+</div>
+
+<script src="/public/js/avatar-fit.js"></script>
+<script src="/prompt-builder.js"></script>
 <script>
-// ── Splash screen ────────────────────────────────────────────────────────────
+'use strict';
 
-(function initSplash() {
-  const LOGO_SRC = location.protocol === 'file:' ? './shedr.png' : '/shedr.png';
-  document.getElementById('splash-logo').src = LOGO_SRC;
+// ════════════════════════════════════════════════════════════════════════════
+//  Avatar Studio — fits equipment to every avatar using landmarks + slot rules.
+//  Data lives in public/data/avatar-fit.json and is read by the game
+//  (public/js/avatar-fit.js). This file only edits that JSON.
+// ════════════════════════════════════════════════════════════════════════════
 
-  document.getElementById('splash-start').addEventListener('click', () => {
-    const splash = document.getElementById('splash');
-    splash.classList.add('fade-out');
-    splash.addEventListener('transitionend', () => splash.remove(), { once: true });
-  });
-})();
-
-// ── Constants ─────────────────────────────────────────────────────────────────
-
-// When served via `npm run canvas` use the server's /public route;
-// fall back to relative path when opened directly as file://
-const BASE = location.protocol === 'file:' ? '../../public' : '/public';
-
+const BASE = '/public';
 const AVATAR_STYLES = ['A', 'B', 'C'];
-
-const EQUIPMENT = [
-  { id: 3,  name: 'Leather Armor',   base: 'leather_armor',   slot: 'armor'   },
-  { id: 4,  name: 'Iron Shield',     base: 'iron_shield',     slot: 'shield'  },
-  { id: 12, name: 'Oak Shield',      base: 'oak_shield',      slot: 'shield'  },
-  { id: 15, name: 'Hunter Armor',    base: 'hunter_armor',    slot: 'armor'   },
-  { id: 42, name: 'Elven Leaves Armor', base: 'elven_leaves_armor', slot: 'armor' },
-  { id: 31, name: 'Iron Gauntlets',  base: 'iron_gauntlets',  slot: 'gauntlet'},
-  { id: 33, name: 'Leather Boots',   base: 'boot_leather',    slot: 'boots'   },
-  { id: 35, name: 'Leather Helmet',  staticSrc: '/img/leather_helmet.png', slot: 'helmet' },
-];
-
-// Slot render order (z-index): armor first (back), then gauntlet, shield, boots, helmet
-const SLOT_ORDER = ['armor', 'gauntlet', 'boots', 'shield', 'helmet'];
-
-// Baseline offsets from style.css — expressed as percentages (matching game CSS)
-// These seed the tool so you adjust from a real baseline.
-const DEFAULTS = {
-  armor:          { top: 40,    left: 50,    width: 65,  height: 65  },
-  'armor-f':      { top: 44,    left: 50,    width: 65,  height: 65  },
-  shield:         { top: 50,    left: 72,    width: 45,  height: 45  },
-  'shield-f':     { top: 50,    left: 72,    width: 45,  height: 45  },
-  boots:          { top: 75,    left: 49.5,  width: 73,  height: 49  },
-  'boots-f':      { top: 83,    left: 49,    width: 73,  height: 49  },
-  gauntlet:       { top: 50,    left: 50,    width: 45,  height: 45  },
-  'gauntlet-f':   { top: 50,    left: 50,    width: 45,  height: 45  },
-  helmet:         { top: 21.59, left: 49.62, width: 60,  height: 60  },
-  'helmet-f':     { top: 21.59, left: 49.62, width: 60,  height: 60  },
+const SLOT_Z = { armor: 1, gauntlet: 2, boots: 3, shield: 4, helmet: 5 };
+const SLOTS = Object.keys(SLOT_Z);
+const REGIONS = AvatarFit.REGIONS;
+const REGION_COLOR = { head: 'var(--c-head)', torso: 'var(--c-torso)', hands: 'var(--c-hands)', feet: 'var(--c-feet)', shield: 'var(--c-shield)' };
+const REGION_HELP = {
+  head:   'Da ponta do cabelo até o queixo, na largura da cabeça (sem rabo de cavalo). Define o tamanho e a posição do <b>elmo</b>.',
+  torso:  'Da linha dos ombros (largura dos braços incluída) até a barra do short/saia. A <b>armadura</b> assume a largura desta caixa.',
+  hands:  'Faixa de uma mão à outra (de fora a fora), na altura do punho/antebraço. As <b>manoplas</b> são encaixadas aqui.',
+  feet:   'Do meio da canela até a sola, de fora a fora dos pés. As <b>botas</b> se alinham pela base desta caixa.',
+  shield: 'Área ao redor da mão que segura o escudo (lado direito da tela). O <b>escudo</b> é centralizado aqui.',
 };
 
-// ── State ─────────────────────────────────────────────────────────────────────
+const $ = id => document.getElementById(id);
+const clone = o => JSON.parse(JSON.stringify(o));
+const round2 = n => Math.round(n * 100) / 100;
+const clamp = (n, a, b) => Math.min(b, Math.max(a, n));
 
-let state = {
+// ── State ────────────────────────────────────────────────────────────────────
+
+let fit = null;            // working copy (what Save writes)
+let savedJson = '';        // snapshot of last saved/loaded state → dirty detection
+const ui = {
+  mode: 'fit',
   gender: 'male',
-  avatarStyle: 'A',
-  activeItems: new Set(),   // item id numbers (built-in) or custom id strings
-  overlays: {},             // slot → { top, left, width, height } in %
-  zoom: 1.0,
-  customEquipment: [],      // user-added items persisted in localStorage
+  style: 'A',
+  active: new Set(),       // active item ids
+  selectedItem: null,      // item id selected in Fit view
+  selectedRegion: 'torso', // landmark selected in Landmarks view
+  ruleSlot: 'armor',
+  zoom: 1,
+  showGrid: false,
+  showPreview: true,
+  showJson: false,
+  onlyProblems: false,
 };
 
-const STORAGE_KEY = 'avatar-canvas-v1';
+const avatarKey = (g = ui.gender, s = ui.style) => `${g}_${s}`;
+const srcOf = (item, gender = ui.gender) => item.src || `/items/${item.base}_${gender}.png`;
+const itemById = id => fit.items.find(i => i.id === id);
+const slotRule = slot => fit.rules[slot];
 
-function loadState() {
-  try {
-    const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
-    if (saved.gender) state.gender = saved.gender;
-    if (saved.avatarStyle) state.avatarStyle = saved.avatarStyle;
-    if (saved.activeItems) state.activeItems = new Set(saved.activeItems);
-    if (saved.overlays) state.overlays = saved.overlays;
-    if (saved.zoom) state.zoom = saved.zoom;
-    if (Array.isArray(saved.customEquipment)) state.customEquipment = saved.customEquipment;
-  } catch (_) {}
+function isDirty() { return JSON.stringify(fit) !== savedJson; }
+
+function placement(item, key = avatarKey(), customFit = fit) {
+  const gender = key.split('_')[0];
+  const o = { fit: customFit, avatarKey: key, slot: item.slot, src: srcOf(item, gender) };
+  const result = AvatarFit.compute(o);
+  return { o, result, problems: AvatarFit.check(o, result) };
 }
 
-function saveState() {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify({
-    gender: state.gender,
-    avatarStyle: state.avatarStyle,
-    activeItems: [...state.activeItems],
-    overlays: state.overlays,
-    zoom: state.zoom,
-    customEquipment: state.customEquipment,
-  }));
-}
+// ── Sprite measurement (visible box from alpha) ──────────────────────────────
 
-// ── DOM refs ──────────────────────────────────────────────────────────────────
-
-const baseImg        = document.getElementById('base-img');
-const avatarContainer = document.getElementById('avatar-container');
-const avatarThumbs   = document.getElementById('avatar-thumbs');
-const equipList      = document.getElementById('equip-list');
-const cssOutput      = document.getElementById('css-output');
-const copyBtn        = document.getElementById('copy-btn');
-
-// ── Avatar selector ───────────────────────────────────────────────────────────
-
-function buildAvatarThumbs() {
-  avatarThumbs.innerHTML = '';
-  AVATAR_STYLES.forEach(style => {
-    const src = `${BASE}/avatars/selection/${state.gender}_selection_${style}.png`;
-    const div = document.createElement('div');
-    div.className = 'avatar-thumb' + (state.avatarStyle === style ? ' active' : '');
-    div.dataset.style = style;
-    div.innerHTML = `<img src="${src}" alt="${state.gender} ${style}" />`;
-    div.addEventListener('click', () => {
-      state.avatarStyle = style;
-      saveState();
-      buildAvatarThumbs();
-      updateBaseAvatar();
-    });
-    avatarThumbs.appendChild(div);
+function loadImage(src) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => resolve(img);
+    img.onerror = () => reject(new Error('imagem não encontrada: ' + src));
+    img.src = BASE + src;
   });
 }
 
-function updateBaseAvatar() {
-  const src = `${BASE}/avatars/selection/${state.gender}_selection_${state.avatarStyle}.png`;
-  baseImg.src = src;
-}
-
-// ── Gender toggle ─────────────────────────────────────────────────────────────
-
-document.querySelectorAll('.gender-btn').forEach(btn => {
-  btn.addEventListener('click', () => {
-    state.gender = btn.dataset.gender;
-    document.querySelectorAll('.gender-btn').forEach(b => b.classList.toggle('active', b === btn));
-    saveState();
-    buildAvatarThumbs();
-    updateBaseAvatar();
-    buildEquipList();
-    rebuildOverlays();
-  });
-});
-
-// ── Equipment list ────────────────────────────────────────────────────────────
-
-function equipImgSrc(eq) {
-  if (eq.staticSrc) return BASE + eq.staticSrc;
-  return `${BASE}/items/${eq.base}_${state.gender}.png`;
-}
-
-function allEquipment() {
-  return [...EQUIPMENT, ...state.customEquipment];
-}
-
-function buildEquipList() {
-  equipList.innerHTML = '';
-  allEquipment().forEach(eq => {
-    const active = state.activeItems.has(eq.id);
-    const isCustom = !EQUIPMENT.find(e => e.id === eq.id);
-    const div = document.createElement('div');
-    div.className = 'equip-item' + (active ? ' active' : '');
-    div.dataset.id = eq.id;
-
-    const img = document.createElement('img');
-    img.src = equipImgSrc(eq);
-    img.alt = eq.name;
-    img.onerror = () => { img.style.opacity = '0.3'; };
-
-    const label = document.createElement('span');
-    label.className = 'equip-item-label';
-    label.textContent = eq.name;
-
-    div.appendChild(img);
-    div.appendChild(label);
-
-    if (isCustom) {
-      const del = document.createElement('button');
-      del.type = 'button';
-      del.className = 'equip-item-del';
-      del.title = 'Remove';
-      del.textContent = '×';
-      del.addEventListener('click', e => {
-        e.stopPropagation();
-        state.activeItems.delete(eq.id);
-        state.customEquipment = state.customEquipment.filter(c => c.id !== eq.id);
-        saveState();
-        buildEquipList();
-        rebuildOverlays();
-      });
-      div.appendChild(del);
-    }
-
-    div.addEventListener('click', () => {
-      if (state.activeItems.has(eq.id)) {
-        state.activeItems.delete(eq.id);
-        const sameSlotActive = allEquipment().filter(e => e.slot === eq.slot && state.activeItems.has(e.id));
-        if (sameSlotActive.length === 0) delete state.overlays[slotKey(eq.slot)];
-      } else {
-        state.activeItems.add(eq.id);
+async function measureSprite(src) {
+  const img = await loadImage(src);
+  const c = document.createElement('canvas');
+  c.width = img.naturalWidth; c.height = img.naturalHeight;
+  const ctx = c.getContext('2d', { willReadFrequently: true });
+  ctx.drawImage(img, 0, 0);
+  const { data } = ctx.getImageData(0, 0, c.width, c.height);
+  const thr = fit.alphaThreshold == null ? 40 : fit.alphaThreshold;
+  let l = c.width, t = c.height, r = -1, b = -1;
+  for (let y = 0; y < c.height; y++) {
+    for (let x = 0; x < c.width; x++) {
+      if (data[(y * c.width + x) * 4 + 3] > thr) {
+        if (x < l) l = x; if (x > r) r = x; if (y < t) t = y; if (y > b) b = y;
       }
-      saveState();
-      buildEquipList();
-      rebuildOverlays();
-    });
-
-    equipList.appendChild(div);
-  });
-}
-
-// ── Slot key (accounts for gender variants) ───────────────────────────────────
-
-function slotKey(slot) {
-  return state.gender === 'female' ? slot + '-f' : slot;
-}
-
-function getSlotDefault(slot) {
-  return { ...( DEFAULTS[slotKey(slot)] || DEFAULTS[slot] || { top: 50, left: 50, width: 60, height: 60 } ) };
-}
-
-// ── Overlay rendering & dragging ──────────────────────────────────────────────
-
-let selectedSlot = null;
-
-function rebuildOverlays() {
-  // Remove all existing overlays
-  avatarContainer.querySelectorAll('.equip-overlay').forEach(el => el.remove());
-
-  // Collect active items grouped by slot (last active wins per slot)
-  const activeBySlot = {};
-  EQUIPMENT.forEach(eq => {
-    if (state.activeItems.has(eq.id)) {
-      activeBySlot[eq.slot] = eq;
     }
-  });
+  }
+  if (r < 0) throw new Error('imagem totalmente transparente: ' + src);
+  return { w: c.width, h: c.height, box: [l, t, r + 1, b + 1] };
+}
 
-  // Render in slot order
-  SLOT_ORDER.forEach((slot, zIdx) => {
-    const eq = activeBySlot[slot];
-    if (!eq) return;
+function allSpriteSrcs() {
+  const out = new Set();
+  for (const it of fit.items) { if (it.src) out.add(it.src); else ['male', 'female'].forEach(g => out.add(srcOf(it, g))); }
+  return [...out];
+}
 
-    const key = slotKey(slot);
-    if (!state.overlays[key]) {
-      state.overlays[key] = getSlotDefault(slot);
-    }
-    const pos = state.overlays[key];
+async function scanSprites(srcs = allSpriteSrcs()) {
+  const errors = [];
+  let changed = 0;
+  for (const s of srcs) {
+    try {
+      const m = await measureSprite(s);
+      const prev = fit.sprites[s] || {};
+      const next = { ...m, prealigned: !!prev.prealigned };
+      if (JSON.stringify(prev) !== JSON.stringify(next)) changed++;
+      fit.sprites[s] = next;
+    } catch (e) { errors.push(e.message); }
+  }
+  return { changed, errors };
+}
 
+// ── Stage rendering ──────────────────────────────────────────────────────────
+
+function activeItems() {
+  return fit.items.filter(i => ui.active.has(i.id)).sort((a, b) => SLOT_Z[a.slot] - SLOT_Z[b.slot]);
+}
+
+function makeStage(key, items, height) {
+  const stage = document.createElement('div');
+  stage.className = 'stage';
+  if (height) stage.style.setProperty('--stage-h', height + 'px');
+  const base = document.createElement('img');
+  base.className = 'base';
+  base.src = `${BASE}/avatars/selection/${key.split('_')[0]}_selection_${key.split('_')[1]}.png`;
+  base.draggable = false;
+  stage.appendChild(base);
+  const placed = [];
+  for (const it of items) {
+    const p = placement(it, key);
     const img = document.createElement('img');
-    img.className = 'equip-overlay' + (selectedSlot === key ? ' selected' : '');
-    img.dataset.slot = key;
-    img.src = equipImgSrc(eq);
-    img.alt = '';
-    img.style.cssText = `
-      top: ${pos.top}%;
-      left: ${pos.left}%;
-      width: ${pos.width}%;
-      height: ${pos.height}%;
-      z-index: ${zIdx + 1};
-    `;
-
-    // Resize handle
-    const handle = document.createElement('div');
-    handle.className = 'resize-handle';
-    handle.dataset.slot = key;
-
-    img.appendChild(handle);
-    avatarContainer.appendChild(img);
-
-    makeDraggable(img, key);
-    makeResizable(handle, img, key);
-
-    img.addEventListener('mousedown', (e) => {
-      if (e.target === handle) return;
-      selectedSlot = key;
-      rebuildOverlays();
-      syncSizeControls();
-      e.stopPropagation();
-    });
-  });
-
-  updateCssOutput();
+    img.className = 'equip';
+    img.draggable = false;
+    img.src = BASE + srcOf(it, key.split('_')[0]);
+    img.style.cssText = p.result ? AvatarFit.overlayStyle(p.result) : 'left:0;top:0;width:100%;height:100%;';
+    img.style.zIndex = SLOT_Z[it.slot];
+    stage.appendChild(img);
+    placed.push({ item: it, ...p });
+  }
+  return { stage, placed };
 }
 
-avatarContainer.addEventListener('mousedown', (e) => {
-  if (e.target === avatarContainer || e.target === baseImg) {
-    selectedSlot = null;
-    rebuildOverlays();
-    syncSizeControls();
-  }
-});
-
-function makeDraggable(img, key) {
-  let startX, startY, startTop, startLeft;
-  const containerRect = () => avatarContainer.getBoundingClientRect();
-
-  img.addEventListener('mousedown', onDown);
-
-  function onDown(e) {
-    if (e.target.classList.contains('resize-handle')) return;
-    e.preventDefault();
-    selectedSlot = key;
-    rebuildOverlays();
-
-    const pos = state.overlays[key];
-    startX = e.clientX;
-    startY = e.clientY;
-    startTop  = pos.top;
-    startLeft = pos.left;
-
-    img.classList.add('dragging');
-
-    function onMove(e) {
-      const rect = containerRect();
-      const dx = ((e.clientX - startX) / rect.width)  * 100;
-      const dy = ((e.clientY - startY) / rect.height) * 100;
-      state.overlays[key].top  = parseFloat((startTop  + dy).toFixed(2));
-      state.overlays[key].left = parseFloat((startLeft + dx).toFixed(2));
-      img.style.top  = state.overlays[key].top  + '%';
-      img.style.left = state.overlays[key].left + '%';
-      updateCssOutput();
-      saveState();
-    }
-
-    function onUp() {
-      img.classList.remove('dragging');
-      document.removeEventListener('mousemove', onMove);
-      document.removeEventListener('mouseup', onUp);
-    }
-
-    document.addEventListener('mousemove', onMove);
-    document.addEventListener('mouseup', onUp);
+function addGrid(stage) {
+  for (let p = 10; p < 100; p += 10) {
+    const h = document.createElement('div'); h.className = 'grid-line'; h.style.top = p + '%';
+    h.innerHTML = `<span>${p}%</span>`; stage.appendChild(h);
+    const v = document.createElement('div'); v.className = 'grid-vline'; v.style.left = p + '%'; stage.appendChild(v);
   }
 }
 
-function makeResizable(handle, img, key) {
-  handle.addEventListener('mousedown', onDown);
-
-  function onDown(e) {
-    e.preventDefault();
-    e.stopPropagation();
-
-    const rect = avatarContainer.getBoundingClientRect();
-    const startX = e.clientX;
-    const startY = e.clientY;
-    const startW = state.overlays[key].width;
-    const startH = state.overlays[key].height;
-
-    function onMove(e) {
-      const dw = ((e.clientX - startX) / rect.width)  * 100;
-      const dh = ((e.clientY - startY) / rect.height) * 100;
-      const newW = Math.max(5, parseFloat((startW + dw).toFixed(2)));
-      const newH = Math.max(5, parseFloat((startH + dh).toFixed(2)));
-      state.overlays[key].width  = newW;
-      state.overlays[key].height = newH;
-      img.style.width  = newW + '%';
-      img.style.height = newH + '%';
-      syncSizeControls();
-      updateCssOutput();
-      saveState();
-    }
-
-    function onUp() {
-      document.removeEventListener('mousemove', onMove);
-      document.removeEventListener('mouseup', onUp);
-    }
-
-    document.addEventListener('mousemove', onMove);
-    document.addEventListener('mouseup', onUp);
-  }
+// Drag helper — reports deltas in % of the stage (x of width, y of height)
+function startDrag(e, stage, onMove, onEnd) {
+  e.preventDefault(); e.stopPropagation();
+  const rect = stage.getBoundingClientRect();
+  const x0 = e.clientX, y0 = e.clientY;
+  const move = ev => onMove(((ev.clientX - x0) / rect.width) * 100, ((ev.clientY - y0) / rect.height) * 100, ev);
+  const up = () => { document.removeEventListener('mousemove', move); document.removeEventListener('mouseup', up); renderEquipList(); renderThumbs(); updateCheckBadge(); onEnd && onEnd(); };
+  document.addEventListener('mousemove', move);
+  document.addEventListener('mouseup', up);
 }
 
-// ── CSS output ────────────────────────────────────────────────────────────────
-
-function formatVal(n) { return parseFloat(n.toFixed(2)) + '%'; }
-
-function updateCssOutput() {
-  const lines = [];
-
-  const slotCssClass = {
-    armor:          '.equip-overlay',
-    'armor-f':      '.equip-overlay-armor--female',
-    shield:         '.equip-overlay-shield',
-    'shield-f':     '.equip-overlay-shield--female',
-    boots:          '.equip-overlay-boots',
-    'boots-f':      '.equip-overlay-boots--female',
-    gauntlet:       '.equip-overlay-gauntlet',
-    'gauntlet-f':   '.equip-overlay-gauntlet--female',
-    helmet:         '.equip-overlay-helmet',
-    'helmet-f':     '.equip-overlay-helmet--female',
+function getOverride(item, key = avatarKey()) {
+  const k = `${key}|${srcOf(item, key.split('_')[0])}`;
+  return { k, v: fit.overrides[k] || {} };
+}
+function setOverride(item, patch, key = avatarKey()) {
+  const { k, v } = getOverride(item, key);
+  const next = { ...v, ...patch };
+  const neutral = (!next.dx) && (!next.dy) && (next.scale == null || Math.abs(next.scale - 1) < 1e-6);
+  if (neutral) delete fit.overrides[k]; else fit.overrides[k] = {
+    scale: round2(next.scale == null ? 1 : next.scale), dx: round2(next.dx || 0), dy: round2(next.dy || 0),
   };
-
-  const allSlots = ['armor', 'armor-f', 'shield', 'shield-f', 'boots', 'boots-f', 'gauntlet', 'gauntlet-f', 'helmet', 'helmet-f'];
-  allSlots.forEach(key => {
-    const pos = state.overlays[key] || DEFAULTS[key];
-    if (!pos) return;
-    const cls = slotCssClass[key] || `.equip-overlay-${key}`;
-    lines.push(`${cls} {`);
-    lines.push(`  top: ${formatVal(pos.top)}; left: ${formatVal(pos.left)};`);
-    lines.push(`  width: ${formatVal(pos.width)}; height: ${formatVal(pos.height)};`);
-    lines.push(`}`);
-    lines.push('');
-  });
-
-  cssOutput.textContent = lines.join('\n');
 }
 
-// ── Apply to Game ─────────────────────────────────────────────────────────────
+function renderStage() {
+  const wrap = $('stage-wrap');
+  wrap.innerHTML = '';
+  if (ui.mode === 'check' || ui.mode === 'prompts') return;
+  const key = avatarKey();
+  const showItems = ui.mode === 'fit' || ui.showPreview;
+  const { stage, placed } = makeStage(key, showItems ? activeItems() : [], Math.round(560 * ui.zoom));
+  wrap.appendChild(stage);
+  if (ui.showGrid) addGrid(stage);
 
-const applyBtn    = document.getElementById('apply-btn');
-const applyStatus = document.getElementById('apply-status');
-
-applyBtn.addEventListener('click', async () => {
-  applyBtn.disabled = true;
-  applyStatus.textContent = 'Applying…';
-  try {
-    const res = await fetch('/apply', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ overlays: state.overlays }),
-    });
-    const data = await res.json();
-    if (res.ok && data.ok) {
-      applyBtn.classList.add('success');
-      applyStatus.textContent = data.message;
-    } else {
-      applyBtn.classList.add('error');
-      applyStatus.textContent = data.error || 'Failed';
+  if (ui.mode === 'fit') {
+    stage.addEventListener('mousedown', e => { if (e.target === stage || e.target.classList.contains('base')) selectItem(null); });
+    for (const p of placed) {
+      if (!p.result || p.result.prealigned) continue;   // pre-aligned sprites have nothing to drag
+      const b = p.result.box;
+      const hit = document.createElement('div');
+      hit.className = 'hit' + (ui.selectedItem === p.item.id ? ' selected' : '') + (p.problems.length ? ' warn' : '');
+      hit.style.cssText = `left:${b.x}%;top:${b.y}%;width:${b.w}%;height:${b.h}%;`;
+      hit.innerHTML = `<span class="tag">${p.item.name}</span><div class="handle"></div>`;
+      hit.title = p.problems.length ? p.problems.join('\n') : p.item.name;
+      // startDrag runs first: it measures the stage before selecting re-renders it.
+      hit.addEventListener('mousedown', e => {
+        if (e.target.classList.contains('handle')) return;
+        const ov0 = getOverride(p.item).v;
+        startDrag(e, stage, (dx, dy) => {
+          setOverride(p.item, { dx: (ov0.dx || 0) + dx, dy: (ov0.dy || 0) + dy });
+          liveUpdate();
+        });
+        selectItem(p.item.id);
+      });
+      hit.querySelector('.handle').addEventListener('mousedown', e => {
+        const ov0 = getOverride(p.item).v;
+        const s0 = ov0.scale == null ? 1 : ov0.scale;
+        startDrag(e, stage, dx => {
+          setOverride(p.item, { scale: clamp(s0 * (b.w + dx) / b.w, 0.2, 4) });
+          liveUpdate();
+        });
+        selectItem(p.item.id);
+      });
+      stage.appendChild(hit);
     }
-  } catch {
-    applyBtn.classList.add('error');
-    applyStatus.textContent = 'Server not running — use npm run canvas';
+  } else if (ui.mode === 'landmarks') {
+    const lm = fit.avatars[key];
+    for (const r of REGIONS) {
+      const b = lm[r];
+      const el = document.createElement('div');
+      el.className = 'lm-box' + (ui.selectedRegion === r ? ' selected' : ui.selectedRegion ? ' dim' : '');
+      el.style.cssText = `--c:${REGION_COLOR[r]};left:${b.x}%;top:${b.y}%;width:${b.w}%;height:${b.h}%;`;
+      el.innerHTML = `<span class="tag">${r}</span><div class="handle"></div>`;
+      el.addEventListener('mousedown', e => {
+        if (e.target.classList.contains('handle')) return;
+        const b0 = { ...lm[r] };
+        startDrag(e, stage, (dx, dy) => { lm[r].x = round2(b0.x + dx); lm[r].y = round2(b0.y + dy); liveUpdate(); });
+        selectRegion(r);
+      });
+      el.querySelector('.handle').addEventListener('mousedown', e => {
+        const b0 = { ...lm[r] };
+        startDrag(e, stage, (dx, dy) => { lm[r].w = round2(Math.max(2, b0.w + dx)); lm[r].h = round2(Math.max(2, b0.h + dy)); liveUpdate(); });
+        selectRegion(r);
+      });
+      stage.appendChild(el);
+    }
   }
-  setTimeout(() => {
-    applyBtn.disabled = false;
-    applyBtn.classList.remove('success', 'error');
-  }, 3000);
-});
+}
 
-// ── Copy button ───────────────────────────────────────────────────────────────
+// Fast path while dragging: re-render stage + side controls without rebuilding lists
+function liveUpdate() { renderStage(); syncControls(); renderChecks(); updateDirty(); }
 
-copyBtn.addEventListener('click', () => {
-  navigator.clipboard.writeText(cssOutput.textContent).then(() => {
-    const orig = copyBtn.textContent;
-    copyBtn.textContent = 'Copied!';
-    setTimeout(() => copyBtn.textContent = orig, 1500);
-  }).catch(() => {
-    const ta = document.createElement('textarea');
-    ta.value = cssOutput.textContent;
-    document.body.appendChild(ta);
-    ta.select();
-    document.execCommand('copy');
-    ta.remove();
-    const orig = copyBtn.textContent;
-    copyBtn.textContent = 'Copied!';
-    setTimeout(() => copyBtn.textContent = orig, 1500);
-  });
-});
+// ── Selection ────────────────────────────────────────────────────────────────
 
-// ── Reset button ──────────────────────────────────────────────────────────────
+function selectItem(id, silent) {
+  ui.selectedItem = id;
+  const it = id && itemById(id);
+  if (it) ui.ruleSlot = it.slot;
+  if (!silent) { renderStage(); }
+  renderEquipList(); renderRuleEditor(); renderOverrideEditor();
+}
+function selectRegion(r) {
+  ui.selectedRegion = r;
+  renderLegend(); renderLandmarkEditor(); renderStage();
+}
 
-document.getElementById('reset-btn').addEventListener('click', () => {
-  state.overlays = {};
-  selectedSlot = null;
-  saveState();
-  rebuildOverlays();
-  syncSizeControls();
-});
+// ── Left panel ───────────────────────────────────────────────────────────────
 
-// ── Add equipment form ────────────────────────────────────────────────────────
+function renderThumbs() {
+  const box = $('avatar-thumbs');
+  box.innerHTML = '';
+  for (const s of AVATAR_STYLES) {
+    const k = avatarKey(ui.gender, s);
+    const d = document.createElement('div');
+    d.className = 'avatar-thumb' + (ui.style === s ? ' active' : '') + (avatarHasProblem(k) ? ' has-problem' : '');
+    d.title = avatarHasProblem(k) ? 'Há avisos neste avatar (veja Check all)' : `${ui.gender} ${s}`;
+    d.innerHTML = `<img src="${BASE}/avatars/selection/${ui.gender}_selection_${s}.png" alt="" /><i class="dot"></i>`;
+    d.addEventListener('click', () => { ui.style = s; renderAll(); });
+    box.appendChild(d);
+  }
+}
 
-(function initAddEquipForm() {
-  const toggle    = document.getElementById('add-equip-toggle');
-  const form      = document.getElementById('add-equip-form');
-  const nameInput = document.getElementById('eq-name');
-  const slotSel   = document.getElementById('eq-slot');
-  const baseField = document.getElementById('eq-base-field');
-  const baseInput = document.getElementById('eq-base');
-  const staticField = document.getElementById('eq-static-field');
-  const staticInput = document.getElementById('eq-static');
-  const submitBtn = document.getElementById('add-equip-submit');
+function avatarHasProblem(key) {
+  return fit.items.some(it => placement(it, key).problems.length);
+}
 
-  toggle.addEventListener('click', () => {
-    const open = form.classList.toggle('open');
-    toggle.classList.toggle('open', open);
-    toggle.textContent = open ? '−' : '+';
-  });
+function renderLegend() {
+  const box = $('lm-legend');
+  box.innerHTML = '';
+  for (const r of REGIONS) {
+    const d = document.createElement('div');
+    d.className = 'lm-chip' + (ui.selectedRegion === r ? ' active' : '');
+    d.innerHTML = `<span class="lm-swatch" style="background:${REGION_COLOR[r]}"></span>${r}`;
+    d.addEventListener('click', () => selectRegion(r));
+    box.appendChild(d);
+  }
+  $('lm-hint').innerHTML = ui.selectedRegion ? REGION_HELP[ui.selectedRegion] : '';
+}
 
-  document.querySelectorAll('input[name="eq-imgtype"]').forEach(radio => {
-    radio.addEventListener('change', () => {
-      const isStatic = radio.value === 'static';
-      baseField.classList.toggle('hidden', isStatic);
-      staticField.classList.toggle('hidden', !isStatic);
+// ── Right panel ──────────────────────────────────────────────────────────────
+
+const controls = []; // {sync()} — refreshed while dragging
+
+function sliderRow(parent, label, min, max, step, get, set, onInputRefresh) {
+  const row = document.createElement('div');
+  row.className = 'slider-row';
+  row.innerHTML = `<label>${label}</label><input type="range" min="${min}" max="${max}" step="${step}"><input type="number" step="${step}">`;
+  const [rng, num] = row.querySelectorAll('input');
+  const sync = () => { const v = get(); rng.value = v; num.value = round2(v); };
+  const apply = v => { if (Number.isFinite(v)) { set(v); liveUpdate(); onInputRefresh && onInputRefresh(); } };
+  rng.addEventListener('input', () => { apply(parseFloat(rng.value)); num.value = round2(parseFloat(rng.value)); });
+  num.addEventListener('change', () => { apply(parseFloat(num.value)); rng.value = num.value; });
+  sync();
+  parent.appendChild(row);
+  controls.push({ sync });
+}
+function syncControls() { controls.forEach(c => c.sync()); }
+
+function renderEquipList() {
+  const list = $('equip-list');
+  list.innerHTML = '';
+  const key = avatarKey();
+  for (const it of fit.items) {
+    const active = ui.active.has(it.id);
+    const probs = placement(it, key).problems;
+    const div = document.createElement('div');
+    div.className = 'equip-item' + (active ? ' active' : '') + (ui.selectedItem === it.id ? ' selected' : '');
+    div.innerHTML = `<img src="${BASE}${srcOf(it)}" alt="" onerror="this.style.opacity=.3"><span class="equip-item-label">${it.name}<span class="equip-item-slot">${it.slot}</span></span>`;
+    if (probs.length) { const b = document.createElement('span'); b.className = 'badge bad'; b.textContent = '⚠'; b.title = probs.join('\n'); div.appendChild(b); }
+    const del = document.createElement('button');
+    del.type = 'button'; del.className = 'equip-item-del'; del.title = 'Remover do studio'; del.textContent = '×';
+    del.addEventListener('click', e => { e.stopPropagation(); removeItem(it.id); });
+    div.appendChild(del);
+    div.addEventListener('click', () => {
+      if (active) { ui.active.delete(it.id); if (ui.selectedItem === it.id) ui.selectedItem = null; }
+      else {
+        fit.items.filter(o => o.slot === it.slot).forEach(o => ui.active.delete(o.id)); // one item per slot
+        ui.active.add(it.id); ui.selectedItem = it.id; ui.ruleSlot = it.slot;
+      }
+      renderAll();
     });
-  });
+    list.appendChild(div);
+  }
+}
 
-  submitBtn.addEventListener('click', () => {
-    const name = nameInput.value.trim();
-    const slot = slotSel.value;
-    const imgType = document.querySelector('input[name="eq-imgtype"]:checked').value;
-    const isStatic = imgType === 'static';
+function renderRuleEditor() {
+  const slot = ui.ruleSlot;
+  const rule = slotRule(slot);
+  $('rule-slot-name').textContent = slot;
+  const sel = $('rule-slot');
+  if (!sel.options.length) SLOTS.forEach(s => sel.add(new Option(s, s)));
+  sel.value = slot;
+  const reg = $('rule-region');
+  if (!reg.options.length) REGIONS.forEach(r => reg.add(new Option(r, r)));
+  reg.value = rule.region;
+  const fm = $('rule-fit');
+  if (!fm.options.length) [
+    ['width', 'width — largura do sprite = largura do landmark'],
+    ['height', 'height — altura do sprite = altura do landmark'],
+    ['contain', 'contain — cabe inteiro dentro do landmark'],
+    ['cover', 'cover — cobre o landmark inteiro'],
+  ].forEach(([v, t]) => fm.add(new Option(t, v)));
+  fm.value = rule.fit;
 
-    if (!name) { nameInput.focus(); return; }
+  const box = $('rule-sliders');
+  box.innerHTML = '';
+  removeControls('rule');
+  const add = (label, min, max, step, get, set) => { const before = controls.length; sliderRow(box, label, min, max, step, get, set); controls.slice(before).forEach(c => c.group = 'rule'); };
+  add('scale ×', 0.3, 3, 0.01, () => rule.scale, v => { rule.scale = v; });
+  add('dx %', -30, 30, 0.1, () => rule.dx || 0, v => { rule.dx = v; });
+  add('dy %', -30, 30, 0.1, () => rule.dy || 0, v => { rule.dy = v; });
+  add('âncora x', 0, 1, 0.05, () => rule.anchor.x, v => { rule.anchor.x = v; });
+  add('âncora y', 0, 1, 0.05, () => rule.anchor.y, v => { rule.anchor.y = v; });
+}
+function removeControls(group) { for (let i = controls.length - 1; i >= 0; i--) if (controls[i].group === group) controls.splice(i, 1); }
 
-    let eq;
-    if (isStatic) {
-      const src = staticInput.value.trim().replace(/^\//, '');
-      if (!src) { staticInput.focus(); return; }
-      eq = { id: 'custom_' + Date.now(), name, staticSrc: '/' + src, slot };
-    } else {
-      const base = baseInput.value.trim();
-      if (!base) { baseInput.focus(); return; }
-      eq = { id: 'custom_' + Date.now(), name, base, slot };
-    }
-
-    state.customEquipment.push(eq);
-    saveState();
-    buildEquipList();
-
-    // Reset form
-    nameInput.value = '';
-    baseInput.value = '';
-    staticInput.value = '';
-    form.classList.remove('open');
-    toggle.classList.remove('open');
-    toggle.textContent = '+';
-  });
-})();
-
-// ── Size controls ────────────────────────────────────────────────────────────
-
-const sizeControls  = document.getElementById('size-controls');
-const sizeSlotName  = document.getElementById('size-slot-name');
-const sizeWInput    = document.getElementById('size-w');
-const sizeHInput    = document.getElementById('size-h');
-const sizeWVal      = document.getElementById('size-w-val');
-const sizeHVal      = document.getElementById('size-h-val');
-
-const SLOT_LABELS = {
-  armor: 'Armor (male)', 'armor-f': 'Armor (female)',
-  shield: 'Shield', boots: 'Boots (male)', 'boots-f': 'Boots (female)',
-  gauntlet: 'Gauntlets', helmet: 'Helmet',
-};
-
-function syncSizeControls() {
-  if (!selectedSlot || !state.overlays[selectedSlot]) {
-    sizeControls.classList.remove('visible');
+function renderOverrideEditor() {
+  const it = ui.selectedItem && itemById(ui.selectedItem);
+  const sl = $('ov-sliders'), btns = $('ov-buttons');
+  sl.innerHTML = ''; btns.innerHTML = '';
+  removeControls('ov');
+  $('ov-prealigned-row').classList.toggle('hidden', !it);
+  if (!it || !ui.active.has(it.id)) {
+    $('ov-name').textContent = '—';
+    $('ov-hint').classList.remove('hidden');
     return;
   }
-  const pos = state.overlays[selectedSlot];
-  sizeControls.classList.add('visible');
-  sizeSlotName.textContent = SLOT_LABELS[selectedSlot] || selectedSlot;
-  sizeWInput.value = pos.width;
-  sizeHInput.value = pos.height;
-  sizeWVal.textContent = pos.width.toFixed(1) + '%';
-  sizeHVal.textContent = pos.height.toFixed(1) + '%';
+  $('ov-hint').classList.add('hidden');
+  $('ov-name').textContent = `${it.name} · ${avatarKey()}`;
+  const pa = $('ov-prealigned');
+  pa.checked = !!(fit.sprites[srcOf(it)] || {}).prealigned;
+  const add = (label, min, max, step, get, set) => { const before = controls.length; sliderRow(sl, label, min, max, step, get, set); controls.slice(before).forEach(c => c.group = 'ov'); };
+  add('scale ×', 0.3, 3, 0.01, () => { const s = getOverride(it).v.scale; return s == null ? 1 : s; }, v => setOverride(it, { scale: v }));
+  add('dx %', -30, 30, 0.1, () => getOverride(it).v.dx || 0, v => setOverride(it, { dx: v }));
+  add('dy %', -30, 30, 0.1, () => getOverride(it).v.dy || 0, v => setOverride(it, { dy: v }));
+  const mk = (text, title, fn) => { const b = document.createElement('button'); b.type = 'button'; b.className = 'btn small'; b.textContent = text; b.title = title; b.addEventListener('click', fn); btns.appendChild(b); };
+  mk('Reset', 'Remove a exceção: volta ao encaixe automático', () => { delete fit.overrides[getOverride(it).k]; renderAll(); });
+  mk('Copiar p/ outros estilos', 'Aplica esta exceção a todos os estilos do mesmo gênero', () => {
+    const v = getOverride(it).v;
+    AVATAR_STYLES.forEach(s => setOverride(it, v, avatarKey(ui.gender, s)));
+    renderAll();
+  });
 }
 
-function applySizeToOverlay() {
-  if (!selectedSlot || !state.overlays[selectedSlot]) return;
-  const overlay = avatarContainer.querySelector(`.equip-overlay[data-slot="${selectedSlot}"]`);
-  if (overlay) {
-    overlay.style.width  = state.overlays[selectedSlot].width  + '%';
-    overlay.style.height = state.overlays[selectedSlot].height + '%';
+function renderLandmarkEditor() {
+  const r = ui.selectedRegion;
+  const sl = $('lm-sliders');
+  sl.innerHTML = '';
+  removeControls('lm');
+  if (!r) { $('lm-name').textContent = '—'; return; }
+  $('lm-name').textContent = r;
+  const b = () => fit.avatars[avatarKey()][r];
+  const add = (label, min, max, step, get, set) => { const before = controls.length; sliderRow(sl, label, min, max, step, get, set); controls.slice(before).forEach(c => c.group = 'lm'); };
+  add('x %', 0, 100, 0.1, () => b().x, v => { b().x = v; });
+  add('y %', 0, 100, 0.1, () => b().y, v => { b().y = v; });
+  add('w %', 2, 100, 0.1, () => b().w, v => { b().w = Math.max(2, v); });
+  add('h %', 2, 100, 0.1, () => b().h, v => { b().h = Math.max(2, v); });
+}
+
+// ── Bottom panel ─────────────────────────────────────────────────────────────
+
+function renderChecks() {
+  const body = $('output-body');
+  if (ui.showJson) { body.innerHTML = '<div id="json-out"></div>'; $('json-out').textContent = JSON.stringify(fit, null, 2); return; }
+  const items = activeItems();
+  $('output-label').textContent = `Checks — ${avatarKey()}`;
+  if (!items.length) { body.innerHTML = '<span class="hint">Ative equipamentos na lista à direita para ver as checagens deste avatar.</span>'; return; }
+  body.innerHTML = items.map(it => {
+    const p = placement(it);
+    if (!p.problems.length) return `<div class="ok">✓ ${it.name} — encaixe ok</div>`;
+    return `<div class="bad">⚠ ${it.name}<br>&nbsp;&nbsp;• ${p.problems.join('<br>&nbsp;&nbsp;• ')}</div>`;
+  }).join('');
+}
+
+// ── Check-all view ───────────────────────────────────────────────────────────
+
+function renderCheckView() {
+  const view = $('view-check');
+  view.innerHTML = '';
+  const items = fit.items;
+  const keys = ['male', 'female'].flatMap(g => AVATAR_STYLES.map(s => avatarKey(g, s)));
+  let ok = 0, bad = 0;
+  const cells = [];
+  for (const k of keys) for (const it of items) {
+    const p = placement(it, k);
+    (p.problems.length ? bad++ : ok++);
+    cells.push({ k, it, p });
   }
-  sizeWVal.textContent = state.overlays[selectedSlot].width.toFixed(1)  + '%';
-  sizeHVal.textContent = state.overlays[selectedSlot].height.toFixed(1) + '%';
-  updateCssOutput();
-  saveState();
+  const head = document.createElement('div');
+  head.className = 'check-head';
+  head.innerHTML = `<span><b class="ok">${ok}</b> ok</span><span><b class="bad">${bad}</b> com aviso</span>
+    <label class="check-row"><input type="checkbox" id="only-problems" ${ui.onlyProblems ? 'checked' : ''}> só problemas</label>
+    <span class="hint">Cada célula mostra um item sozinho num avatar. Clique para ir ao ajuste.</span>`;
+  view.appendChild(head);
+  head.querySelector('#only-problems').addEventListener('change', e => { ui.onlyProblems = e.target.checked; renderCheckView(); });
+
+  const grid = document.createElement('div');
+  grid.className = 'check-grid';
+  grid.style.gridTemplateColumns = `70px repeat(${items.length}, minmax(0, 1fr))`;
+  grid.appendChild(document.createElement('div'));
+  items.forEach(it => { const h = document.createElement('div'); h.className = 'check-colhead'; h.textContent = it.name; grid.appendChild(h); });
+  for (const k of keys) {
+    const rowCells = cells.filter(c => c.k === k);
+    if (ui.onlyProblems && !rowCells.some(c => c.p.problems.length)) continue;
+    const rh = document.createElement('div'); rh.className = 'check-rowhead'; rh.textContent = k.replace('_', ' '); grid.appendChild(rh);
+    for (const c of rowCells) {
+      const cell = document.createElement('div');
+      const bad = c.p.problems.length > 0;
+      cell.className = 'cell ' + (bad ? 'bad' : 'ok');
+      if (ui.onlyProblems && !bad) cell.style.visibility = 'hidden';
+      const { stage } = makeStage(k, [c.it], 170);
+      cell.appendChild(stage);
+      const msg = document.createElement('div');
+      msg.className = 'msg';
+      msg.innerHTML = bad ? c.p.problems.join('<br>') : '✓ ok';
+      cell.appendChild(msg);
+      cell.addEventListener('click', () => {
+        const [g, s] = k.split('_');
+        ui.gender = g; ui.style = s;
+        fit.items.filter(o => o.slot === c.it.slot).forEach(o => ui.active.delete(o.id));
+        ui.active.add(c.it.id); ui.selectedItem = c.it.id; ui.ruleSlot = c.it.slot;
+        setMode('fit');
+      });
+      grid.appendChild(cell);
+    }
+  }
+  view.appendChild(grid);
+  const cnt = $('check-count');
+  cnt.textContent = bad; cnt.classList.toggle('hidden', !bad);
 }
 
-sizeWInput.addEventListener('input', () => {
-  if (!selectedSlot || !state.overlays[selectedSlot]) return;
-  state.overlays[selectedSlot].width = parseFloat(sizeWInput.value);
-  applySizeToOverlay();
-});
+// ── Mode / global render ─────────────────────────────────────────────────────
 
-sizeHInput.addEventListener('input', () => {
-  if (!selectedSlot || !state.overlays[selectedSlot]) return;
-  state.overlays[selectedSlot].height = parseFloat(sizeHInput.value);
-  applySizeToOverlay();
-});
-
-document.getElementById('size-smaller').addEventListener('click', () => {
-  if (!selectedSlot || !state.overlays[selectedSlot]) return;
-  const pos = state.overlays[selectedSlot];
-  pos.width  = parseFloat(Math.max(5, pos.width  - 5).toFixed(1));
-  pos.height = parseFloat(Math.max(5, pos.height - 5).toFixed(1));
-  syncSizeControls();
-  applySizeToOverlay();
-});
-
-document.getElementById('size-bigger').addEventListener('click', () => {
-  if (!selectedSlot || !state.overlays[selectedSlot]) return;
-  const pos = state.overlays[selectedSlot];
-  pos.width  = parseFloat(Math.min(150, pos.width  + 5).toFixed(1));
-  pos.height = parseFloat(Math.min(150, pos.height + 5).toFixed(1));
-  syncSizeControls();
-  applySizeToOverlay();
-});
-
-// ── Zoom ──────────────────────────────────────────────────────────────────────
-
-const ZOOM_MIN  = 0.4;
-const ZOOM_MAX  = 3.0;
-const ZOOM_STEP = 0.1;
-
-const zoomLabel = document.getElementById('zoom-label');
-
-function applyZoom() {
-  avatarContainer.style.transform       = `scale(${state.zoom})`;
-  avatarContainer.style.transformOrigin = 'center center';
-  zoomLabel.textContent = Math.round(state.zoom * 100) + '%';
-  saveState();
+function setMode(mode) {
+  ui.mode = mode;
+  document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.mode === mode));
+  const isCheck = mode === 'check', isLm = mode === 'landmarks', isFit = mode === 'fit', isPrompts = mode === 'prompts';
+  $('stage-wrap').classList.toggle('hidden', isCheck || isPrompts);
+  $('view-check').classList.toggle('hidden', !isCheck);
+  $('view-prompts').classList.toggle('hidden', !isPrompts);
+  $('lm-panel').classList.toggle('hidden', !isLm);
+  $('opt-preview-row').classList.toggle('hidden', !isLm);
+  $('lm-edit-panel').classList.toggle('hidden', !isLm);
+  $('rule-panel').classList.toggle('hidden', !isFit);
+  $('override-panel').classList.toggle('hidden', !isFit);
+  document.querySelector('.zoom-controls').classList.toggle('hidden', isCheck || isPrompts);
+  renderAll();
 }
 
-document.getElementById('zoom-in').addEventListener('click', () => {
-  state.zoom = parseFloat(Math.min(ZOOM_MAX, state.zoom + ZOOM_STEP).toFixed(2));
-  applyZoom();
+function renderAll() {
+  controls.length = 0;
+  document.querySelectorAll('.gender-btn').forEach(b => b.classList.toggle('active', b.dataset.gender === ui.gender));
+  renderThumbs();
+  renderLegend();
+  renderEquipList();
+  renderRuleEditor();
+  renderOverrideEditor();
+  renderLandmarkEditor();
+  renderStage();
+  renderChecks();
+  if (ui.mode === 'check') renderCheckView(); else updateCheckBadge();
+  if (ui.mode === 'prompts') renderPromptsView();
+  updateDirty();
+}
+
+function updateCheckBadge() {
+  let bad = 0;
+  for (const g of ['male', 'female']) for (const s of AVATAR_STYLES) for (const it of fit.items) if (placement(it, avatarKey(g, s)).problems.length) bad++;
+  const cnt = $('check-count');
+  cnt.textContent = bad; cnt.classList.toggle('hidden', !bad);
+}
+
+function updateDirty() { $('dirty-badge').classList.toggle('on', isDirty()); }
+
+// ── Add / remove equipment ───────────────────────────────────────────────────
+
+$('add-equip-toggle').addEventListener('click', () => {
+  $('add-equip-form').classList.toggle('open');
+  $('add-equip-toggle').classList.toggle('open');
+});
+document.querySelectorAll('input[name=eq-imgtype]').forEach(r => r.addEventListener('change', () => {
+  const s = document.querySelector('input[name=eq-imgtype]:checked').value === 'static';
+  $('eq-base-field').classList.toggle('hidden', s);
+  $('eq-static-field').classList.toggle('hidden', !s);
+}));
+$('add-equip-submit').addEventListener('click', async () => {
+  const err = $('add-error'); err.textContent = '';
+  const name = $('eq-name').value.trim();
+  const slot = $('eq-slot').value;
+  const isStatic = document.querySelector('input[name=eq-imgtype]:checked').value === 'static';
+  const base = $('eq-base').value.trim();
+  let stat = $('eq-static').value.trim().replace(/^\/?(public\/)?/, '/');
+  if (!name) { err.textContent = 'Informe um nome.'; return; }
+  if (isStatic ? !stat : !base) { err.textContent = 'Informe o arquivo da imagem.'; return; }
+  const id = (name.toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_|_$/g, '')) || 'item';
+  if (itemById(id)) { err.textContent = 'Já existe um item com esse nome.'; return; }
+  const item = isStatic ? { id, name, slot, src: stat } : { id, name, slot, base };
+  const srcs = isStatic ? [stat] : ['male', 'female'].map(g => srcOf(item, g));
+  const { errors } = await scanSprites(srcs);
+  if (errors.length) { err.textContent = errors.join(' · '); srcs.forEach(s => delete fit.sprites[s]); return; }
+  if ($('eq-prealigned').checked) srcs.forEach(s => { fit.sprites[s].prealigned = true; });
+  fit.items.push(item);
+  fit.items.filter(o => o.slot === slot && o.id !== id).forEach(o => ui.active.delete(o.id));
+  ui.active.add(id); ui.selectedItem = id; ui.ruleSlot = slot;
+  $('eq-name').value = ''; $('eq-base').value = ''; $('eq-static').value = '';
+  $('add-equip-form').classList.remove('open'); $('add-equip-toggle').classList.remove('open');
+  renderAll();
 });
 
-document.getElementById('zoom-out').addEventListener('click', () => {
-  state.zoom = parseFloat(Math.max(ZOOM_MIN, state.zoom - ZOOM_STEP).toFixed(2));
-  applyZoom();
+function removeItem(id) {
+  const it = itemById(id);
+  if (!it || !confirm(`Remover "${it.name}" do studio? (As imagens não são apagadas.)`)) return;
+  const srcs = it.src ? [it.src] : ['male', 'female'].map(g => srcOf(it, g));
+  fit.items = fit.items.filter(i => i.id !== id);
+  srcs.forEach(s => { delete fit.sprites[s]; Object.keys(fit.overrides).filter(k => k.endsWith('|' + s)).forEach(k => delete fit.overrides[k]); });
+  ui.active.delete(id); if (ui.selectedItem === id) ui.selectedItem = null;
+  renderAll();
+}
+
+// ── Wiring ───────────────────────────────────────────────────────────────────
+
+document.querySelectorAll('.tab').forEach(t => t.addEventListener('click', () => setMode(t.dataset.mode)));
+document.querySelectorAll('.gender-btn').forEach(b => b.addEventListener('click', () => { ui.gender = b.dataset.gender; renderAll(); }));
+$('opt-grid').addEventListener('change', e => { ui.showGrid = e.target.checked; renderStage(); });
+$('opt-preview').addEventListener('change', e => { ui.showPreview = e.target.checked; renderStage(); });
+$('rule-slot').addEventListener('change', e => { ui.ruleSlot = e.target.value; renderRuleEditor(); });
+$('rule-region').addEventListener('change', e => { slotRule(ui.ruleSlot).region = e.target.value; renderAll(); });
+$('rule-fit').addEventListener('change', e => { slotRule(ui.ruleSlot).fit = e.target.value; renderAll(); });
+$('ov-prealigned').addEventListener('change', e => {
+  const it = itemById(ui.selectedItem); if (!it) return;
+  (it.src ? [it.src] : ['male', 'female'].map(g => srcOf(it, g))).forEach(s => { if (fit.sprites[s]) fit.sprites[s].prealigned = e.target.checked; });
+  renderAll();
+});
+$('json-toggle').addEventListener('click', () => { ui.showJson = !ui.showJson; $('json-toggle').textContent = ui.showJson ? 'Mostrar checks' : 'Mostrar JSON'; renderChecks(); });
+$('zoom-in').addEventListener('click', () => { ui.zoom = clamp(ui.zoom + 0.1, 0.5, 2); $('zoom-label').textContent = Math.round(ui.zoom * 100) + '%'; renderStage(); });
+$('zoom-out').addEventListener('click', () => { ui.zoom = clamp(ui.zoom - 0.1, 0.5, 2); $('zoom-label').textContent = Math.round(ui.zoom * 100) + '%'; renderStage(); });
+
+$('lm-copy').addEventListener('click', () => {
+  const from = prompt(`Copiar todos os landmarks de qual estilo? (${AVATAR_STYLES.join(', ')})`, 'A');
+  const s = (from || '').trim().toUpperCase();
+  if (!AVATAR_STYLES.includes(s) || !fit.avatars[avatarKey(ui.gender, s)]) return;
+  fit.avatars[avatarKey()] = clone(fit.avatars[avatarKey(ui.gender, s)]);
+  renderAll();
+});
+$('lm-revert').addEventListener('click', () => {
+  const saved = JSON.parse(savedJson).avatars[avatarKey()];
+  if (saved) { fit.avatars[avatarKey()] = clone(saved); renderAll(); }
 });
 
-// Scroll wheel on canvas area
-document.getElementById('canvas-area').addEventListener('wheel', (e) => {
+$('rescan-btn').addEventListener('click', async () => {
+  setStatus('Medindo sprites…');
+  const { changed, errors } = await scanSprites();
+  setStatus(errors.length ? 'Erros: ' + errors.join(' · ') : `Sprites medidos — ${changed} alterado(s)`);
+  renderAll();
+});
+
+// Keyboard: arrows nudge the selected overlay / landmark (Shift = ×10), Ctrl+S saves
+document.addEventListener('keydown', e => {
+  if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') { e.preventDefault(); save(); return; }
+  if (e.key === 'Escape' && $('tour').classList.contains('on')) { closeTour(); return; }
+  if (/INPUT|SELECT|TEXTAREA/.test(document.activeElement.tagName) && document.activeElement.type !== 'range') return;
+  const d = { ArrowLeft: [-1, 0], ArrowRight: [1, 0], ArrowUp: [0, -1], ArrowDown: [0, 1] }[e.key];
+  if (!d) return;
   e.preventDefault();
-  const delta = e.deltaY < 0 ? ZOOM_STEP : -ZOOM_STEP;
-  state.zoom = parseFloat(Math.min(ZOOM_MAX, Math.max(ZOOM_MIN, state.zoom + delta)).toFixed(2));
-  applyZoom();
-}, { passive: false });
-
-// ── Init ──────────────────────────────────────────────────────────────────────
-
-loadState();
-
-// Sync gender buttons
-document.querySelectorAll('.gender-btn').forEach(b => {
-  b.classList.toggle('active', b.dataset.gender === state.gender);
+  const step = (e.shiftKey ? 1 : 0.1);
+  if (ui.mode === 'fit' && ui.selectedItem) {
+    const it = itemById(ui.selectedItem); const v = getOverride(it).v;
+    setOverride(it, { dx: (v.dx || 0) + d[0] * step, dy: (v.dy || 0) + d[1] * step }); liveUpdate();
+  } else if (ui.mode === 'landmarks' && ui.selectedRegion) {
+    const b = fit.avatars[avatarKey()][ui.selectedRegion]; b.x = round2(b.x + d[0] * step); b.y = round2(b.y + d[1] * step); liveUpdate();
+  }
 });
+window.addEventListener('beforeunload', e => { if (isDirty()) { e.preventDefault(); e.returnValue = ''; } });
 
-buildAvatarThumbs();
-updateBaseAvatar();
-buildEquipList();
-rebuildOverlays();
-updateCssOutput();
-applyZoom();
+// ── Save ─────────────────────────────────────────────────────────────────────
+
+function setStatus(t) { $('status').textContent = t; }
+
+async function save() {
+  const btn = $('save-btn');
+  btn.disabled = true; setStatus('Salvando…');
+  try {
+    const res = await fetch('/save-fit', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(fit) });
+    const data = await res.json();
+    if (!res.ok) throw new Error((data.errors || [data.error]).join(' · '));
+    savedJson = JSON.stringify(fit);
+    setStatus(data.message); btn.classList.add('success'); updateDirty();
+  } catch (err) {
+    setStatus('Erro ao salvar: ' + err.message); btn.classList.add('error');
+  } finally {
+    btn.disabled = false;
+    setTimeout(() => btn.classList.remove('success', 'error'), 1800);
+  }
+}
+$('save-btn').addEventListener('click', save);
+
+// ════════════════════════════════════════════════════════════════════════════
+//  Prompts — ready-made image-generation prompts for new equipment
+//  Templates live in tools/avatar-canvas/prompts.json (edit them to evolve the style guide).
+// ════════════════════════════════════════════════════════════════════════════
+
+let promptCfg = null;
+const PROMPT_FORM_KEY = 'avatar-studio-prompt-form';
+const PROMPT_SLOT_ICON = { armor: '🛡️', helmet: '⛑️', shield: '🔰', gauntlet: '🧤', boots: '🥾' };
+const promptForm = Object.assign({ slot: 'armor', name: '', style: '', gender: 'both', details: '', reference: false, chroma: false, refAvatar: 'male_A' },
+  (() => { try { return JSON.parse(localStorage.getItem(PROMPT_FORM_KEY) || '{}'); } catch (_) { return {}; } })());
+function savePromptForm() { try { localStorage.setItem(PROMPT_FORM_KEY, JSON.stringify(promptForm)); } catch (_) {} }
+
+async function copyText(text, btn) {
+  try { await navigator.clipboard.writeText(text); }
+  catch (_) { const t = document.createElement('textarea'); t.value = text; document.body.appendChild(t); t.select(); document.execCommand('copy'); t.remove(); }
+  const old = btn.textContent; btn.textContent = 'Copiado ✓'; setTimeout(() => { btn.textContent = old; }, 1400);
+}
+
+function renderPromptsView() {
+  const view = $('view-prompts');
+  if (!promptCfg) { view.innerHTML = '<p class="hint" style="padding:1rem">Não consegui carregar <code>tools/avatar-canvas/prompts.json</code>.</p>'; return; }
+  const cfg = promptCfg;
+  const f = promptForm;
+  const el = (html) => { const d = document.createElement('div'); d.innerHTML = html.trim(); return d.firstElementChild; };
+  view.innerHTML = '';
+  const layout = el('<div class="pr-layout"></div>');
+
+  // ── Form ──
+  const form = el(`<div class="pr-card">
+    <h3>Variáveis do prompt</h3>
+    <div class="field"><label>Tipo de item</label><div class="slot-btns" id="pr-slots"></div></div>
+    <div class="field"><label>Nome do item</label><input type="text" id="pr-name" placeholder="ex.: dragon-armor, samurai helmet" value=""></div>
+    <div class="field"><label>Estilo / tema</label><input type="text" id="pr-style" placeholder="ex.: dragon, steel, samurai, light" value="">
+      <div class="chips" id="pr-chips"></div></div>
+    <div class="field"><label>Gênero</label>
+      <div class="radio-row">
+        <label><input type="radio" name="pr-gender" value="male"> Masculino</label>
+        <label><input type="radio" name="pr-gender" value="female"> Feminino</label>
+        <label><input type="radio" name="pr-gender" value="both"> Ambos</label>
+      </div></div>
+    <div class="field"><label>Detalhes extras (opcional)</label><textarea id="pr-details" rows="3" placeholder="cores, materiais, símbolos… ex.: scales in dark red, gold trim, glowing eyes on the pauldrons"></textarea></div>
+    <label class="check-row"><input type="checkbox" id="pr-reference"> Pré-alinhado: usar imagem do avatar como referência</label>
+    <p class="hint" id="pr-ref-hint">Desligado = <b>sprite solto</b> (recomendado): o studio encaixa no corpo sozinho.</p>
+    <div class="field hidden" id="pr-ref-field"><label>Avatar de referência</label><select id="pr-refavatar"></select>
+      <a id="pr-reflink" class="btn small" style="text-align:center;text-decoration:none" download>⬇ Baixar avatar de referência</a></div>
+    <label class="check-row"><input type="checkbox" id="pr-chroma"> Meu gerador não faz fundo transparente (usar fundo magenta)</label>
+  </div>`);
+  layout.appendChild(form);
+
+  const slotBox = form.querySelector('#pr-slots');
+  Object.entries(cfg.slots).forEach(([k, sl]) => {
+    const b = el(`<button type="button" class="slot-btn ${f.slot === k ? 'active' : ''}">${PROMPT_SLOT_ICON[k] || '•'}<span>${sl.label.split(' ').pop()}</span><small>${sl.width}×${sl.height}</small></button>`);
+    b.addEventListener('click', () => { f.slot = k; savePromptForm(); renderPromptsView(); });
+    slotBox.appendChild(b);
+  });
+  const chips = form.querySelector('#pr-chips');
+  (cfg.styleSuggestions || []).forEach(sg => {
+    const c = el(`<button type="button" class="chip">${sg}</button>`);
+    c.addEventListener('click', () => { f.style = sg.split(' / ')[0]; savePromptForm(); renderPromptsView(); });
+    chips.appendChild(c);
+  });
+  const bind = (id, key, ev = 'input') => {
+    const n = form.querySelector(id); n.value = f[key];
+    n.addEventListener(ev, () => { f[key] = n.value; savePromptForm(); renderPromptOutput(out); });
+  };
+  bind('#pr-name', 'name'); bind('#pr-style', 'style'); bind('#pr-details', 'details');
+  form.querySelectorAll('input[name=pr-gender]').forEach(r => {
+    r.checked = r.value === f.gender;
+    r.addEventListener('change', () => { f.gender = r.value; savePromptForm(); renderPromptOutput(out); });
+  });
+  const ref = form.querySelector('#pr-reference'); ref.checked = f.reference;
+  const refField = form.querySelector('#pr-ref-field');
+  const refSel = form.querySelector('#pr-refavatar');
+  ['male', 'female'].forEach(g => AVATAR_STYLES.forEach(st => refSel.add(new Option(`${g} ${st}`, `${g}_${st}`))));
+  refSel.value = f.refAvatar;
+  const updRef = () => {
+    refField.classList.toggle('hidden', !f.reference);
+    const [g, st] = f.refAvatar.split('_');
+    form.querySelector('#pr-reflink').href = `${BASE}/avatars/selection/${g}_selection_${st}.png`;
+    form.querySelector('#pr-reflink').download = `${g}_selection_${st}.png`;
+    form.querySelector('#pr-ref-hint').innerHTML = f.reference
+      ? 'Ligado: a IA desenha só o equipamento <b>já no lugar</b>, no canvas 1024×1536 do avatar. Exige gerador com imagem de referência.'
+      : 'Desligado = <b>sprite solto</b> (recomendado): o studio encaixa no corpo sozinho.';
+  };
+  ref.addEventListener('change', () => { f.reference = ref.checked; savePromptForm(); updRef(); renderPromptOutput(out); });
+  refSel.addEventListener('change', () => { f.refAvatar = refSel.value; savePromptForm(); updRef(); });
+  updRef();
+  const chroma = form.querySelector('#pr-chroma'); chroma.checked = f.chroma;
+  chroma.addEventListener('change', () => { f.chroma = chroma.checked; savePromptForm(); renderPromptOutput(out); });
+
+  const out = el('<div class="pr-out"></div>');
+  layout.appendChild(out);
+  view.appendChild(layout);
+  renderPromptOutput(out);
+}
+
+function renderPromptOutput(out) {
+  const r = PromptBuilder.build(promptCfg, promptForm);
+  out.innerHTML = '';
+  const add = html => { const d = document.createElement('div'); d.innerHTML = html.trim(); const n = d.firstElementChild; out.appendChild(n); return n; };
+  if (r.errors.length) {
+    add(`<div class="pr-card"><h3>Preencha as variáveis</h3><div class="pr-errors">${r.errors.map(e => '• ' + e).join('<br>')}</div>
+      <p class="hint">Os prompts aparecem aqui assim que o tipo, o nome e o estilo estiverem preenchidos. O <b>estilo visual</b> do jogo já vem embutido em todos eles.</p></div>`);
+  } else {
+    r.prompts.forEach(p => {
+      const card = add(`<div class="pr-card">
+        <div class="pr-prompt-head"><h3>${p.title}</h3><button type="button" class="btn small primary">Copiar prompt</button></div>
+        <div class="meta"><span>tamanho <b>${p.width}×${p.height}</b></span><span>fundo <b>${promptForm.chroma ? 'magenta (remover)' : 'transparente'}</b></span><span>arquivo <b>${p.file.split('  ')[0]}</b></span></div>
+        <textarea class="pr-text" readonly></textarea></div>`);
+      const ta = card.querySelector('textarea'); ta.value = p.text;
+      ta.style.height = Math.min(520, 40 + p.text.split('\n').length * 17) + 'px';
+      card.querySelector('button').addEventListener('click', e => copyText(p.text, e.target));
+    });
+    if (r.prompts.length > 1) {
+      const all = add('<div><button type="button" class="btn small">Copiar todos os prompts</button></div>');
+      all.querySelector('button').addEventListener('click', e => copyText(r.prompts.map(p => `### ${p.title}\n\n${p.text}`).join('\n\n\n'), e.target));
+    }
+    const base = PromptBuilder.slugify(promptForm.name);
+    const next = add(`<div class="pr-card"><h3>Depois de gerar</h3>
+      <ul class="pr-notes">${r.notes.map(n => `<li>${n}</li>`).join('')}
+        <li>Salve em <code>${r.prompts.map(p => p.file.split('  ')[0]).join('</code> e <code>')}</code>.</li>
+        <li>Adicione no studio e rode <b>Check all</b>:</li></ul>
+      <div class="btn-row"><button type="button" class="btn small primary" id="pr-prefill">Preencher “Add Equipment” →</button></div></div>`);
+    next.querySelector('#pr-prefill').addEventListener('click', () => prefillAddForm({
+      name: PromptBuilder.titleCase(promptForm.name), slot: promptForm.slot, base, prealigned: promptForm.reference,
+    }));
+  }
+  const raw = add(`<div class="pr-card"><details class="raw"><summary>Ver o template bruto com as variáveis (<code>prompts.json</code>)</summary>
+    <p class="pr-vars">Variáveis: ${['name', 'style', 'slot_label', 'gender_label', 'subject', 'details', 'composition', 'genderNote', 'width', 'height', 'orientation', 'background', 'styleGuide', 'technical', 'negative', 'reference'].map(v => `<code>{{${v}}}</code>`).join(' ')}.
+    Para mudar o estilo de <b>todos</b> os prompts, edite <code>styleGuide</code> em <code>tools/avatar-canvas/prompts.json</code> e recarregue o studio.</p>
+    <textarea class="pr-text" readonly style="min-height:260px"></textarea>
+    <div class="btn-row" style="margin-top:.4rem"><button type="button" class="btn small">Copiar template</button></div></details></div>`);
+  raw.querySelector('textarea').value = promptCfg.main;
+  raw.querySelector('button').addEventListener('click', e => copyText(promptCfg.main, e.target));
+}
+
+function prefillAddForm({ name, slot, base, prealigned }) {
+  setMode('fit');
+  $('add-equip-form').classList.add('open'); $('add-equip-toggle').classList.add('open');
+  $('eq-name').value = name; $('eq-slot').value = slot; $('eq-base').value = base;
+  document.querySelector('input[name=eq-imgtype][value=gendered]').checked = true;
+  $('eq-base-field').classList.remove('hidden'); $('eq-static-field').classList.add('hidden');
+  $('eq-prealigned').checked = !!prealigned;
+  $('eq-name').scrollIntoView({ block: 'center' });
+  setStatus('Formulário preenchido — coloque os PNGs em public/items/ e clique em Add Equipment');
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+//  Tutorial — spotlight tour + help recipes
+// ════════════════════════════════════════════════════════════════════════════
+
+const TOUR_KEY = 'avatar-studio-tour-v2';
+const TOUR = [
+  {
+    title: 'Como o studio funciona',
+    center: true,
+    body: `<p>O problema: cada PNG de equipamento é uma ilustração solta, com margens transparentes e proporções diferentes. Posicionar item por item na mão (e para 6 avatares!) é o que faz a armadura ficar menor que o tórax.</p>
+      <p>A solução: <b>você mede o corpo uma vez, e o studio encaixa qualquer item sozinho</b>. São 3 camadas, da mais geral para a mais específica:</p>
+      <ul>
+        <li><b>1. Landmarks</b> — caixas no corpo de cada avatar (cabeça, tórax, mãos, pés, escudo).</li>
+        <li><b>2. Regras de slot</b> — como o sprite é encaixado na caixa (ex.: armadura = largura do tórax).</li>
+        <li><b>3. Exceções</b> — ajuste fino de <i>um</i> item em <i>um</i> avatar, só quando necessário.</li>
+      </ul>
+      <p class="tip">Item novo = <b>zero ajuste manual</b> na maioria dos casos. É só adicionar a imagem e conferir.</p>`,
+  },
+  {
+    title: 'Os três modos',
+    target: '#tabs',
+    place: 'bottom',
+    body: `<ul>
+        <li><b>Fit</b> — vê os equipamentos no personagem e ajusta regras/exceções.</li>
+        <li><b>Landmarks</b> — marca o corpo de cada avatar.</li>
+        <li><b>Check all</b> — testa <i>todos</i> os itens em <i>todos</i> os avatares de uma vez e aponta o que está errado. O número vermelho é a quantidade de avisos.</li>
+      </ul>
+      <p class="tip">Fluxo recomendado: <b>Landmarks → Fit → Check all → Save</b>.</p>`,
+  },
+  {
+    title: '1 · Landmarks: meça o corpo',
+    mode: 'landmarks',
+    target: '#stage-wrap .stage',
+    place: 'right',
+    body: `<p>Cada caixa colorida marca uma parte do corpo <i>deste avatar</i>. <b>Arraste</b> para mover e use o <b>quadradinho dourado</b> no canto inferior direito para redimensionar. As setas do teclado ajustam fino (<kbd>Shift</kbd> = passo maior).</p>
+      <ul>
+        <li><code>head</code> — do cabelo ao queixo → elmo</li>
+        <li><code>torso</code> — dos ombros à barra do short → armadura</li>
+        <li><code>hands</code> — de mão a mão, na altura do punho → manoplas</li>
+        <li><code>feet</code> — meia-canela até a sola → botas</li>
+        <li><code>shield</code> — ao redor da mão do escudo → escudo</li>
+      </ul>
+      <div class="try"><b>Experimente:</b> arraste a caixa azul <code>torso</code> um pouco e veja o resultado no próximo passo.</div>`,
+  },
+  {
+    title: 'Dicas para marcar bem',
+    mode: 'landmarks',
+    target: '#left-panel',
+    place: 'right',
+    body: `<ul>
+        <li>Ligue <b>Grade de %</b> para ter uma régua sobre o avatar.</li>
+        <li>Ligue <b>Mostrar equipamentos</b> para ver o item mudar enquanto você mexe na caixa.</li>
+        <li>Clique num nome da legenda para ver a explicação daquela caixa.</li>
+        <li><b>Largura</b> é o que mais importa: a armadura herda a largura de <code>torso</code>, o elmo a de <code>head</code>.</li>
+        <li>Avatares parecidos? Use <b>Copiar de outro estilo…</b> (painel direito) e só corrija as diferenças.</li>
+      </ul>
+      <p class="tip">Você só mede cada avatar <b>uma vez</b>. Todos os itens, atuais e futuros, aproveitam.</p>`,
+  },
+  {
+    title: '2 · Fit: veja o equipamento no corpo',
+    mode: 'fit',
+    target: '#equip-list',
+    place: 'left',
+    onEnter() {
+      if (!ui.active.size) { const a = fit.items.find(i => i.slot === 'armor'); if (a) { ui.active.add(a.id); ui.selectedItem = a.id; ui.ruleSlot = 'armor'; renderAll(); } }
+    },
+    body: `<p>Clique num item para <b>vesti-lo</b> (um por slot). Ele é posicionado automaticamente usando os landmarks do avatar atual. Troque de <b>Character/Style</b> (painel esquerdo) e o item se adapta ao novo corpo.</p>
+      <p>Itens com <b>⚠</b> têm algum problema — passe o mouse para ver qual.</p>`,
+  },
+  {
+    title: 'Regra de slot: ajuste todos de uma vez',
+    mode: 'fit',
+    target: '#rule-panel',
+    place: 'left',
+    body: `<p>Se <i>todas</i> as armaduras ficam um pouco altas, não mexa item a item: ajuste a <b>regra do slot</b>.</p>
+      <ul>
+        <li><b>Landmark alvo</b> — qual caixa do corpo o slot usa.</li>
+        <li><b>Modo</b> — <code>width</code> (largura igual), <code>height</code>, <code>contain</code> (cabe dentro), <code>cover</code> (cobre).</li>
+        <li><b>scale ×</b> — aumenta/diminui o sprite (1.1 = 10% maior que o landmark).</li>
+        <li><b>dx / dy</b> — desloca em % do avatar.</li>
+        <li><b>âncora</b> — em qual ponto da caixa o sprite "gruda" (y=0 topo, 1 base).</li>
+      </ul>
+      <div class="try"><b>Experimente:</b> mexa em <b>scale ×</b> da armadura e veja o tórax ser coberto (ou não).</div>`,
+  },
+  {
+    title: '3 · Exceção: um item, um avatar',
+    mode: 'fit',
+    target: '#override-panel',
+    place: 'left',
+    body: `<p>Às vezes <i>um</i> item não segue a regra (ex.: uma armadura muito larga). Selecione-o e:</p>
+      <ul>
+        <li><b>Arraste</b> o sprite no canvas — a posição vira uma exceção (<code>dx/dy</code>).</li>
+        <li><b>Puxe o quadradinho dourado</b> — muda o tamanho (<code>scale</code>).</li>
+        <li>Setas do teclado — ajuste fino.</li>
+      </ul>
+      <p>A exceção vale <b>só para aquele avatar</b>. Use <b>Copiar p/ outros estilos</b> para repetir nos demais do mesmo gênero, e <b>Reset</b> para voltar ao automático.</p>
+      <p class="tip">Regra de ouro: se você está criando a mesma exceção em vários avatares, o problema é da <b>regra do slot</b> ou do <b>landmark</b> — corrija lá.</p>`,
+  },
+  {
+    title: 'Check all: o teste final',
+    mode: 'check',
+    target: '#view-check',
+    place: 'left',
+    body: `<p>Mostra <b>cada item em cada avatar</b>. Células vermelhas têm aviso:</p>
+      <ul>
+        <li><i>cobre só X% de "torso"</i> — a armadura não cobre o tórax todo.</li>
+        <li><i>menor que o corpo</i> / <i>grande demais</i> — largura fora do esperado.</li>
+        <li><i>descentralizado</i> — o item escorregou para o lado.</li>
+        <li><i>sai da área do avatar</i> — passou da borda do canvas.</li>
+      </ul>
+      <p><b>Clique numa célula</b> para ir direto ao ajuste daquele item naquele avatar. Marque <b>só problemas</b> para filtrar.</p>`,
+  },
+  {
+    title: 'Save: o jogo passa a usar',
+    target: '#save-btn',
+    place: 'bottom',
+    body: `<p><b>Save</b> (ou <kbd>Ctrl+S</kbd>) grava <code>public/data/avatar-fit.json</code>. O jogo lê esse arquivo — recarregue o jogo para ver. Um backup <code>.bak</code> é criado a cada save.</p>
+      <p>O selo <b>● alterações não salvas</b> avisa se algo ficou pendente. Depois de salvar, é só fazer <code>commit</code> do JSON como qualquer outro arquivo.</p>
+      <p class="tip">Os avisos são calculados pelo mesmo código do jogo, então <b>o que você vê aqui é exatamente o que o jogador vê</b>.</p>`,
+  },
+  {
+    title: 'Prompts: gerar a arte do item',
+    mode: 'prompts',
+    target: '#view-prompts',
+    place: 'left',
+    body: `<p>Antes de adicionar um item, você precisa da imagem. A aba <b>Prompts</b> monta o prompt completo para a IA de imagem.</p>
+      <ul>
+        <li>Escolha o <b>tipo</b> (armor, helmet, shield, gauntlet, boots) — o tamanho do canvas já vem certo.</li>
+        <li>Preencha <b>nome</b> (<code>dragon-armor</code>), <b>estilo</b> (<code>dragon</code>, <code>samurai</code>, <code>light</code>…) e o <b>gênero</b>.</li>
+        <li>O <b>estilo visual do jogo</b>, o fundo transparente, a composição e o que evitar já vão embutidos.</li>
+        <li>Ao terminar, <b>Preencher “Add Equipment”</b> leva você direto ao cadastro do item.</li>
+      </ul>
+      <p class="tip">Quer mudar o visual de todos os prompts? Edite <code>styleGuide</code> em <code>tools/avatar-canvas/prompts.json</code>.</p>`,
+  },
+  {
+    title: 'Receita: equipamento novo',
+    center: true,
+    body: `<ol style="padding-left:1.1rem;display:flex;flex-direction:column;gap:0.25rem">
+        <li>Gere a arte (aba <b>Prompts</b>) e coloque os PNGs em <code>public/items/nome_male.png</code> e <code>nome_female.png</code> (ou um único PNG em <code>public/img/</code>).</li>
+        <li>No painel <b>Equipment</b>, clique em <b>+</b> e preencha nome, slot e arquivo. O studio mede a caixa visível sozinho.</li>
+        <li>Abra <b>Check all</b>. Se tudo estiver verde, pronto.</li>
+        <li>Se algum avatar ficar vermelho: ajuste a <b>regra do slot</b> (afeta todos) ou crie uma <b>exceção</b>.</li>
+        <li><b>Save</b>. Depois registre o item no jogo (<code>ITEM_IMAGES</code> em <code>game.js</code>) para ele aparecer no personagem.</li>
+      </ol>
+      <p class="tip">Dica de ouro: se você gerar a arte do equipamento <b>já no canvas do avatar</b> (1024×1536, vestido no corpo), marque <b>"Já desenhado no canvas do avatar"</b> — o item entra sem nenhum encaixe e sem nenhum aviso.</p>
+      <p>Esta ajuda fica sempre disponível no botão <b>?</b>.</p>`,
+  },
+];
+
+let tourIdx = 0;
+function openTour(i = 0) { tourIdx = i; $('tour').classList.add('on'); $('tour-never').checked = !!localStorage.getItem(TOUR_KEY); showTourStep(); }
+function closeTour() {
+  $('tour').classList.remove('on');
+  if ($('tour-never').checked) localStorage.setItem(TOUR_KEY, '1'); else localStorage.removeItem(TOUR_KEY);
+}
+function showTourStep() {
+  const s = TOUR[tourIdx];
+  if (s.mode && ui.mode !== s.mode) setMode(s.mode);
+  if (s.onEnter) s.onEnter();
+  $('tour-step-n').textContent = `Passo ${tourIdx + 1} de ${TOUR.length}`;
+  $('tour-title').textContent = s.title;
+  $('tour-body').innerHTML = s.body;
+  $('tour-dots').innerHTML = TOUR.map((_, i) => `<i class="${i === tourIdx ? 'on' : ''}"></i>`).join('');
+  $('tour-prev').disabled = tourIdx === 0;
+  $('tour-next').textContent = tourIdx === TOUR.length - 1 ? 'Concluir ✓' : 'Próximo →';
+  // wait a frame so the mode switch has laid out
+  requestAnimationFrame(() => requestAnimationFrame(positionTour));
+}
+function positionTour() {
+  const s = TOUR[tourIdx];
+  const hole = $('tour-hole'), card = $('tour-card');
+  const el = s.target && document.querySelector(s.target);
+  const vw = innerWidth, vh = innerHeight;
+  const cw = card.offsetWidth, ch = card.offsetHeight;
+  if (!el || s.center) {
+    hole.style.cssText = `left:${vw / 2}px;top:${vh / 2}px;width:0;height:0;border-color:transparent;`;
+    card.style.left = Math.max(12, (vw - cw) / 2) + 'px';
+    card.style.top = Math.max(12, (vh - ch) / 2) + 'px';
+    return;
+  }
+  const r = el.getBoundingClientRect();
+  const pad = 6;
+  hole.style.cssText = `left:${r.left - pad}px;top:${r.top - pad}px;width:${r.width + pad * 2}px;height:${r.height + pad * 2}px;`;
+  let x, y;
+  switch (s.place) {
+    case 'right':  x = r.right + 16; y = r.top + 8; break;
+    case 'left':   x = r.left - cw - 16; y = r.top + 8; break;
+    case 'bottom': x = r.left + r.width / 2 - cw / 2; y = r.bottom + 16; break;
+    default:       x = r.left; y = r.bottom + 16;
+  }
+  // keep the card on screen; if the target is huge (stage) tuck the card to its side
+  card.style.left = clamp(x, 12, vw - cw - 12) + 'px';
+  card.style.top = clamp(y, 12, vh - ch - 12) + 'px';
+}
+$('tour-next').addEventListener('click', () => { if (tourIdx >= TOUR.length - 1) { closeTour(); return; } tourIdx++; showTourStep(); });
+$('tour-prev').addEventListener('click', () => { if (tourIdx > 0) { tourIdx--; showTourStep(); } });
+$('tour-close').addEventListener('click', closeTour);
+window.addEventListener('resize', () => { if ($('tour').classList.contains('on')) positionTour(); });
+
+// Help modal (recipes & FAQ — static reference)
+$('help-body').innerHTML = `
+  <h4>Glossário</h4>
+  <table>
+    <tr><th>Termo</th><th>Significado</th></tr>
+    <tr><td><b>Landmark</b></td><td>Caixa que marca uma parte do corpo de um avatar (head, torso, hands, feet, shield). Medida uma vez por avatar.</td></tr>
+    <tr><td><b>Regra de slot</b></td><td>Como o sprite de um slot é encaixado no landmark (modo, escala, deslocamento, âncora). Vale para todos os itens do slot.</td></tr>
+    <tr><td><b>Exceção (override)</b></td><td>Ajuste <code>dx / dy / scale</code> de <i>um</i> sprite em <i>um</i> avatar. Somado à regra.</td></tr>
+    <tr><td><b>Caixa visível</b></td><td>Retângulo que contém só os pixels não transparentes do PNG. É ela (e não o PNG inteiro) que é encaixada no corpo.</td></tr>
+    <tr><td><b>Pré-alinhado</b></td><td>Sprite desenhado direto no canvas 1024×1536 do avatar. Dispensa encaixe.</td></tr>
+  </table>
+  <h4>Modos de encaixe</h4>
+  <table>
+    <tr><td><code>width</code></td><td>Largura da caixa visível = largura do landmark. Altura segue a proporção do sprite. (Armadura, manoplas, elmo.)</td></tr>
+    <tr><td><code>height</code></td><td>Altura = altura do landmark.</td></tr>
+    <tr><td><code>contain</code></td><td>Maior tamanho que ainda cabe inteiro no landmark. (Botas, escudo.)</td></tr>
+    <tr><td><code>cover</code></td><td>Menor tamanho que cobre o landmark inteiro.</td></tr>
+  </table>
+  <h4>Receita: novo avatar</h4>
+  <ul>
+    <li>Coloque o PNG 1024×1536 em <code>public/avatars/selection/&lt;gender&gt;_selection_&lt;X&gt;.png</code>.</li>
+    <li>Adicione a chave (<code>male_D</code>…) em <code>avatars</code> no JSON, copiando os landmarks de um avatar parecido (ou use <b>Copiar de outro estilo…</b> após incluir a letra em <code>AVATAR_STYLES</code> neste arquivo).</li>
+    <li>Libere o caminho do avatar na lista <code>VALID_AVATARS</code> em <code>server/routes/characters.js</code> e na seleção de personagem.</li>
+    <li>Meça os landmarks no modo <b>Landmarks</b>, rode <b>Check all</b> e <b>Save</b>.</li>
+  </ul>
+  <h4>Receita: troquei o PNG de um item</h4>
+  <p>Clique em <b>Rescan sprites</b> (rodapé). O studio remede a caixa visível de todas as imagens e os encaixes se atualizam sozinhos. (Isso também acontece ao abrir o studio.)</p>
+  <h4>Quando usar o quê?</h4>
+  <ul>
+    <li>Um item errado em <b>todos</b> os avatares → regra do slot, ou o sprite tem uma margem estranha (Rescan).</li>
+    <li>Todos os itens de um slot errados em <b>um</b> avatar → landmark daquele avatar.</li>
+    <li>Um item errado em <b>um</b> avatar → exceção.</li>
+  </ul>
+  <h4>Atalhos</h4>
+  <p><kbd>Ctrl</kbd>+<kbd>S</kbd> salvar · <kbd>←↑→↓</kbd> mover 0,1% (<kbd>Shift</kbd> = 1%) o item/landmark selecionado · <kbd>Esc</kbd> fecha o tutorial.</p>
+  <h4>Por que existe o JSON?</h4>
+  <p>Antes, as posições eram escritas à mão no <code>style.css</code>, uma regra por slot e por gênero — o que servia para um item e quebrava os outros. Agora o jogo calcula a posição a partir de <code>public/data/avatar-fit.json</code> usando <code>public/js/avatar-fit.js</code>, o mesmo código usado aqui. Versione o JSON no git como qualquer outro arquivo.</p>`;
+$('help-btn').addEventListener('click', () => $('help').classList.add('on'));
+$('help-close').addEventListener('click', () => $('help').classList.remove('on'));
+$('help').addEventListener('mousedown', e => { if (e.target === $('help')) $('help').classList.remove('on'); });
+$('help-tour').addEventListener('click', () => { $('help').classList.remove('on'); setMode('fit'); openTour(0); });
+
+// ── Boot ─────────────────────────────────────────────────────────────────────
+
+const booted = (async function boot() {
+  try {
+    const res = await fetch(BASE + AvatarFit.DATA_URL, { cache: 'no-store' });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    fit = await res.json();
+  } catch (e) {
+    document.body.innerHTML = `<p style="padding:2rem">Não consegui carregar <code>public/data/avatar-fit.json</code> (${e.message}). Abra o studio com <code>npm run canvas</code>.</p>`;
+    return;
+  }
+  try { promptCfg = await (await fetch('/prompts.json', { cache: 'no-store' })).json(); } catch (_) { promptCfg = null; }
+  fit.overrides = fit.overrides || {};
+  fit.sprites = fit.sprites || {};
+  savedJson = JSON.stringify(fit);
+  AvatarFit.setData(fit);        // same object → compute() always sees live edits
+  const { changed, errors } = await scanSprites();
+  if (changed) setStatus(`${changed} sprite(s) remedidos — salve para gravar`);
+  if (errors.length) setStatus('Aviso: ' + errors.join(' · '));
+  setMode('fit');
+})();
+
+// The splash "Enter Studio" button leads into the tutorial the first time.
+$('splash-start').addEventListener('click', async () => {
+  const splash = $('splash');
+  splash.classList.add('fade-out');
+  splash.addEventListener('transitionend', () => splash.remove(), { once: true });
+  await booted;
+  if (fit && !localStorage.getItem(TOUR_KEY)) setTimeout(() => openTour(0), 450);
+});
 </script>
 </body>
 </html>
