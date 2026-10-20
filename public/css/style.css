@@ -1077,29 +1077,29 @@ body.game-page {
   0%   { box-shadow: 0 0 0 2px var(--night-950), 0 18px 40px rgba(0, 0, 0, 0.6), 0 0 18px rgba(240, 138, 60, 0.14); }
   100% { box-shadow: 0 0 0 2px var(--night-950), 0 18px 40px rgba(0, 0, 0, 0.6), 0 0 32px rgba(240, 138, 60, 0.34); }
 }
-.avatar-display .char-avatar-img { width: 100%; height: 100%; object-fit: contain; display: block; border-radius: 7px; }
+.avatar-stage {
+  position: relative;
+  height: 100%;
+  max-width: 100%;
+  aspect-ratio: 1024 / 1536;
+  flex-shrink: 0;
+}
+.avatar-stage .char-avatar-img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: fill;
+  display: block;
+}
 .char-avatar-icon { font-size: 3.5rem; line-height: 1; }
 
-/* Equipment overlays — positions are tuned to the avatar art; do not edit casually */
+/* Equipment overlays — position/size are inline (percentages from js/avatar-fit.js) */
 .equip-overlay {
   position: absolute;
-  width: 50.00%;
-  height: 50.00%;
-  top: 40.00%;
-  left: 50.00%;
-  transform: translate(-50%, -50%);
-  object-fit: contain;
+  object-fit: fill;
   pointer-events: none;
 }
-.equip-overlay-armor--female { top: 43.76%; left: 50.00%; width: 45.00%; height: 45.00%; }
-.equip-overlay-boots { top: 75.89%; left: 49.89%; width: 73.00%; height: 49.00%; }
-.equip-overlay-boots--female { top: 83.00%; left: 49.00%; width: 73.00%; height: 49.00%; }
-.equip-overlay-shield { top: 49.61%; left: 76.06%; width: 45.00%; height: 45.00%; z-index: 3; }
-.equip-overlay-gauntlet { top: 50%; left: 50%; width: 45%; height: 45%; z-index: 2; }
-.equip-overlay-helmet { top: 17.76%; left: 49.62%; width: 60.00%; height: 60.00%; z-index: 4; }
-.equip-overlay-helmet--female { top: 21.59%; left: 49.62%; width: 60.00%; height: 60.00%; }
-.equip-overlay-shield--female { top: 50.00%; left: 72.00%; width: 45.00%; height: 45.00%; }
-.equip-overlay-gauntlet--female { top: 50%; left: 50%; width: 45%; height: 45%; }
 
 /* ---- HUD: status bar ---- */
 .status-bar {
@@ -1364,7 +1364,7 @@ body.game-page {
   flex-shrink: 0;
   position: relative;
 }
-.eq-doll-avatar .char-avatar-img { width: 100%; height: 100%; object-fit: contain; border-radius: 50%; }
+.eq-doll-avatar .avatar-stage .char-avatar-img { border-radius: 50%; }  /* only the body art is rounded; equipment overlays may extend past it */
 
 .eq-inv-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(60px, 1fr)); gap: 6px; }
 .eq-inv-slot { aspect-ratio: 1; font-size: 1.5rem; }

@@ -31,11 +31,6 @@ function getItemImage(itemId, gender) {
   return `${base}_${gender || 'male'}.png`;
 }
 
-// Per-item overlay size overrides (percentage of avatar container)
-const ITEM_OVERLAY_SIZE = {
-  15: '50%', // Hunter Armor — slightly smaller on avatar
-};
-
 function itemIconHtml(itemId, itemIcon, itemName, gender, imgClass) {
   const img = getItemImage(itemId, gender);
   if (img) return `<img class="${imgClass}" src="${img}" alt="${escHtml(itemName)}" />`;
@@ -132,6 +127,7 @@ async function init() {
   if (!res) return;
   const data = await res.json();
   charState = data;
+  await AvatarFit.load();   // equipment placement data, needed by the first avatar render
   renderAll(data);
   startTick();
   // Resume dungeon polling if a run is already active
@@ -301,36 +297,40 @@ function renderAll(char) {
   refreshCombatStats();
 }
 
-// Shared avatar renderer — used by the game screen and the equipment modal
+// Shared avatar renderer — used by the game screen and the equipment modal.
+// Equipment sprites are placed by AvatarFit (landmarks + slot rules, authored in
+// tools/avatar-canvas); the stage keeps the 2:3 aspect of the avatar PNG so the
+// percentages match the artwork in every container.
+const EQUIP_LAYERS = [
+  // [slot, char field, z-index] — back to front
+  ['armor',    'equippedArmor',  1],
+  ['gauntlet', 'equippedArm',    2],
+  ['boots',    'equippedBoots',  3],
+  ['shield',   'equippedShield', 4],
+  ['helmet',   'equippedHelmet', 5],
+];
+
+function equipOverlayHtml(char, avatarKey, slot, field, z) {
+  const item = char[field];
+  if (!item) return '';
+  const src = getItemImage(item.id, char.gender);
+  if (!src) return '';
+  const placed = AvatarFit.compute({ avatarKey, slot, src });
+  // No fit data for this sprite yet: draw it on the full canvas (the "pre-aligned" convention).
+  const style = placed ? AvatarFit.overlayStyle(placed) : 'left:0;top:0;width:100%;height:100%;';
+  return `<img class="equip-overlay" style="${style}z-index:${z};" src="${escHtml(src)}" alt="" />`;
+}
+
 function renderCharAvatar(containerEl, char) {
   if (!containerEl || !char) return;
-  const armorImg    = char.equippedArmor  ? getItemImage(char.equippedArmor.id,  char.gender) : null;
-  const shieldImg   = char.equippedShield ? getItemImage(char.equippedShield.id, char.gender) : null;
-  const bootsImg    = char.equippedBoots  ? getItemImage(char.equippedBoots.id,  char.gender) : null;
-  const gauntletImg = char.equippedArm    ? getItemImage(char.equippedArm.id,    char.gender) : null;
-  const helmetImg   = char.equippedHelmet ? getItemImage(char.equippedHelmet.id, char.gender) : null;
-  let armorOverlay = '';
-  if (armorImg) {
-    const size = ITEM_OVERLAY_SIZE[Number(char.equippedArmor.id)];
-    const style = size ? ` style="width:${size};height:${size}"` : '';
-    const armorGenderClass = char.gender === 'female' ? ' equip-overlay-armor--female' : '';
-    armorOverlay = `<img class="equip-overlay${armorGenderClass}"${style} src="${escHtml(armorImg)}" alt="" />`;
-  }
-  const isFemale = char.gender === 'female';
-  const shieldGenderClass   = isFemale ? ' equip-overlay-shield--female'   : '';
-  const bootsGenderClass    = isFemale ? ' equip-overlay-boots--female'    : '';
-  const gauntletGenderClass = isFemale ? ' equip-overlay-gauntlet--female' : '';
-  const helmetGenderClass   = isFemale ? ' equip-overlay-helmet--female'   : '';
-  const shieldOverlay   = shieldImg   ? `<img class="equip-overlay equip-overlay-shield${shieldGenderClass}"     src="${escHtml(shieldImg)}"   alt="" />` : '';
-  const bootsOverlay    = bootsImg    ? `<img class="equip-overlay equip-overlay-boots${bootsGenderClass}"       src="${escHtml(bootsImg)}"    alt="" />` : '';
-  const gauntletOverlay = gauntletImg ? `<img class="equip-overlay equip-overlay-gauntlet${gauntletGenderClass}" src="${escHtml(gauntletImg)}" alt="" />` : '';
-  const helmetOverlay   = helmetImg   ? `<img class="equip-overlay equip-overlay-helmet${helmetGenderClass}"     src="${escHtml(helmetImg)}"   alt="" />` : '';
-  if (char.avatar_path) {
-    containerEl.innerHTML = `<img class="char-avatar-img" src="${escHtml(char.avatar_path)}" alt="Avatar" />${armorOverlay}${shieldOverlay}${bootsOverlay}${gauntletOverlay}${helmetOverlay}`;
-  } else {
-    const icon = CLASS_ICONS[char.class] || '🧍';
-    containerEl.innerHTML = `<span class="char-avatar-icon">${icon}</span>${armorOverlay}${shieldOverlay}${bootsOverlay}${gauntletOverlay}${helmetOverlay}`;
-  }
+  const avatarKey = AvatarFit.avatarKeyFromPath(char.avatar_path, char.gender);
+  const overlays = EQUIP_LAYERS
+    .map(([slot, field, z]) => equipOverlayHtml(char, avatarKey, slot, field, z))
+    .join('');
+  const base = char.avatar_path
+    ? `<img class="char-avatar-img" src="${escHtml(char.avatar_path)}" alt="Avatar" />`
+    : `<span class="char-avatar-icon">${CLASS_ICONS[char.class] || '🧍'}</span>`;
+  containerEl.innerHTML = `<div class="avatar-stage">${base}${overlays}</div>`;
 }
 
 function updateActionSquares(activity, isFarming = false) {
